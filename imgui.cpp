@@ -9643,7 +9643,7 @@ static void BeginLayoutItem(ImGuiLayout* layout)
         ImGui::BeginGroup();
         if (layout->Bounds.y > item.Size.y)
         {
-            auto align = ImMax(0.0f, ImMin(1.0f, ImGui::GetStyle().LayoutAlign));
+            float align = ImMax(0.0f, ImMin(1.0f, ImGui::GetStyle().LayoutAlign));
 
             float align_offset = floorf(align * (layout->Bounds.y - item.Size.y));
             float new_position = ImGui::GetCursorPosY() + align_offset;
@@ -9656,7 +9656,7 @@ static void BeginLayoutItem(ImGuiLayout* layout)
         ImGui::BeginGroup();
         if (layout->Bounds.x > item.Size.x)
         {
-            auto align = ImMax(0.0f, ImMin(1.0f, ImGui::GetStyle().LayoutAlign));
+            float align = ImMax(0.0f, ImMin(1.0f, ImGui::GetStyle().LayoutAlign));
 
             float align_offset = floorf(align * (layout->Bounds.x - item.Size.x));
             float new_position = ImGui::GetCursorPosX() + align_offset;
