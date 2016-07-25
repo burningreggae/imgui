@@ -9387,7 +9387,7 @@ static void EndLayout(ImGuiLayoutType type)
     if (layout->NextItemIndex < layout->Items.size())
     {
         layout->Items.resize(layout->NextItemIndex);
-        layout->Dirty |= ImGuiLayoutDirtyFlags_ItemAdded;
+        layout->Dirty |= ImGuiLayoutDirtyFlags_ItemRemoved;
     }
 
     PopLayout(layout);
