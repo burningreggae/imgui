@@ -399,6 +399,21 @@ void ImDrawList::PrimRectUV(const ImVec2& a, const ImVec2& c, const ImVec2& uv_a
     _IdxWritePtr += 6;
 }
 
+void ImDrawList::PrimRectUV4(const ImVec2& a, const ImVec2& c, const ImVec4 uv[4], ImU32 col)
+{
+    ImVec2 b(c.x, a.y), d(a.x, c.y);
+    ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
+    _IdxWritePtr[0] = idx; _IdxWritePtr[1] = (ImDrawIdx)(idx+1); _IdxWritePtr[2] = (ImDrawIdx)(idx+2);
+    _IdxWritePtr[3] = idx; _IdxWritePtr[4] = (ImDrawIdx)(idx+2); _IdxWritePtr[5] = (ImDrawIdx)(idx+3);
+    _VtxWritePtr[0].pos = a; _VtxWritePtr[0].uv = uv[0]; _VtxWritePtr[0].col = col;
+    _VtxWritePtr[1].pos = b; _VtxWritePtr[1].uv = uv[1]; _VtxWritePtr[1].col = col;
+    _VtxWritePtr[2].pos = c; _VtxWritePtr[2].uv = uv[2]; _VtxWritePtr[2].col = col;
+    _VtxWritePtr[3].pos = d; _VtxWritePtr[3].uv = uv[3]; _VtxWritePtr[3].col = col;
+    _VtxWritePtr += 4;
+    _VtxCurrentIdx += 4;
+    _IdxWritePtr += 6;
+}
+
 void ImDrawList::PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, ImU32 col)
 {
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
@@ -798,13 +813,134 @@ void ImDrawList::PathRect(const ImVec2& a, const ImVec2& b, float rounding, int 
     }
 }
 
-void ImDrawList::AddLine(const ImVec2& a, const ImVec2& b, ImU32 col, float thickness)
+void ImDrawList::AddLine(const ImVec2& a, const ImVec2& b, ImU32 col, float thickness, bool anti_aliased)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
     PathLineTo(a + ImVec2(0.5f,0.5f));
     PathLineTo(b + ImVec2(0.5f,0.5f));
-    PathStroke(col, false, thickness);
+    PathStroke(col, false, thickness, anti_aliased);
+}
+
+void ImDrawList::PokeDrawCmd(shaderparam* shader)
+{
+    ImDrawCmd* curr_cmd = CmdBuffer.Size ? &CmdBuffer.back() : NULL;
+	if (curr_cmd) curr_cmd->shader = shader;
+}
+
+void ImDrawList::AddShadowRect(const ImVec2& a, const ImVec2& c,const ImVec2 shadowSize[2],const ImU32 co[2],float rounding,int rounding_corners)
+{
+    const ImVec2 uv = GImGui->FontTexUvWhitePixel;
+
+	int quads = 0;
+	quads += rounding_corners & 1 ? 1 : 0;
+	quads += rounding_corners & 2 ? 1 : 0;
+	quads += rounding_corners & 4 ? 1 : 0;
+
+	quads += rounding_corners & 8 ? 1 : 0;
+	quads += rounding_corners & 16 ? 1 : 0;
+	quads += rounding_corners & 32 ? 1 : 0;
+
+	quads += rounding_corners & 64 ? 1 : 0;
+	quads += rounding_corners & 128 ? 1 : 0;
+	quads += rounding_corners & 256 ? 1 : 0;
+
+
+    PrimReserve(6 * quads, 4 * quads);
+	static ImDrawIdx lQuad[6] = { 0,1,2,0,2,3 };
+	static ImDrawIdx rQuad[6] = { 0,1,3,1,2,3 };
+	int g;
+
+	//top left
+	if (rounding_corners & 1)
+	{
+		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
+		PrimWriteVtx(ImVec2(a.x-shadowSize[0].x, a.y-shadowSize[0].y), uv, co[1]);
+		PrimWriteVtx(ImVec2(a.x, a.y-shadowSize[0].y), uv, co[1]);
+		PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(a.x-shadowSize[0].x, a.y), uv, co[1]);
+	}
+
+	//top center
+	if (rounding_corners & 2)
+	{
+		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
+		PrimWriteVtx(ImVec2(a.x, a.y-shadowSize[0].y), uv, co[1]);
+		PrimWriteVtx(ImVec2(c.x, a.y-shadowSize[0].y), uv, co[1]);
+		PrimWriteVtx(ImVec2(c.x, a.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
+	}
+
+	//top right
+	if (rounding_corners & 4)
+	{
+		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + rQuad[g]);
+		PrimWriteVtx(ImVec2(c.x, a.y-shadowSize[0].y), uv, co[1]);
+		PrimWriteVtx(ImVec2(c.x+shadowSize[0].x, a.y-shadowSize[0].y), uv, co[1]);
+		PrimWriteVtx(ImVec2(c.x+shadowSize[0].x, a.y), uv, co[1]);
+		PrimWriteVtx(ImVec2(c.x, a.y), uv, co[0]);
+	}
+
+	//center left
+	if (rounding_corners & 8)
+	{
+		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
+		PrimWriteVtx(ImVec2(a.x-shadowSize[0].x, a.y), uv, co[1]);
+		PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(a.x, c.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(a.x-shadowSize[1].x, c.y), uv, co[1]);
+	}
+
+	//center center
+	if (rounding_corners & 16)
+	{
+		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + rQuad[g]);
+		PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(c.x, a.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(c.x, c.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(a.x, c.y), uv, co[0]);
+	}
+
+	//center right
+	if (rounding_corners & 32)
+	{
+		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + rQuad[g]);
+		PrimWriteVtx(ImVec2(c.x, a.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(c.x+shadowSize[0].x, a.y), uv, co[1]);
+		PrimWriteVtx(ImVec2(c.x+shadowSize[1].x, c.y), uv, co[1]);
+		PrimWriteVtx(ImVec2(c.x, c.y), uv, co[0]);
+	}
+
+	//bottom left
+	if (rounding_corners & 64)
+	{
+		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + rQuad[g]);
+		PrimWriteVtx(ImVec2(a.x-shadowSize[1].x, c.y), uv, co[1]);
+		PrimWriteVtx(ImVec2(a.x, c.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(a.x, c.y+shadowSize[1].y), uv, co[1]);
+		PrimWriteVtx(ImVec2(a.x-shadowSize[1].x, c.y+shadowSize[1].y), uv, co[1]);
+	}
+
+	//bottom center
+	if (rounding_corners & 128)
+	{
+		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
+		PrimWriteVtx(ImVec2(a.x, c.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(c.x, c.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(c.x, c.y+shadowSize[1].y), uv, co[1]);
+		PrimWriteVtx(ImVec2(a.x, c.y+shadowSize[1].y), uv, co[1]);
+	}
+
+	//bottom right
+	if (rounding_corners & 256)
+	{
+		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
+		PrimWriteVtx(ImVec2(c.x, c.y), uv, co[0]);
+		PrimWriteVtx(ImVec2(c.x+shadowSize[1].x, c.y), uv, co[1]);
+		PrimWriteVtx(ImVec2(c.x+shadowSize[1].x, c.y+shadowSize[1].y), uv, co[1]);
+		PrimWriteVtx(ImVec2(c.x, c.y+shadowSize[1].y), uv, co[1]);
+	}
+
 }
 
 // a: upper-left, b: lower-right. we don't render 1 px sized rectangles properly.
@@ -871,7 +1007,7 @@ void ImDrawList::AddQuadFilled(const ImVec2& a, const ImVec2& b, const ImVec2& c
     PathFillConvex(col);
 }
 
-void ImDrawList::AddTriangle(const ImVec2& a, const ImVec2& b, const ImVec2& c, ImU32 col, float thickness)
+void ImDrawList::AddTriangle(const ImVec2& a, const ImVec2& b, const ImVec2& c, ImU32 col, float thickness, bool anti_aliased)
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
@@ -879,7 +1015,7 @@ void ImDrawList::AddTriangle(const ImVec2& a, const ImVec2& b, const ImVec2& c, 
     PathLineTo(a);
     PathLineTo(b);
     PathLineTo(c);
-    PathStroke(col, true, thickness);
+    PathStroke(col, true, thickness, anti_aliased);
 }
 
 void ImDrawList::AddTriangleFilled(const ImVec2& a, const ImVec2& b, const ImVec2& c, ImU32 col)
