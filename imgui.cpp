@@ -2382,6 +2382,17 @@ void ImGui::NewFrame()
         }
     }
 
+	//Horizonal Scrolling
+    if (g.HoveredWindow && g.IO.MouseWheelH != 0.0f && !g.HoveredWindow->Collapsed)
+    {
+        ImGuiWindow* window = g.HoveredWindow;
+        if (!(window->Flags & ImGuiWindowFlags_NoScrollWithMouse))
+        {
+            // Scroll X
+			window->ScrollTarget.x = window->Scroll.x + g.IO.MouseWheelH * window->DC.CursorMaxPos.x / 20.f;
+        }
+    }
+
     // Pressing TAB activate widget focus
     // NB: Don't discard FocusedWindow if it isn't active, so that a window that go on/off programatically won't lose its keyboard focus.
     if (g.ActiveId == 0 && g.FocusedWindow != NULL && g.FocusedWindow->Active && IsKeyPressedMap(ImGuiKey_Tab, false))
@@ -2763,6 +2774,7 @@ void ImGui::EndFrame()
 
     // Clear Input data for next frame
     g.IO.MouseWheel = 0.0f;
+	g.IO.MouseWheelH = 0.0f;
     memset(g.IO.InputCharacters, 0, sizeof(g.IO.InputCharacters));
 
     g.FrameCountEnded = g.FrameCount;
