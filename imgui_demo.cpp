@@ -109,6 +109,8 @@ void ImGui::ShowUserGuide()
         "  Use +- to subtract.\n");
 }
 
+bool show_app_style_editor = false;
+
 // Demonstrate most ImGui features (big function!)
 void ImGui::ShowTestWindow(bool* p_open)
 {
@@ -124,7 +126,6 @@ void ImGui::ShowTestWindow(bool* p_open)
     static bool show_app_fixed_overlay = false;
     static bool show_app_manipulating_window_title = false;
     static bool show_app_custom_rendering = false;
-    static bool show_app_style_editor = false;
 
     static bool show_app_metrics = false;
     static bool show_app_about = false;

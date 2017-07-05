@@ -726,17 +726,49 @@ static void             ImeSetInputScreenPosFn_DefaultImpl(int x, int y);
 
 // Default font atlas storage .
 // New contexts always point by default to this font atlas. It can be changed by reassigning the GetIO().Fonts variable.
-static ImFontAtlas      GImDefaultFontAtlas;
-
+ImFontAtlas*      GImDefaultFontAtlas = 0;
+ImGuiContext*     GImGui = 0;
 // Default context storage + current context pointer.
 // Implicitely used by all ImGui functions. Always assumed to be != NULL. Change to a different context by calling ImGui::SetCurrentContext()
 // ImGui is currently not thread-safe because of this variable. If you want thread-safety to allow N threads to access N different contexts, you might work around it by:
 // - Having multiple instances of the ImGui code compiled inside different namespace (easiest/safest, if you have a finite number of contexts)
 // - or: Changing this variable to be TLS. You may #define GImGui in imconfig.h for further custom hackery. Future development aim to make this context pointer explicit to all calls. Also read https://github.com/ocornut/imgui/issues/586
+#if 0
 #ifndef GImGui
 static ImGuiContext     GImDefaultContext;
 ImGuiContext*           GImGui = &GImDefaultContext;
 #endif
+#endif
+
+void ImGui::CreateInstance()
+{
+	if (0 == GImDefaultFontAtlas)	GImDefaultFontAtlas = new ImFontAtlas();
+	if (0 == GImGui) GImGui = CreateContext(); //new ImGuiContext();
+}
+
+void ImGui::DestroyInstance()
+{
+	if (GImDefaultFontAtlas)	{ delete GImDefaultFontAtlas; GImDefaultFontAtlas = 0; }
+	if (GImGui) { DestroyContext(GImGui); GImGui = 0; }
+}
+
+void msg(const char* fmt, ...);
+void ImGuiIO::redraw(int value, const char*func ,const char * caller)
+{
+	if ( value )
+	{
+/*
+		const char *window_name = "";
+		//ImGui::GetCurrentWindowRead()->Name;
+		if (GImGui && GImGui->CurrentWindow && GImGui->CurrentWindow->Name)
+		{
+			window_name = GImGui->CurrentWindow->Name;
+		}
+*/
+		//msg ( "redraw %s %s\n",func ? func : "", caller ? caller : "" );
+		_RedrawCount += value;
+	}
+}
 
 //-----------------------------------------------------------------------------
 // User facing structures
@@ -811,6 +843,17 @@ ImGuiStyle::ImGuiStyle()
     Colors[ImGuiCol_PlotHistogramHovered]   = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
     Colors[ImGuiCol_TextSelectedBg]         = ImVec4(0.00f, 0.00f, 1.00f, 0.35f);
     Colors[ImGuiCol_ModalWindowDarkening]   = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+
+	Brightness				= 1.0f;				// Global brightness applies to everything in ImGui
+	TitleBarHeight			= 6.f;				// Height of Titlebar
+	CollapseTriangleScale	= 1.f;				// Scaling of Collapsed Triangle Default 1.f
+	CloseButtonSize			= 8.f;				// Scaling of Closes Button
+	CircleLineSegment       = 16;				// Circle Vertex Line Segments
+	Colors[ImGuiCol_CollapseTriangle]       = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
+    Colors[ImGuiCol_MaximizeButton]         = ImVec4(0.10f, 0.50f, 0.90f, 0.50f);
+    Colors[ImGuiCol_MaximizeButtonHovered]  = ImVec4(0.20f, 0.70f, 0.90f, 0.60f);
+    Colors[ImGuiCol_MaximizeButtonActive]   = ImVec4(0.20f, 0.70f, 0.70f, 1.00f);
+
 }
 
 ImGuiIO::ImGuiIO()
@@ -823,7 +866,7 @@ ImGuiIO::ImGuiIO()
     IniSavingRate = 5.0f;
     IniFilename = "imgui.ini";
     LogFilename = "imgui_log.txt";
-    Fonts = &GImDefaultFontAtlas;
+    Fonts = GImDefaultFontAtlas;
     FontGlobalScale = 1.0f;
     FontDefault = NULL;
     DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
@@ -851,6 +894,7 @@ ImGuiIO::ImGuiIO()
     ClipboardUserData = NULL;
     ImeSetInputScreenPosFn = ImeSetInputScreenPosFn_DefaultImpl;
 
+	_RedrawCount = 0;
     // Set OS X style defaults based on __APPLE__ compile time flag
 #ifdef __APPLE__
     OSXBehaviors = true;
@@ -1235,13 +1279,19 @@ ImU32 ImGui::ColorConvertFloat4ToU32(const ImVec4& in)
 ImU32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)  
 { 
     ImVec4 c = GImGui->Style.Colors[idx]; 
+	c.x *= GImGui->Style.Brightness;
+	c.y *= GImGui->Style.Brightness;
+	c.z *= GImGui->Style.Brightness;
     c.w *= GImGui->Style.Alpha * alpha_mul; 
     return ColorConvertFloat4ToU32(c); 
 }
 
 ImU32 ImGui::GetColorU32(const ImVec4& col)
 { 
-    ImVec4 c = col; 
+    ImVec4 c = col;
+	c.x *= GImGui->Style.Brightness;
+	c.y *= GImGui->Style.Brightness;
+	c.z *= GImGui->Style.Brightness;
     c.w *= GImGui->Style.Alpha; 
     return ColorConvertFloat4ToU32(c); 
 }
@@ -2310,7 +2360,7 @@ void ImGui::NewFrame()
         ImGuiWindow* window = g.HoveredWindow;
         if (g.IO.KeyCtrl)
         {
-            if (g.IO.FontAllowUserScaling)
+            if (g.IO.FontAllowUserScaling && !(g.HoveredWindow->Flags & ImGuiWindowFlags_NoZoom) )
             {
                 // Zoom / Scale window
                 float new_font_scale = ImClamp(window->FontWindowScale + g.IO.MouseWheel * 0.10f, 0.50f, 2.50f);
@@ -2986,7 +3036,7 @@ void ImGui::RenderCollapseTriangle(ImVec2 p_min, bool is_open, float scale)
 
     const float h = g.FontSize * 1.00f;
     const float r = h * 0.40f * scale;
-    ImVec2 center = p_min + ImVec2(h*0.50f, h*0.50f*scale);
+    ImVec2 center = p_min + ImVec2(h*0.50f, 0.f);
 
     ImVec2 a, b, c;
     if (is_open)
@@ -3003,7 +3053,7 @@ void ImGui::RenderCollapseTriangle(ImVec2 p_min, bool is_open, float scale)
         c = center + ImVec2(-0.500f,-0.866f)*r;
     }
 
-    window->DrawList->AddTriangleFilled(a, b, c, GetColorU32(ImGuiCol_Text));
+    window->DrawList->AddTriangleFilled(a, b, c, GetColorU32(ImGuiCol_CollapseTriangle));
 }
 
 void ImGui::RenderBullet(ImVec2 pos)
@@ -3537,7 +3587,7 @@ static bool BeginPopupEx(const char* str_id, ImGuiWindowFlags extra_flags)
     }
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    ImGuiWindowFlags flags = extra_flags|ImGuiWindowFlags_Popup|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_AlwaysAutoResize;
+    ImGuiWindowFlags flags = extra_flags|ImGuiWindowFlags_Popup|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings;
 
     char name[20];
     if (flags & ImGuiWindowFlags_ChildMenu)
@@ -3988,6 +4038,8 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
     window->RootWindow = g.CurrentWindowStack[root_idx];
     window->RootNonPopupWindow = g.CurrentWindowStack[root_non_popup_idx];      // This is merely for displaying the TitleBgActive color.
 
+	const int titlebar_active = g.FocusedWindow && window->RootNonPopupWindow == g.FocusedWindow->RootNonPopupWindow;
+
     // When reusing window again multiple times a frame, just append content (don't need to setup again)
     if (first_begin_of_the_frame)
     {
@@ -4252,6 +4304,81 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
             window->ScrollbarSizes = ImVec2(window->ScrollbarY ? style.ScrollbarSize : 0.0f, window->ScrollbarX ? style.ScrollbarSize : 0.0f);
             window->BorderSize = (flags & ImGuiWindowFlags_ShowBorders) ? 1.0f : 0.0f;
 
+			//shadow
+			if ( !(flags & ImGuiWindowFlags_ChildWindow))
+			{
+				float nudge = window_rounding * 0.5f;
+				ImVec2 shadowSize[2];
+				ImVec2 ofs[2] = { ImVec2(nudge,nudge+0.f),ImVec2(nudge,nudge) };
+				ImU32 col[2];
+				ImRect shadow;
+				int shadowFlags;
+
+				//light shadow
+				shadowFlags = ~0 & ~16; //center center off
+				col[0] = 0x22222222;
+				col[1] = 0x00222222;
+				if (titlebar_active)
+				{
+					shadowSize[0].x = 48+nudge;
+					shadowSize[0].y = 24+nudge;
+					shadowSize[1].x = 48+nudge;
+					shadowSize[1].y = 70+nudge;
+					//shadowFlags &= ~2  & ~16; //top center, center center off
+					//ofs[0].y += 8.f;
+				}
+				else
+				{
+					shadowSize[0].x = 32+nudge;
+					shadowSize[0].y = 24+nudge;
+					shadowSize[1].x = 32+nudge;
+					shadowSize[1].y = 36+nudge;
+				}
+				if ( flags & ImGuiWindowFlags_Tooltip)
+				{
+					shadowSize[0].x *= 0.5f;
+					shadowSize[0].y *= 0.5f;
+					shadowSize[1].x *= 0.5f;
+					shadowSize[1].y *= 0.5f;
+				}
+				shadow.Min = window->Pos + ofs[0];
+				shadow.Max = window->Pos + window->Size - ofs[1];
+				window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,window_rounding,shadowFlags);
+
+				//darker shadow
+				shadowFlags = ~0 & ~16; //center center off
+				col[0] = 0x33222222;
+				col[1] = 0x00222222;
+				if (titlebar_active)
+				{
+					shadowSize[0].x = 25+nudge;
+					shadowSize[0].y = 8+nudge;
+					shadowSize[1].x = 25+nudge;
+					shadowSize[1].y = 20+nudge;
+					shadowFlags &= ~2  & ~16; //top center off
+					ofs[0].y += title_bar_rect.GetHeight() * 0.5f;
+				}
+				else
+				{
+					shadowSize[0].x = 14+nudge;
+					shadowSize[0].y = 4+nudge;
+					shadowSize[1].x = 14+nudge;
+					shadowSize[1].y = 20+nudge;
+				}
+				if ( flags & ImGuiWindowFlags_Tooltip)
+				{
+					shadowSize[0].x *= 0.5f;
+					shadowSize[0].y *= 0.5f;
+					shadowSize[1].x *= 0.5f;
+					shadowSize[1].y *= 0.5f;
+				}
+
+				shadow.Min = window->Pos + ofs[0];
+				shadow.Max = window->Pos + window->Size - ofs[1];
+				window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,window_rounding,shadowFlags);
+
+			}
+
             // Window background, Default Alpha
             ImGuiCol bg_color_idx = ImGuiCol_WindowBg;
             if ((flags & ImGuiWindowFlags_ComboBox) != 0)
@@ -4369,7 +4496,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
 
             const ImVec2 text_size = CalcTextSize(name, NULL, true);
             if (!(flags & ImGuiWindowFlags_NoCollapse))
-                RenderCollapseTriangle(window->Pos + style.FramePadding, !window->Collapsed, 1.0f);
+				RenderCollapseTriangle(window->Pos + ImVec2( style.FramePadding.x,title_bar_rect.GetHeight()*0.5f), !window->Collapsed, style.CollapseTriangleScale);
 
             ImVec2 text_min = window->Pos;
             ImVec2 text_max = window->Pos + ImVec2(window->Size.x, style.FramePadding.y*2 + text_size.y);
@@ -4381,7 +4508,9 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
             text_min.x += pad_left;
             text_max.x -= pad_right;
             clip_rect.Min = ImVec2(text_min.x, window->Pos.y);
+			if (!titlebar_active) PushStyleColor(ImGuiCol_Text, GImGui->Style.Colors[ImGuiCol_TextDisabled]);
             RenderTextClipped(text_min, text_max, name, NULL, &text_size, style.WindowTitleAlign, &clip_rect);
+			if (!titlebar_active) PopStyleColor();
         }
 
         // Save clipped aabb so we can access it in constant-time in FindHoveredWindow()
@@ -5683,7 +5812,7 @@ bool ImGui::SmallButton(const char* label)
 
 // Tip: use ImGui::PushID()/PopID() to push indices or pointers in the ID stack.
 // Then you can keep 'str_id' empty or the same for all your buttons (instead of creating a string based on a non-string id)
-bool ImGui::InvisibleButton(const char* str_id, const ImVec2& size_arg)
+bool ImGui::InvisibleButton(const char* str_id, const ImVec2& size_arg, bool *hovered, bool *held)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -5696,8 +5825,7 @@ bool ImGui::InvisibleButton(const char* str_id, const ImVec2& size_arg)
     if (!ItemAdd(bb, &id))
         return false;
 
-    bool hovered, held;
-    bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+    bool pressed = ButtonBehavior(bb, id, hovered, held);
 
     return pressed;
 }
@@ -6015,7 +6143,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     {
         // Framed type
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderCollapseTriangle(bb.Min + padding + ImVec2(0.0f, text_base_offset_y), is_open, 1.0f);
+        RenderCollapseTriangle(bb.Min + ImVec2(0.0f, bb.GetHeight()*0.5f), is_open, style.CollapseTriangleScale);
         if (g.LogEnabled)
         {
             // NB: '##' is normally used to hide text (as a library-wide feature), so we need to specify the text range to make sure the ## aren't stripped out here.
@@ -6039,7 +6167,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
         if (flags & ImGuiTreeNodeFlags_Bullet)
             RenderBullet(bb.Min + ImVec2(text_offset_x * 0.5f, g.FontSize*0.50f + text_base_offset_y));
         else if (!(flags & ImGuiTreeNodeFlags_Leaf))
-            RenderCollapseTriangle(bb.Min + ImVec2(padding.x, g.FontSize*0.15f + text_base_offset_y), is_open, 0.70f);
+            RenderCollapseTriangle(bb.Min + ImVec2(padding.x, bb.GetHeight()*0.5f), is_open, style.CollapseTriangleScale * 0.70f);
         if (g.LogEnabled)
             LogRenderedText(text_pos, ">");
         RenderText(text_pos, label, label_end, false);
@@ -7007,6 +7135,33 @@ bool ImGui::DragFloat4(const char* label, float v[4], float v_speed, float v_min
     return DragFloatN(label, v, 4, v_speed, v_min, v_max, display_format, power);
 }
 
+bool ImGui::DragFloatN2(const char* label, float* v, int components, const float *v_speed, const float *v_min, const float* v_max, const char* display_format, float power)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImGuiContext& g = *GImGui;
+    bool value_changed = false;
+    BeginGroup();
+    PushID(label);
+    PushMultiItemsWidths(components);
+    for (int i = 0; i < components; i++)
+    {
+        PushID(i);
+        value_changed |= DragFloat("##v", &v[i], v_speed[i], v_min[i], v_max[i], display_format, power);
+        SameLine(0, g.Style.ItemInnerSpacing.x);
+        PopID();
+        PopItemWidth();
+    }
+    PopID();
+
+    TextUnformatted(label, FindRenderedTextEnd(label));
+    EndGroup();
+
+    return value_changed;
+}
+
 bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_current_max, float v_speed, float v_min, float v_max, const char* display_format, const char* display_format_max, float power)
 {
     ImGuiWindow* window = GetCurrentWindow();
@@ -7030,6 +7185,15 @@ bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_cu
     PopID();
 
     return value_changed;
+}
+
+void ImGui::SetParentFlag(unsigned flag ,int val)
+{
+    ImGuiWindow* window = GetCurrentWindowRead();
+	if ( window && window->ParentWindow )
+	{
+		val ? window->Flags |= flag : window->Flags &=~flag;
+	}
 }
 
 // NB: v_speed is float to allow adjusting the drag speed with more precision
@@ -8418,16 +8582,19 @@ bool ImGui::InputInt4(const char* label, int v[4], ImGuiInputTextFlags extra_fla
     return InputIntN(label, v, 4, extra_flags);
 }
 
-static bool Items_ArrayGetter(void* data, int idx, const char** out_text)
+static bool Items_ArrayGetter(void* data, int idx, const char** out_text,ImGuiItemGetterCommand cmd)
 {
-    const char* const* items = (const char* const*)data;
+	if ( cmd != ImGuiItemGetterCommand_get_text ) return false;
+    const char** items = (const char**)data;
     if (out_text)
         *out_text = items[idx];
     return true;
 }
 
-static bool Items_SingleStringGetter(void* data, int idx, const char** out_text)
+static bool Items_SingleStringGetter(void* data, int idx, const char** out_text,ImGuiItemGetterCommand cmd)
 {
+	if ( cmd != ImGuiItemGetterCommand_get_text ) return false;
+
     // FIXME-OPT: we could pre-compute the indices to fasten this. But only 1 active combo means the waste is limited.
     const char* items_separated_by_zeros = (const char*)data;
     int items_count = 0;
@@ -8468,12 +8635,13 @@ bool ImGui::Combo(const char* label, int* current_item, const char* items_separa
 }
 
 // Combo box function.
-bool ImGui::Combo(const char* label, int* current_item, bool (*items_getter)(void*, int, const char**), void* data, int items_count, int height_in_items)
+bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_getter, void* data, int items_count, int height_in_items, int columns)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return false;
 
+	items_count *= columns;
     ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window->GetID(label);
@@ -8494,12 +8662,12 @@ bool ImGui::Combo(const char* label, int* current_item, bool (*items_getter)(voi
     const ImRect value_bb(frame_bb.Min, frame_bb.Max - ImVec2(arrow_size, 0.0f));
     RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
     RenderFrame(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y), frame_bb.Max, GetColorU32(popup_open || hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button), true, style.FrameRounding); // FIXME-ROUNDING
-    RenderCollapseTriangle(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y) + style.FramePadding, true);
+	RenderCollapseTriangle(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y) + ImVec2( style.FramePadding.x,frame_bb.GetHeight()*0.5f), true,style.CollapseTriangleScale);
 
     if (*current_item >= 0 && *current_item < items_count)
     {
         const char* item_text;
-        if (items_getter(data, *current_item, &item_text))
+        if (items_getter(data, *current_item , &item_text,ImGuiItemGetterCommand_get_text))
             RenderTextClipped(frame_bb.Min + style.FramePadding, value_bb.Max, item_text, NULL, NULL, ImVec2(0.0f,0.0f));
     }
 
@@ -8531,8 +8699,10 @@ bool ImGui::Combo(const char* label, int* current_item, bool (*items_getter)(voi
         // Size default to hold ~7 items
         if (height_in_items < 0)
             height_in_items = 7;
-
-        float popup_height = (label_size.y + style.ItemSpacing.y) * ImMin(items_count, height_in_items) + (style.FramePadding.y * 3);
+		int line_count = columns<= 1 ? items_count: items_count/columns;
+        float popup_x1 = ImClamp(frame_bb.Min.x,style.DisplaySafeAreaPadding.x,g.IO.DisplaySize.x - style.DisplaySafeAreaPadding.x);
+        float popup_x2 = ImClamp(frame_bb.Max.x,style.DisplaySafeAreaPadding.x,g.IO.DisplaySize.x - style.DisplaySafeAreaPadding.x);
+        float popup_height = (label_size.y + style.ItemSpacing.y) * ImMin(line_count, height_in_items) + (style.FramePadding.y * 3);
         float popup_y1 = frame_bb.Max.y;
         float popup_y2 = ImClamp(popup_y1 + popup_height, popup_y1, g.IO.DisplaySize.y - style.DisplaySafeAreaPadding.y);
         if ((popup_y2 - popup_y1) < ImMin(popup_height, frame_bb.Min.y - style.DisplaySafeAreaPadding.y))
@@ -8541,36 +8711,168 @@ bool ImGui::Combo(const char* label, int* current_item, bool (*items_getter)(voi
             popup_y1 = ImClamp(frame_bb.Min.y - popup_height, style.DisplaySafeAreaPadding.y, frame_bb.Min.y);
             popup_y2 = frame_bb.Min.y;
         }
-        ImRect popup_rect(ImVec2(frame_bb.Min.x, popup_y1), ImVec2(frame_bb.Max.x, popup_y2));
-        SetNextWindowPos(popup_rect.Min);
-        SetNextWindowSize(popup_rect.GetSize());
-        PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
+		if ( columns <= 1 )
+		{
+			ImRect popup_rect(ImVec2(frame_bb.Min.x, popup_y1), ImVec2(frame_bb.Max.x, popup_y2));
+			SetNextWindowPos(popup_rect.Min);
+			SetNextWindowSize(popup_rect.GetSize());
+			PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
 
-        const ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox | ((window->Flags & ImGuiWindowFlags_ShowBorders) ? ImGuiWindowFlags_ShowBorders : 0);
-        if (BeginPopupEx(label, flags))
-        {
-            // Display items
-            Spacing();
-            for (int i = 0; i < items_count; i++)
-            {
-                PushID((void*)(intptr_t)i);
-                const bool item_selected = (i == *current_item);
-                const char* item_text;
-                if (!items_getter(data, i, &item_text))
-                    item_text = "*Unknown item*";
-                if (Selectable(item_text, item_selected))
-                {
-                    ClearActiveID();
-                    value_changed = true;
-                    *current_item = i;
-                }
-                if (item_selected && popup_opened_now)
-                    SetScrollHere();
-                PopID();
-            }
-            EndPopup();
-        }
-        PopStyleVar();
+			const ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ((window->Flags & ImGuiWindowFlags_ShowBorders) ? ImGuiWindowFlags_ShowBorders : 0);
+
+			if (BeginPopupEx(label, flags))
+			{
+				// Display items
+				Spacing();
+				for (int i = 0; i < items_count; i++)
+				{
+					PushID((void*)(intptr_t)i);
+					const bool item_selected = (i == *current_item);
+					const char* item_text;
+					if (!items_getter(data, i, &item_text,ImGuiItemGetterCommand_get_text))
+						item_text = "*Unknown item*";
+					if (Selectable(item_text, item_selected))
+					{
+						ClearActiveID();
+						value_changed = true;
+						*current_item = i;
+					}
+					if (item_selected && popup_opened_now)
+						SetScrollHere();
+					PopID();
+				}
+				EndPopup();
+			}
+			PopStyleVar();
+		}
+		else
+		{
+			float popup_width = (popup_x2 - popup_x1);
+
+			ImRect popup_rect(ImVec2(popup_x1, popup_y1), ImVec2(popup_x2, popup_y2));
+			SetNextWindowPos(popup_rect.Min);
+			SetNextWindowSize(popup_rect.GetSize(),line_count< 1 ? ImGuiSetCond_Always:ImGuiSetCond_FirstUseEver);
+			SetNextWindowSizeConstraints(
+				ImVec2(popup_width, 0),
+				ImVec2(g.IO.DisplaySize.x - style.DisplaySafeAreaPadding.x - popup_x1,
+				       g.IO.DisplaySize.y - style.DisplaySafeAreaPadding.y - popup_y1)
+				);
+			const char* item_text;
+			int column_index;
+
+			ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox | 
+				((window->Flags & ImGuiWindowFlags_ShowBorders) ? ImGuiWindowFlags_ShowBorders : 0);
+
+			//auto size and visible columns
+			float content_width = 0.f;
+			for (column_index = 0; column_index < columns; ++column_index)
+			{
+				if (!items_getter(data,column_index,&item_text,ImGuiItemGetterCommand_get_column_auto_size)) continue;
+				const ImVec2 textsize = CalcTextSize(item_text, 0, false);
+				if (textsize.x) content_width += textsize.x + 2.f * g.Style.ItemSpacing.x;
+			}
+
+			//ask for virtual content width before open window
+			if(items_getter(data,0,(const char**) &content_width,ImGuiItemGetterCommand_get_region_width))
+			{
+				SetNextWindowContentWidth(content_width);
+			}
+			else
+			{
+				content_width = popup_width;
+			}
+			if ( content_width > popup_width ) flags |= ImGuiWindowFlags_HorizontalScrollbar;
+
+
+			PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
+
+			if (BeginPopupEx(label, flags))
+			{
+				// Display items
+
+				float scroll = GetScrollY();
+				if (popup_opened_now )
+				{
+					scroll = GetTextLineHeightWithSpacing()* ((*current_item/columns));
+					scroll -= popup_rect.GetHeight() * 0.5f;
+					if ( scroll < 0.f ) scroll = 0.f;
+					SetScrollY(scroll);
+				}
+				//if (popup_opened_now ) scroll = GetTextLineHeightWithSpacing()* *current_item;
+
+				Columns(columns,0,true,items_getter,data);
+
+				//header
+				int id = 0;
+				bool multiSelect = true;
+				int selFlags = multiSelect ? 0: ImGuiSelectableFlags_SpanAllColumns;
+				for ( column_index = 0; column_index < columns; ++column_index,++id )
+				{
+					if (items_getter(data, id, &item_text,ImGuiItemGetterCommand_get_text))
+					{
+						PushID(id);
+						const bool item_selected = (id==*current_item);
+						if (Selectable(item_text, item_selected,selFlags))
+						{
+							ClearActiveID();
+							value_changed = true;
+							*current_item = id;
+						}
+						PopID();
+					}
+					Spacing();
+					NextColumn();
+				}
+
+				ImGuiListClipper clipper;
+				clipper.Begin(line_count-1, GetTextLineHeightWithSpacing());
+
+				multiSelect = false;
+				selFlags = multiSelect ? 0: ImGuiSelectableFlags_SpanAllColumns;
+				while (clipper.Step())
+				for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+				{
+					int id = (i+1)*columns;
+
+					for ( column_index = 0; column_index < columns; ++column_index,++id )
+					{
+						if (items_getter(data, id, &item_text,ImGuiItemGetterCommand_get_text))
+						{
+							if (!multiSelect) SetItemAllowOverlap();
+							if ( column_index == 0 || multiSelect )
+							{
+								PushID(id);
+								const bool item_selected = (id==*current_item);
+								if (Selectable(item_text, item_selected,selFlags))
+								{
+									ClearActiveID();
+									value_changed = true;
+									*current_item = id;
+								}
+								PopID();
+							}
+							else
+							{
+								TextUnformatted(item_text,0);
+							}
+						}
+						NextColumn();
+					}
+				}
+
+				//retreive dragged mouse column size
+				for (column_index = 0; column_index < columns; ++column_index )
+				{
+					//float offset = GetColumnOffset(column_index);
+					//items_getter(data, c, &item_text,&offset,0);
+				}
+
+				Columns(1,0,true,items_getter,data);
+
+				EndPopup();
+			}
+			PopStyleVar();
+		}
     }
     return value_changed;
 }
@@ -8730,7 +9032,7 @@ bool ImGui::ListBox(const char* label, int* current_item, const char* const* ite
     return value_changed;
 }
 
-bool ImGui::ListBox(const char* label, int* current_item, bool (*items_getter)(void*, int, const char**), void* data, int items_count, int height_in_items)
+bool ImGui::ListBox(const char* label, int* current_item, ImGuiItemGetter items_getter, void* data, int items_count, int height_in_items)
 {
     if (!ListBoxHeader(label, items_count, height_in_items))
         return false;
@@ -8743,7 +9045,7 @@ bool ImGui::ListBox(const char* label, int* current_item, bool (*items_getter)(v
         {
             const bool item_selected = (i == *current_item);
             const char* item_text;
-            if (!items_getter(data, i, &item_text))
+            if (!items_getter(data, i, &item_text,ImGuiItemGetterCommand_get_text))
                 item_text = "*Unknown item*";
 
             PushID(i);
@@ -8897,7 +9199,7 @@ bool ImGui::BeginMenu(const char* label, bool enabled)
         float extra_w = ImMax(0.0f, GetContentRegionAvail().x - w);
         pressed = Selectable(label, menu_is_open, ImGuiSelectableFlags_Menu | ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_DrawFillAvailWidth | (!enabled ? ImGuiSelectableFlags_Disabled : 0), ImVec2(w, 0.0f));
         if (!enabled) PushStyleColor(ImGuiCol_Text, g.Style.Colors[ImGuiCol_TextDisabled]);
-        RenderCollapseTriangle(pos + ImVec2(window->MenuColumns.Pos[2] + extra_w + g.FontSize * 0.20f, 0.0f), false);
+        RenderCollapseTriangle(pos + ImVec2(window->MenuColumns.Pos[2] + extra_w + g.FontSize * 0.20f, 0.0f), false,style.CollapseTriangleScale);
         if (!enabled) PopStyleColor();
     }
 
@@ -9025,10 +9327,12 @@ bool ImGui::ColorEdit4(const char* label, float col[4], bool alpha)
 
     ImGuiColorEditMode edit_mode = window->DC.ColorEditMode;
     if (edit_mode == ImGuiColorEditMode_UserSelect || edit_mode == ImGuiColorEditMode_UserSelectShowButton)
-        edit_mode = g.ColorEditModeStorage.GetInt(id, 0) % 3;
+        edit_mode = g.ColorEditModeStorage.GetInt(id, -1) % 4;
+
+	if (edit_mode < 0) edit_mode = ImGuiColorEditMode_HSB;
 
     float f[4] = { col[0], col[1], col[2], col[3] };
-    if (edit_mode == ImGuiColorEditMode_HSV)
+    if (edit_mode == ImGuiColorEditMode_HSV || edit_mode == ImGuiColorEditMode_HSB)
         ColorConvertRGBtoHSV(f[0], f[1], f[2], f[0], f[1], f[2]);
 
     int i[4] = { IM_F32_TO_INT8_UNBOUND(f[0]), IM_F32_TO_INT8_UNBOUND(f[1]), IM_F32_TO_INT8_UNBOUND(f[2]), IM_F32_TO_INT8_UNBOUND(f[3]) };
@@ -9044,6 +9348,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], bool alpha)
     {
     case ImGuiColorEditMode_RGB:
     case ImGuiColorEditMode_HSV:
+	case ImGuiColorEditMode_HSB:
         {
             // RGB/HSV 0..255 Sliders
             const float w_items_all = w_full - (square_sz + style.ItemInnerSpacing.x);
@@ -9052,13 +9357,26 @@ bool ImGui::ColorEdit4(const char* label, float col[4], bool alpha)
 
             const bool hide_prefix = (w_item_one <= CalcTextSize("M:999").x);
             const char* ids[4] = { "##X", "##Y", "##Z", "##W" };
-            const char* fmt_table[3][4] =
+            const char* fmt_table[4][4] =
             {
                 {   "%3.0f",   "%3.0f",   "%3.0f",   "%3.0f" },
                 { "R:%3.0f", "G:%3.0f", "B:%3.0f", "A:%3.0f" },
-                { "H:%3.0f", "S:%3.0f", "V:%3.0f", "A:%3.0f" }
+                { "H:%3.0f", "S:%3.0f", "V:%3.0f", "A:%3.0f" },
+				{ "H:%3.1f\xc2\xb0", "S:%2.1f%%", "B:%2.1f%%", "A:%2.1f%%" }
             };
-            const char** fmt = hide_prefix ? fmt_table[0] : hsv ? fmt_table[2] : fmt_table[1];
+			const float mult[4][4] =
+			{
+				{ 1.f, 1.f, 1.f, 1.f },
+				{ 1.f, 1.f, 1.f, 1.f },
+				{ 1.f, 1.f, 1.f, 1.f },
+				{ 360.f, 100.f, 100.f, 100.f },
+			};
+
+			const char** fmt = fmt_table[0];
+			if (hide_prefix) fmt = fmt_table[0];
+			else if (edit_mode == ImGuiColorEditMode_HSB) fmt = fmt_table[3];
+			else if (edit_mode == ImGuiColorEditMode_HSV) fmt = fmt_table[2];
+			else if (edit_mode == ImGuiColorEditMode_RGB) fmt = fmt_table[1];
 
             PushItemWidth(w_item_one);
             for (int n = 0; n < components; n++)
@@ -9067,7 +9385,17 @@ bool ImGui::ColorEdit4(const char* label, float col[4], bool alpha)
                     SameLine(0, style.ItemInnerSpacing.x);
                 if (n + 1 == components)
                     PushItemWidth(w_item_last);
-                value_changed |= DragInt(ids[n], &i[n], 1.0f, 0, 255, fmt[n]);
+				if (edit_mode == ImGuiColorEditMode_HSB)
+				{
+					f[n] *= mult[edit_mode][n];
+					value_changed |= DragFloat(ids[n], &f[n], 0.125f, 0, mult[edit_mode][n], fmt[n]);
+					f[n] /= mult[edit_mode][n];
+					i[n] = IM_F32_TO_INT8_UNBOUND(f[n]);
+				}
+				else
+				{
+	                value_changed |= DragInt(ids[n], &i[n], 1.0f, 0, 255, fmt[n]);
+				}
             }
             PopItemWidth();
             PopItemWidth();
@@ -9102,9 +9430,12 @@ bool ImGui::ColorEdit4(const char* label, float col[4], bool alpha)
 
     SameLine(0, style.ItemInnerSpacing.x);
 
-    const ImVec4 col_display(col[0], col[1], col[2], 1.0f);
-    if (ColorButton(col_display))
-        g.ColorEditModeStorage.SetInt(id, (edit_mode + 1) % 3); // Don't set local copy of 'edit_mode' right away!
+	const ImVec4 col_display(col[0], col[1], col[2], col[3]);
+	if (ColorButton(col_display))
+	{
+		g.ColorEditModeStorage.SetInt(id, (edit_mode + 1) % 4); // Don't set local copy of 'edit_mode' right away!
+		value_changed |= true;
+	}
 
     // Recreate our own tooltip over's ColorButton() one because we want to display correct alpha here
     if (IsItemHovered())
@@ -9112,10 +9443,10 @@ bool ImGui::ColorEdit4(const char* label, float col[4], bool alpha)
 
     if (window->DC.ColorEditMode == ImGuiColorEditMode_UserSelectShowButton)
     {
-        SameLine(0, style.ItemInnerSpacing.x);
-        const char* button_titles[3] = { "RGB", "HSV", "HEX" };
-        if (ButtonEx(button_titles[edit_mode], ImVec2(0,0), ImGuiButtonFlags_DontClosePopups))
-            g.ColorEditModeStorage.SetInt(id, (edit_mode + 1) % 3); // Don't set local copy of 'edit_mode' right away!
+		SameLine(0, style.ItemInnerSpacing.x);
+		const char* button_titles[4] = { "RGB", "HSB", "HSV", "HEX" };
+		if (ButtonEx(button_titles[edit_mode], ImVec2(0, 0), ImGuiButtonFlags_DontClosePopups))
+			g.ColorEditModeStorage.SetInt(id, (edit_mode + 1) % 4); // Don't set local copy of 'edit_mode' right away!
     }
 
     const char* label_display_end = FindRenderedTextEnd(label);
@@ -9128,7 +9459,7 @@ bool ImGui::ColorEdit4(const char* label, float col[4], bool alpha)
     // Convert back
     for (int n = 0; n < 4; n++)
         f[n] = i[n] / 255.0f;
-    if (edit_mode == 1)
+    if (edit_mode == 1 || edit_mode == ImGuiColorEditMode_HSB)
         ColorConvertHSVtoRGB(f[0], f[1], f[2], f[0], f[1], f[2]);
 
     if (value_changed)
@@ -9439,7 +9770,7 @@ static void PushColumnClipRect(int column_index)
     ImGui::PushClipRect(ImVec2(x1,-FLT_MAX), ImVec2(x2,+FLT_MAX), true);
 }
 
-void ImGui::Columns(int columns_count, const char* id, bool border)
+void ImGui::Columns(int columns_count, const char* id, bool border, ImGuiItemGetter items_getter, void *data)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = GetCurrentWindow();
@@ -9857,6 +10188,40 @@ void ImGui::ShowMetricsWindow(bool* p_open)
         }
     }
     ImGui::End();
+}
+
+bool ImGui::Image4(ImTextureID user_texture_id, const ImVec2& size, const ImVec4 uv[4], unsigned tint_col, shaderparam *shaderparam, const char *str_id)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems) return false;
+
+	const ImGuiID id = window->GetID(str_id);
+
+    ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size);
+    //if (border_col.w > 0.0f) bb.Max += ImVec2(2,2);
+    ItemSize(bb);
+    if (!ItemAdd(bb, &id)) return false;
+
+    bool hovered, held;
+    bool pressed = ButtonBehavior(bb, id, &hovered, &held);
+
+/*
+    if (border_col.w > 0.0f)
+    {
+        window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(border_col), 0.0f);
+        window->DrawList->AddImage(user_texture_id, bb.Min+ImVec2(1,1), bb.Max-ImVec2(1,1), uv0, uv1, GetColorU32(tint_col));
+    }
+    else
+    {
+        window->DrawList->AddImage(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col));
+    }
+*/
+	window->DrawList->PushTextureID(user_texture_id);
+	window->DrawList->PrimReserve(6, 4);
+	window->DrawList->PrimRectUV4(bb.Min, bb.Max, uv,tint_col);
+	window->DrawList->PokeDrawCmd(shaderparam);
+	window->DrawList->PopTextureID();
+	return pressed;
 }
 
 //-----------------------------------------------------------------------------

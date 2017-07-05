@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include <assert.h>
 //---- Define assertion handler. Defaults to calling assert().
 //#define IM_ASSERT(_EXPR)  MyAssert(_EXPR)
+#define IM_ASSERT(_EXPR) assert(_EXPR)
 
 //---- Define attributes of all API symbols declarations, e.g. for DLL under Windows.
 //#define IMGUI_API __declspec( dllexport )
@@ -55,3 +57,59 @@ namespace ImGui
 }
 */
 
+#define IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT struct ImDrawVert\
+{\
+    ImVec2  pos;\
+    ImVec4  uv;\
+    ImU32   col;\
+};
+
+#define IM_VEC4_CLASS_EXTRA                                           \
+        ImVec4(const ImVec2& f) { x = f.x; y = f.y; z = w = 0.f; }    \
+
+
+#define raw_density 1
+#define maximumIntensityProjection 4
+#define blendAlpha 8
+#define blendAlphaPremul 16
+#define alpha_from_color 32
+#define tex_filter		64
+#define tex_clamp		128
+#define tex_gen			256
+#define tex_mipmapgen	512
+#define tex_filter2		1024
+
+struct shaderparamlayer
+{
+	shaderparamlayer():transferTexPrivate(0) {}
+
+	//uniform location
+	int _oct;
+	int _transferFunc;
+	int _alpha_test;
+	int _alpha_scale;
+	int _alpha_from_color;
+	int _raw_density;
+	int _colorshift;
+	int _tex_gen;
+	int _alpha_premul;
+
+	unsigned int octTex;
+	float alpha_test;
+	float alpha_scale;
+	unsigned flags;
+	unsigned int transferTex;			//volume colormap
+	unsigned int transferTexPrivate;	//private colormap
+	unsigned int transferTexLink;		//linked colormap
+	float colorshift;
+};
+
+struct shaderparam
+{
+	shaderparam():id(0) {}
+
+	unsigned int id;	//shader nr
+	shaderparamlayer layer[2];
+};
+
+void setShader(shaderparam &shader);
