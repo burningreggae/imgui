@@ -20,7 +20,7 @@ namespace ImGui
 	IMGUI_API void DockEndWorkspace();
 
 	IMGUI_API bool DockWorkspaceClosed();
-	IMGUI_API void DockDebugWindow();
+	IMGUI_API void DockDebugWindow(bool *v_open = 0);
 }
 
 #endif

@@ -2430,6 +2430,7 @@ void ImGui::NewFrame()
 // NB: behavior of ImGui after Shutdown() is not tested/guaranteed at the moment. This function is merely here to free heap allocations.
 void ImGui::Shutdown()
 {
+	if ( 0 == GImGui ) return;
     ImGuiContext& g = *GImGui;
 
     // The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)

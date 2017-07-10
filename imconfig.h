@@ -95,6 +95,7 @@ struct shaderparamlayer
 	int _alpha_premul;
 
 	unsigned int octTex;
+	unsigned int octTexType; 
 	float alpha_test;
 	float alpha_scale;
 	unsigned flags;
