@@ -239,7 +239,7 @@ struct DockContext
 	void tryDockToStoredLocation(Dock& dock);
 	bool begin(const char* label, bool* opened, bool border ,ImGuiWindowFlags extra_flags, const ImVec2& default_size);
 	void end();
-	void debugWindow();
+	void debugWindow(bool *v_open);
 	int getDockIndex(Dock* dock);
 	void save(ImGuiTextBuffer &out);
 	void load(const char *filename);
@@ -1231,10 +1231,10 @@ void DockContext::end()
 }
 
 
-void DockContext::debugWindow()
+void DockContext::debugWindow(bool *v_open)
 {
 	//SetNextWindowSize(ImVec2(300, 300));
-	if (!Begin("Dock Debug Info"))
+	if (!Begin("Dock Debug Info",v_open))
 	{
 		End();
 		return;
@@ -1513,9 +1513,9 @@ void DockEndWorkspace()
 	End();
 }
 
-void DockDebugWindow()
+void DockDebugWindow(bool *v_open)
 {
-	g_dock.debugWindow();
+	g_dock.debugWindow(v_open);
 }
 
 void RootDock(const ImVec2& pos, const ImVec2& size)

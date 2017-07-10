@@ -127,6 +127,12 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 					glDepthMask(GL_FALSE);
 
 					glTexCoordPointer(3, GL_FLOAT, sizeof(ImDrawVert), (void*)(vtx_buffer + OFFSETOF(ImDrawVert, uv)));
+
+					if (pcmd->shader->layer[0].octTexType == GL_TEXTURE_2D )
+					{
+						currentTexture2D = t;
+					}
+
 				}
 				else
 				if ( t != currentTexture2D )
