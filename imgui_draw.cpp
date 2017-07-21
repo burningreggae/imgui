@@ -695,14 +695,14 @@ void ImDrawList::AddConvexPolyFilled(const ImVec2* points, const int points_coun
 
 void ImDrawList::PathArcToFast(const ImVec2& centre, float radius, int amin, int amax)
 {
-    static ImVec2 circle_vtx[12];
+    static ImVec2 circle_vtx[16];
     static bool circle_vtx_builds = false;
     const int circle_vtx_count = IM_ARRAYSIZE(circle_vtx);
     if (!circle_vtx_builds)
     {
         for (int i = 0; i < circle_vtx_count; i++)
         {
-            const float a = ((float)i / (float)circle_vtx_count) * 2*IM_PI;
+            const float a = ((float)i / (float)12) * 2*IM_PI;
             circle_vtx[i].x = cosf(a);
             circle_vtx[i].y = sinf(a);
         }
@@ -719,7 +719,7 @@ void ImDrawList::PathArcToFast(const ImVec2& centre, float radius, int amin, int
         _Path.reserve(_Path.Size + (amax - amin + 1));
         for (int a = amin; a <= amax; a++)
         {
-            const ImVec2& c = circle_vtx[a % circle_vtx_count];
+            const ImVec2& c = circle_vtx[a & 0xf]; //% circle_vtx_count];
             _Path.push_back(ImVec2(centre.x + c.x * radius, centre.y + c.y * radius));
         }
     }
@@ -828,6 +828,8 @@ void ImDrawList::PokeDrawCmd(shaderparam* shader)
 	if (curr_cmd) curr_cmd->shader = shader;
 }
 
+//Rectangle with "radial" color gradient
+//shadowSize: 
 void ImDrawList::AddShadowRect(const ImVec2& a, const ImVec2& c,const ImVec2 shadowSize[2],const ImU32 co[2],float rounding,int rounding_corners)
 {
     const ImVec2 uv = GImGui->FontTexUvWhitePixel;
@@ -851,6 +853,7 @@ void ImDrawList::AddShadowRect(const ImVec2& a, const ImVec2& c,const ImVec2 sha
 	static ImDrawIdx rQuad[6] = { 0,1,3,1,2,3 };
 	int g;
 
+	ImVec2 d,e;
 	//top left
 	if (rounding_corners & 1)
 	{
@@ -859,6 +862,14 @@ void ImDrawList::AddShadowRect(const ImVec2& a, const ImVec2& c,const ImVec2 sha
 		PrimWriteVtx(ImVec2(a.x, a.y-shadowSize[0].y), uv, co[1]);
 		PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
 		PrimWriteVtx(ImVec2(a.x-shadowSize[0].x, a.y), uv, co[1]);
+
+		d.x = a.x - shadowSize[0].x;
+		d.y = a.y - shadowSize[0].y;
+		e.x = a.x;
+		e.y = a.y;
+
+        //PathRect(d, e, rounding, 1);
+        //PathFillConvex(col);
 	}
 
 	//top center
@@ -2307,10 +2318,10 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, ImVec2 pos, ImU32 col
                     {
                         idx_write[0] = (ImDrawIdx)(vtx_current_idx); idx_write[1] = (ImDrawIdx)(vtx_current_idx+1); idx_write[2] = (ImDrawIdx)(vtx_current_idx+2);
                         idx_write[3] = (ImDrawIdx)(vtx_current_idx); idx_write[4] = (ImDrawIdx)(vtx_current_idx+2); idx_write[5] = (ImDrawIdx)(vtx_current_idx+3);
-                        vtx_write[0].pos.x = x1; vtx_write[0].pos.y = y1; vtx_write[0].col = col; vtx_write[0].uv.x = u1; vtx_write[0].uv.y = v1;
-                        vtx_write[1].pos.x = x2; vtx_write[1].pos.y = y1; vtx_write[1].col = col; vtx_write[1].uv.x = u2; vtx_write[1].uv.y = v1;
-                        vtx_write[2].pos.x = x2; vtx_write[2].pos.y = y2; vtx_write[2].col = col; vtx_write[2].uv.x = u2; vtx_write[2].uv.y = v2;
-                        vtx_write[3].pos.x = x1; vtx_write[3].pos.y = y2; vtx_write[3].col = col; vtx_write[3].uv.x = u1; vtx_write[3].uv.y = v2;
+                        vtx_write[0].pos.x = x1; vtx_write[0].pos.y = y1; vtx_write[0].col = col; vtx_write[0].uv.x = u1; vtx_write[0].uv.y = v1; vtx_write[0].uv.z = u1; vtx_write[0].uv.w = v1;
+                        vtx_write[1].pos.x = x2; vtx_write[1].pos.y = y1; vtx_write[1].col = col; vtx_write[1].uv.x = u2; vtx_write[1].uv.y = v1; vtx_write[1].uv.z = u2; vtx_write[1].uv.w = v1;
+                        vtx_write[2].pos.x = x2; vtx_write[2].pos.y = y2; vtx_write[2].col = col; vtx_write[2].uv.x = u2; vtx_write[2].uv.y = v2; vtx_write[2].uv.z = u2; vtx_write[2].uv.w = v2;
+                        vtx_write[3].pos.x = x1; vtx_write[3].pos.y = y2; vtx_write[3].col = col; vtx_write[3].uv.x = u1; vtx_write[3].uv.y = v2; vtx_write[3].uv.z = u1; vtx_write[3].uv.w = v2;
                         vtx_write += 4;
                         vtx_current_idx += 4;
                         idx_write += 6;

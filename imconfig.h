@@ -65,7 +65,7 @@ namespace ImGui
 };
 
 #define IM_VEC4_CLASS_EXTRA                                           \
-        ImVec4(const ImVec2& f) { x = f.x; y = f.y; z = w = 0.f; }    \
+	ImVec4(const ImVec2& f):x(f.x),y(f.y),z(f.x),w(f.y) {}
 
 
 #define raw_density 1

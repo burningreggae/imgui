@@ -16,6 +16,26 @@ IMGUI_API int SystemMouseCursor( int cursorID );
 IMGUI_API void SetStyle(int style,float fontSize);
 void savePNG ( const char *filename,unsigned char* pixels,int width, int height,int samples );
 
+struct Camera
+{
+	void glFrustum(float left, float right, float bottom, float top, float nearval, float farval);
+	void glOrtho (float left, float right, float bottom, float top, float zNear, float zFar);
+	void gluPerspective(float fovy, float aspect, float zNear, float zFar);
+
+	void gluPickMatrix(float x, float y,float width, float height, const int viewport[4]);
+	void glViewport(const int viewport[4]);
+
+	int viewport[4];
+	float projection[16];
+	float modelview[16];
+
+	float viewer[3];
+
+	unsigned int selectBuf[256]; // Space for selection buffer
+	unsigned char pickedFrameBuffer[16];
+	int pickedId;
+};
+
 #endif// __IMGUI_IMPL_GLUT_H_INCLUDED__
 
 
