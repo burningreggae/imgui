@@ -12,6 +12,7 @@
 #include <GL/glut.h>
 
 
+
 // Data
 //static bool         g_MousePressed[3] = { false, false, false };
 //static float        g_MouseWheel = 0.0f;
@@ -19,26 +20,19 @@ static GLuint       g_FontTexture = 0;
 float g_FontWishSize = 15.f;
 
 // Data
-static int          g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
-static int          g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
-static int          g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
-static unsigned int g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
+static GLhandleARB  g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
+static int          g_AttribLocationTex = -1, g_AttribLocationProjMtx = -1;
+static int          g_AttribLocationPosition = -1, g_AttribLocationUV = -1, g_AttribLocationColor =-1;
+static GLhandleARB g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
 #define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
 
-// This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
-// If text or lines are blurry when integrating ImGui in your engine:
-// - in your Render function, try translating your projection matrix by (0.5f,0.5f) or (0.375f,0.375f)
-void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
+extern Camera cam;
+
+GLuint currentTexture2D = 0;
+
+void setGUIShader(GLhandleARB shader)
 {
-	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
-	ImGuiIO& io = ImGui::GetIO();
-	int fb_width = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
-	int fb_height = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
-	if(fb_width <= 0 || fb_height <= 0) return;
-	draw_data->ScaleClipRects(io.DisplayFramebufferScale);
-
-
 	// We are using the OpenGL fixed pipeline to make the example code simpler to read!
 	// Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled, vertex/texcoord/color pointers.
 	//GLint currentTexture3D = 0;
@@ -48,7 +42,8 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 	//glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_TRANSFORM_BIT);
 	//glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-	glUseProgram(0);
+	glUseProgram(shader);
+	if (g_AttribLocationTex>=0) glUniform1i(g_AttribLocationTex, 0);
 
 	glShadeModel(GL_SMOOTH);
 
@@ -67,29 +62,65 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 
 	glEnable(GL_SCISSOR_TEST);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
-	glColor4f(1.f, 1.f, 1.f, 1.f);
-
+	glClientActiveTexture(GL_TEXTURE1);
 	glActiveTexture(GL_TEXTURE1);
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_TEXTURE_1D);
 
+	glClientActiveTexture(GL_TEXTURE0);
 	glActiveTexture(GL_TEXTURE0);
 	glDisable(GL_TEXTURE_3D);
 	glDisable(GL_TEXTURE_1D);
 	glEnable(GL_TEXTURE_2D);
 
-	GLuint currentTexture2D = g_FontTexture;
+	currentTexture2D = g_FontTexture;
 	glBindTexture(GL_TEXTURE_2D, currentTexture2D);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	glColor4f(1.f, 1.f, 1.f, 1.f);
+}
+
+void unsetGUIShader()
+{
+	// Restore modified state
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisable(GL_SCISSOR_TEST);
+	glDisable(GL_BLEND);
+	//glPopAttrib();
+	//glBindTexture(GL_TEXTURE_2D, (GLuint)last_texture);
+	//glMatrixMode(GL_MODELVIEW);
+	//glPopMatrix();
+	//glMatrixMode(GL_PROJECTION);
+	//glPopMatrix();
+	//glPopAttrib();
+	//glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
+}
+
+// This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
+// If text or lines are blurry when integrating ImGui in your engine:
+// - in your Render function, try translating your projection matrix by (0.5f,0.5f) or (0.375f,0.375f)
+void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
+{
+	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
+	ImGuiIO& io = ImGui::GetIO();
+	int fb_width = (int)(io.DisplaySize.x * io.DisplayFramebufferScale.x);
+	int fb_height = (int)(io.DisplaySize.y * io.DisplayFramebufferScale.y);
+	if(fb_width <= 0 || fb_height <= 0) return;
+	draw_data->ScaleClipRects(io.DisplayFramebufferScale);
+
+	setGUIShader(g_ShaderHandle);
 	
 	// Setup viewport, orthographic projection matrix
-	glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
+	int viewport[4] = {0, 0,fb_width,fb_height};
+	cam.glViewport(viewport);
 	glMatrixMode(GL_PROJECTION);
 	//glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0.0f, io.DisplaySize.x, io.DisplaySize.y, 0.0f, -1.0f, +1.0f);
+	cam.glOrtho(0.0f, io.DisplaySize.x, io.DisplaySize.y, 0.0f, -1.0f, +1.0f);
 	glMatrixMode(GL_MODELVIEW);
 	//glPushMatrix();
 	glLoadIdentity();
@@ -100,6 +131,8 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 		const ImDrawList* cmd_list = draw_data->CmdLists[n];
 		const unsigned char* vtx_buffer = (const unsigned char*)&cmd_list->VtxBuffer.front();
 		const ImDrawIdx* idx_buffer = &cmd_list->IdxBuffer.front();
+
+		glClientActiveTexture(GL_TEXTURE0);
 		glVertexPointer(2, GL_FLOAT, sizeof(ImDrawVert), (void*)(vtx_buffer + OFFSETOF(ImDrawVert, pos)));
 		glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert), (void*)(vtx_buffer + OFFSETOF(ImDrawVert, uv)));
 		glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(ImDrawVert), (void*)(vtx_buffer + OFFSETOF(ImDrawVert, col)));
@@ -116,7 +149,6 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 			else
 			if(t)
 			{
-
 				if ( pcmd->shader )
 				{
 					//pcmd->shader->layer[0].octTex = t;
@@ -146,23 +178,22 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 
 				if ( pcmd->shader)
 				{
-					glUseProgram(0);
+					glUseProgram(g_ShaderHandle);
+					if (g_AttribLocationTex>=0) glUniform1i(g_AttribLocationTex, 0);
 
-					//glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-					//glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-					glActiveTexture(GL_TEXTURE3);
-					glDisable(GL_TEXTURE_2D);
-
+					glClientActiveTexture(GL_TEXTURE2);
 					glActiveTexture(GL_TEXTURE2);
 					glDisable(GL_TEXTURE_3D);
 
+					glClientActiveTexture(GL_TEXTURE1);
 					glActiveTexture(GL_TEXTURE1);
 					glDisable(GL_TEXTURE_2D);
 
+					glClientActiveTexture(GL_TEXTURE0);
 					glActiveTexture(GL_TEXTURE0);
 					glDisable(GL_TEXTURE_3D);
 					glEnable(GL_TEXTURE_2D);
-					//glBindTexture(GL_TEXTURE_2D, currentTexture2D);
+					glBindTexture(GL_TEXTURE_2D, currentTexture2D);
 
 					glBlendEquationEXT(GL_FUNC_ADD_EXT);
 					glEnable(GL_BLEND);
@@ -171,6 +202,7 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 					glAlphaFunc(GL_GEQUAL, 0.f);
 
 					glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert), (void*)(vtx_buffer + OFFSETOF(ImDrawVert, uv)));
+
 					glEnable(GL_SCISSOR_TEST);
 				}
 
@@ -179,20 +211,7 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 		}
 	}
 
-	// Restore modified state
-	glDisableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisable(GL_SCISSOR_TEST);
-	glDisable(GL_BLEND);
-	//glPopAttrib();
-	//glBindTexture(GL_TEXTURE_2D, (GLuint)last_texture);
-	//glMatrixMode(GL_MODELVIEW);
-	//glPopMatrix();
-	//glMatrixMode(GL_PROJECTION);
-	//glPopMatrix();
-	//glPopAttrib();
-	//glViewport(last_viewport[0], last_viewport[1], (GLsizei)last_viewport[2], (GLsizei)last_viewport[3]);
+	unsetGUIShader();
 }
 
 // This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
@@ -244,10 +263,12 @@ void ImGui_ImplGLUT_RenderDrawLists2(ImDrawData* draw_data)
 
 	glColor4f(1.f, 1.f, 1.f, 1.f);
 
+	glClientActiveTexture(GL_TEXTURE1);
 	glActiveTexture(GL_TEXTURE1);
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_TEXTURE_1D);
 
+	glClientActiveTexture(GL_TEXTURE0);
 	glActiveTexture(GL_TEXTURE0);
 	glDisable(GL_TEXTURE_3D);
 	glDisable(GL_TEXTURE_1D);
@@ -339,15 +360,19 @@ void ImGui_ImplGLUT_RenderDrawLists2(ImDrawData* draw_data)
 
 					//glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 					//glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+					glClientActiveTexture(GL_TEXTURE3);
 					glActiveTexture(GL_TEXTURE3);
 					glDisable(GL_TEXTURE_2D);
 
+					glClientActiveTexture(GL_TEXTURE2);
 					glActiveTexture(GL_TEXTURE2);
 					glDisable(GL_TEXTURE_3D);
 
+					glClientActiveTexture(GL_TEXTURE1);
 					glActiveTexture(GL_TEXTURE1);
 					glDisable(GL_TEXTURE_2D);
 
+					glClientActiveTexture(GL_TEXTURE0);
 					glActiveTexture(GL_TEXTURE0);
 					glDisable(GL_TEXTURE_3D);
 					glEnable(GL_TEXTURE_2D);
@@ -373,6 +398,7 @@ void ImGui_ImplGLUT_RenderDrawLists2(ImDrawData* draw_data)
 
     // Restore modified GL state
     glUseProgram(last_program);
+	glClientActiveTexture(last_active_texture);
     glActiveTexture(last_active_texture);
     glBindTexture(GL_TEXTURE_2D, last_texture);
     glBindVertexArray(last_vertex_array);
@@ -510,6 +536,7 @@ void createFonts()
 	//GLint last_texture;
 	//glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
 
+	glClientActiveTexture(GL_TEXTURE0);
 	glActiveTexture(GL_TEXTURE0);
 	glEnable(GL_TEXTURE_2D);
 	glGenTextures(1, &g_FontTexture);
@@ -530,10 +557,14 @@ void createFonts()
 }
 
 extern void ShaderManager_log(GLhandleARB object, const char* filename, int type);
+extern void ShaderManager_build(GLhandleARB& program,const char *shadername);
 
 void createShader()
 {
 	if (g_ShaderHandle) return;
+	ShaderManager_build(g_ShaderHandle,"shader2d_imgui");
+	g_AttribLocationTex = glGetUniformLocationARB(g_ShaderHandle, "Texture");
+	return;
 
     const GLchar *vertex_shader =
         "#version 330\n"
@@ -612,7 +643,7 @@ bool ImGui_ImplGLUT_CreateDeviceObjects()
 
 
 	createFonts();
-	//createShader();
+	createShader();
 
     // Restore modified GL state
     glBindTexture(GL_TEXTURE_2D, last_texture);
@@ -686,7 +717,7 @@ void style1()
 	style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 0.5f);
 	//style.Colors[ImGuiCol_TextHovered] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 	//style.Colors[ImGuiCol_TextActive] = ImVec4(1.00f, 1.00f, 0.00f, 1.00f);
-	style.Colors[ImGuiCol_WindowBg] = ImVec4(0.96f, 0.96f, 0.96f, 1.f);
+	style.Colors[ImGuiCol_WindowBg] = ImVec4(0.94f, 0.94f, 0.94f, 1.f);
 	style.Colors[ImGuiCol_WindowBgFocused] = ImVec4(0.96f, 0.96f, 0.96f, 1.f);
 	style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.f);
 	style.Colors[ImGuiCol_Border] = ImVec4(0.00f, 0.00f, 0.00f, 0.25f);

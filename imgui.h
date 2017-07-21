@@ -100,6 +100,8 @@ typedef unsigned long long ImU64;   // 64-bit unsigned integer
 // class ImVector<>                 // Lightweight std::vector like class.
 // IMGUI_ONCE_UPON_A_FRAME          // Execute a block of code once per frame only (convenient for creating UI within deep-nested code that runs multiple times)
 
+struct ImVec4;
+
 struct ImVec2
 {
     float x, y;
@@ -119,6 +121,7 @@ struct ImVec4
     IM_VEC4_CLASS_EXTRA
 #endif
 };
+
 
 // ImGui end-user API
 // In a namespace so that user can add extra functions in a separate file (e.g. Value() helpers for your vector or common types)
