@@ -1299,7 +1299,8 @@ struct ImDrawList
     IMGUI_API void  AddCallback(ImDrawCallback callback, void* callback_data);  // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
     IMGUI_API void  AddDrawCmd();                                               // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
 	IMGUI_API void  PokeDrawCmd(shaderparam* shader);
-	IMGUI_API void  AddShadowRect(const ImVec2& a, const ImVec2& c,const ImVec2 shadowSize[2], const ImU32 col[2],float rounding,int rounding_corners_flags);
+	IMGUI_API void  AddShadowRect(const ImVec2& a, const ImVec2& c,const ImVec2 shadowSize[2], const ImU32 col[2],int rounding_corners_flags);
+	IMGUI_API void  PrimArcToFast(const ImVec2& centre, const ImVec2& radius, const ImU32 co[2],int amin, int amax); // PathArcToFast
 
     // Internal helpers
     // NB: all primitives needs to be reserved via PrimReserve() beforehand!

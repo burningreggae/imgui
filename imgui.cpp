@@ -4363,7 +4363,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
 				}
 				shadow.Min = window->Pos + ofs[0];
 				shadow.Max = window->Pos + window->Size - ofs[1];
-				window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,window_rounding,shadowFlags);
+				window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,shadowFlags);
 
 				//darker shadow
 				shadowFlags = ~0 & ~16; //center center off
@@ -4395,7 +4395,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
 
 				shadow.Min = window->Pos + ofs[0];
 				shadow.Max = window->Pos + window->Size - ofs[1];
-				window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,window_rounding,shadowFlags);
+				window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,shadowFlags);
 
 			}
 
