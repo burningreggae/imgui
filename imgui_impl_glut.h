@@ -9,7 +9,7 @@
 // https://github.com/ocornut/imgui
 
 IMGUI_API bool ImGui_ImplGLUT_Init();
-IMGUI_API bool ImGui_ImplGLUT_CreateDeviceObjects();
+IMGUI_API void ImGui_ImplGLUT_CreateDeviceObjects();
 IMGUI_API void ImGui_ImplGLUT_Shutdown();
 IMGUI_API void ImGui_ImplGLUT_MouseCursor();
 IMGUI_API int SystemMouseCursor( int cursorID );
@@ -25,9 +25,12 @@ struct Camera
 	void gluPickMatrix(float x, float y,float width, float height, const int viewport[4]);
 	void glViewport(const int viewport[4]);
 
+	bool invert_matrix(float * out,const float * m);
+	void transform_point(float out[4], const float m[16], const float in[4]);
 	int viewport[4];
 	float projection[16];
 	float modelview[16];
+	float modelview_inverse[16];
 
 	float viewer[3];
 

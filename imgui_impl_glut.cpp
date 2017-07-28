@@ -129,13 +129,20 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 	for(int n = 0; n < draw_data->CmdListsCount; n++)
 	{
 		const ImDrawList* cmd_list = draw_data->CmdLists[n];
-		const unsigned char* vtx_buffer = (const unsigned char*)&cmd_list->VtxBuffer.front();
-		const ImDrawIdx* idx_buffer = &cmd_list->IdxBuffer.front();
+		const unsigned char* vtx_buffer = 0; // (const unsigned char*)&cmd_list->VtxBuffer.front();
+		const ImDrawIdx* idx_buffer = 0; //&cmd_list->IdxBuffer.front();
+
+        glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert), (const GLvoid*)cmd_list->VtxBuffer.Data, GL_STREAM_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ElementsHandle);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx), (const GLvoid*)cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);
 
 		glClientActiveTexture(GL_TEXTURE0);
 		glVertexPointer(2, GL_FLOAT, sizeof(ImDrawVert), (void*)(vtx_buffer + OFFSETOF(ImDrawVert, pos)));
 		glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert), (void*)(vtx_buffer + OFFSETOF(ImDrawVert, uv)));
 		glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(ImDrawVert), (void*)(vtx_buffer + OFFSETOF(ImDrawVert, col)));
+
 
 		for(int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.size(); cmd_i++)
 		{
@@ -483,10 +490,10 @@ void createFonts()
 	io.FontAllowUserScaling = true;
 
 	ImFontConfig config;
-	config.OversampleH = 1;
+	config.OversampleH = 3;
 	config.OversampleV = 1;
 	config.GlyphExtraSpacing.x = 0.f;
-	config.PixelSnapH = true;
+	config.PixelSnapH = false;
 	//config.GlyphRanges = io.Fonts->GetGlyphRangesGreek();
 	//ImFont* font = io.Fonts->AddFontFromFileTTF("HelveticaLt.ttf", 12, &config);
 	//font->DisplayOffset.y -= 2;   // Render 1 pixel down
@@ -631,11 +638,19 @@ void createShader()
 
 }
 
-bool ImGui_ImplGLUT_CreateDeviceObjects()
+void createBuffer()
 {
-	if (g_FontTexture) return false;
+	if(g_VboHandle) return;
+    glGenBuffers(1, &g_VboHandle);
+    glGenBuffers(1, &g_ElementsHandle);
+}
 
-    // Backup GL state
+
+void ImGui_ImplGLUT_CreateDeviceObjects()
+{
+	if (g_FontTexture) return;
+
+	// Backup GL state
     GLint last_texture, last_array_buffer, last_vertex_array;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
@@ -644,13 +659,13 @@ bool ImGui_ImplGLUT_CreateDeviceObjects()
 
 	createFonts();
 	createShader();
+	createBuffer();
 
     // Restore modified GL state
     glBindTexture(GL_TEXTURE_2D, last_texture);
     glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
     glBindVertexArray(last_vertex_array);
 
-	return true;
 }
 
 void ImGui_ImplGLUT_InvalidateDeviceObjects()

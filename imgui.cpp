@@ -2260,7 +2260,8 @@ void ImGui::NewFrame()
     g.FramerateSecPerFrameAccum += g.IO.DeltaTime - g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx];
     g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx] = g.IO.DeltaTime;
     g.FramerateSecPerFrameIdx = (g.FramerateSecPerFrameIdx + 1) % IM_ARRAYSIZE(g.FramerateSecPerFrame);
-    g.IO.Framerate = 1.0f / (g.FramerateSecPerFrameAccum / (float)IM_ARRAYSIZE(g.FramerateSecPerFrame));
+    g.IO.Framerate = g.FramerateSecPerFrameAccum / (float)IM_ARRAYSIZE(g.FramerateSecPerFrame);
+	g.IO.Framerate = g.IO.Framerate > 0.0001f ? 1.0f / g.IO.Framerate : 0.1f;
 
     // Clear reference to active widget if the widget isn't alive anymore
     g.HoveredIdPreviousFrame = g.HoveredId;
@@ -4363,17 +4364,17 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
 				}
 				shadow.Min = window->Pos + ofs[0];
 				shadow.Max = window->Pos + window->Size - ofs[1];
-				window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,window_rounding,shadowFlags);
+				window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,shadowFlags);
 
 				//darker shadow
 				shadowFlags = ~0 & ~16; //center center off
-				col[0] = 0x33222222;
+				col[0] = 0x22222222;
 				col[1] = 0x00222222;
 				if (titlebar_active)
 				{
-					shadowSize[0].x = 25+nudge;
+					shadowSize[0].x = 20+nudge;
 					shadowSize[0].y = 8+nudge;
-					shadowSize[1].x = 25+nudge;
+					shadowSize[1].x = 20+nudge;
 					shadowSize[1].y = 20+nudge;
 					shadowFlags &= ~2  & ~16; //top center off
 					ofs[0].y += title_bar_rect.GetHeight() * 0.5f;
@@ -4395,7 +4396,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
 
 				shadow.Min = window->Pos + ofs[0];
 				shadow.Max = window->Pos + window->Size - ofs[1];
-				window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,window_rounding,shadowFlags);
+				window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,shadowFlags);
 
 			}
 
