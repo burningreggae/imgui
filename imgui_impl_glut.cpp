@@ -814,7 +814,7 @@ void SetStyle(int style,float fontSize)
 	}
 
 	if ( style == 2 ) style2();
-	else style1();
+	else if ( style == 1 ) style1();
 }
 
 bool ImGui_ImplGLUT_Init()

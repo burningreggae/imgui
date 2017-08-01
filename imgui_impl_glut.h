@@ -18,6 +18,11 @@ void savePNG ( const char *filename,unsigned char* pixels,int width, int height,
 
 struct Camera
 {
+	void glMatrixMode(unsigned mode );
+	void glLoadIdentity();
+	void glPushMatrix();
+	void glPopMatrix();
+
 	void glFrustum(float left, float right, float bottom, float top, float nearval, float farval);
 	void glOrtho (float left, float right, float bottom, float top, float zNear, float zFar);
 	void gluPerspective(float fovy, float aspect, float zNear, float zFar);
@@ -31,7 +36,6 @@ struct Camera
 	float projection[16];
 	float modelview[16];
 	float modelview_inverse[16];
-
 	float viewer[3];
 
 	unsigned int selectBuf[256]; // Space for selection buffer
