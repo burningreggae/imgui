@@ -1,4 +1,4 @@
-// dear imgui, v1.51 WIP
+﻿// dear imgui, v1.51 WIP
 // (headers)
 
 // See imgui.cpp file for documentation.
@@ -242,6 +242,18 @@ namespace ImGui
     IMGUI_API float         GetTextLineHeight();                                                // height of font == GetWindowFontSize()
     IMGUI_API float         GetTextLineHeightWithSpacing();                                     // distance (in pixels) between 2 consecutive lines of text == GetWindowFontSize() + GetStyle().ItemSpacing.y
     IMGUI_API float         GetItemsLineHeightWithSpacing();                                    // distance (in pixels) between 2 consecutive lines of standard height widgets == GetWindowFontSize() + GetStyle().FramePadding.y*2 + GetStyle().ItemSpacing.y
+
+    IMGUI_API void          BeginHorizontal(const char* str_id, const ImVec2& size = ImVec2(0, 0), float align = -1);
+    IMGUI_API void          BeginHorizontal(const void* ptr_id, const ImVec2& size = ImVec2(0, 0), float align = -1);
+    IMGUI_API void          BeginHorizontal(int id, const ImVec2& size = ImVec2(0, 0), float align = -1);
+    IMGUI_API void          EndHorizontal();
+    IMGUI_API void          BeginVertical(const char* str_id, const ImVec2& size = ImVec2(0, 0), float align = -1);
+    IMGUI_API void          BeginVertical(const void* ptr_id, const ImVec2& size = ImVec2(0, 0), float align = -1);
+    IMGUI_API void          BeginVertical(int id, const ImVec2& size = ImVec2(0, 0), float align = -1);
+    IMGUI_API void          EndVertical();
+    IMGUI_API void          Spring(float weight = 1.0f, float spacing = -1.0f);
+    IMGUI_API void          SuspendLayout();
+    IMGUI_API void          ResumeLayout();
 
     // Columns
     // You can also use SameLine(pos_x) for simplified columning. The columns API is still work-in-progress and rather lacking.
@@ -684,6 +696,7 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_IndentSpacing,       // float     IndentSpacing
     ImGuiStyleVar_GrabMinSize,         // float     GrabMinSize
     ImGuiStyleVar_ButtonTextAlign,     // ImVec2    ButtonTextAlign
+    ImGuiStyleVar_LayoutAlign,         // float
     ImGuiStyleVar_Count_
 };
 
@@ -742,6 +755,7 @@ struct ImGuiStyle
     float       ScrollbarRounding;          // Radius of grab corners for scrollbar
     float       GrabMinSize;                // Minimum width/height of a grab box for slider/scrollbar.
     float       GrabRounding;               // Radius of grabs corners rounding. Set to 0.0f to have rectangular slider grabs.
+    float       LayoutAlign;                // Element alignment inside horizontal and vertical layouts (0.0f - left/top, 1.0f - right/bottom, 0.5f - center).
     ImVec2      ButtonTextAlign;            // Alignment of button text when button is larger than text. Defaults to (0.5f,0.5f) for horizontally+vertically centered.
     ImVec2      DisplayWindowPadding;       // Window positions are clamped to be visible within the display area by at least this amount. Only covers regular windows.
     ImVec2      DisplaySafeAreaPadding;     // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
