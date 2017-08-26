@@ -487,7 +487,7 @@ void createFonts()
 	ImGuiIO& io = ImGui::GetIO();
 	io.Fonts->Clear();
 
-	io.FontAllowUserScaling = true;
+	io.FontAllowUserScaling = false;
 
 	ImFontConfig config;
 	config.OversampleH = 3;
@@ -687,7 +687,7 @@ void ImGui_ImplGLUT_InvalidateDeviceObjects()
 }
 
 //https://github.com/ocornut/imgui/issues/249
-void style2()
+void style3()
 {
 	ImGuiStyle& style = ImGui::GetStyle();
 
@@ -733,7 +733,6 @@ void style1()
 	//style.Colors[ImGuiCol_TextHovered] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 	//style.Colors[ImGuiCol_TextActive] = ImVec4(1.00f, 1.00f, 0.00f, 1.00f);
 	style.Colors[ImGuiCol_WindowBg] = ImVec4(0.94f, 0.94f, 0.94f, 1.f);
-	style.Colors[ImGuiCol_WindowBgFocused] = ImVec4(0.96f, 0.96f, 0.96f, 1.f);
 	style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.f);
 	style.Colors[ImGuiCol_Border] = ImVec4(0.00f, 0.00f, 0.00f, 0.25f);
 	style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.25f, 0.25f, 0.25f, 0.25f);
@@ -758,7 +757,7 @@ void style1()
 	style.Colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
 	style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
 	style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	style.Colors[ImGuiCol_Column] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+	style.Colors[ImGuiCol_Column] = ImVec4(0.39f, 0.39f, 0.39f, 0.5f);
 	style.Colors[ImGuiCol_ColumnHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
 	style.Colors[ImGuiCol_ColumnActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
 	style.Colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
@@ -777,7 +776,9 @@ void style1()
 	style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
 	style.Colors[ImGuiCol_PopupBg] = ImVec4(0.98f, 0.98f, 0.98f, 0.94f);
 	style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+
 	style.Colors[ImGuiCol_CollapseTriangle] = ImVec4(0.55f, 0.55f, 0.55f, 1.f);
+	style.Colors[ImGuiCol_WindowBgFocused] = ImVec4(0.96f, 0.96f, 0.96f, 1.f);
 
     style.Alpha = 1.0f;
 	style.WindowPadding.x = 8;
@@ -801,8 +802,88 @@ void style1()
 	style.CollapseTriangleScale = 0.85f;
 	style.CircleLineSegment = 50;
 	style.ColumnsMinSpacing = 0.f;
-
 }
+
+void style2()
+{
+	ImGuiStyle& style = ImGui::GetStyle();
+
+	style.Colors[ImGuiCol_Text] = ImVec4(1.f, 1.f, 1.f, 0.9f);
+	style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.50f, 0.5f);
+	//style.Colors[ImGuiCol_TextHovered] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+	//style.Colors[ImGuiCol_TextActive] = ImVec4(1.00f, 1.00f, 0.00f, 1.00f);
+	style.Colors[ImGuiCol_WindowBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.f);
+	style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.f);
+	style.Colors[ImGuiCol_Border] = ImVec4(0.00f, 0.00f, 0.00f, 0.25f);
+	style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.25f, 0.25f, 0.25f, 0.25f);
+	style.Colors[ImGuiCol_FrameBg] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+	style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+	style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+	style.Colors[ImGuiCol_TitleBg] = ImVec4(0.96f, 0.96f, 0.96f, 1.f);
+	style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.96f, 0.96f, 0.96f, 0.75f);
+	style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
+	style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
+	style.Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
+	style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.49f, 0.49f, 0.49f, 0.50f);
+	style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.49f, 0.49f, 0.49f, 1.0f);
+	style.Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
+	style.Colors[ImGuiCol_ComboBg] = ImVec4(0.86f, 0.86f, 0.86f, 0.99f);
+	style.Colors[ImGuiCol_CheckMark] = ImVec4(0.26f, 0.59f, 0.98f, 0.8f);
+	style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.26f, 0.59f, 0.98f, 0.5f);
+	style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.8f);
+	style.Colors[ImGuiCol_Button] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+	style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
+	style.Colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
+	style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+	style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	style.Colors[ImGuiCol_Column] = ImVec4(0.39f, 0.39f, 0.39f, 0.5f);
+	style.Colors[ImGuiCol_ColumnHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
+	style.Colors[ImGuiCol_ColumnActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	style.Colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 1.00f, 1.00f, 0.00f);
+	style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+	style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+	style.Colors[ImGuiCol_CloseButton] = ImVec4(0.59f, 0.59f, 0.59f, 0.50f);
+	style.Colors[ImGuiCol_CloseButtonHovered] = ImVec4(0.8f, 0.39f, 0.36f, 0.75f);
+	style.Colors[ImGuiCol_CloseButtonActive] = ImVec4(0.98f, 0.39f, 0.36f, 1.f);
+	style.Colors[ImGuiCol_MaximizeButton] = ImVec4(0.59f, 0.59f, 0.59f, 0.50f);
+	style.Colors[ImGuiCol_MaximizeButtonHovered] = ImVec4(0.1f, 0.39f, 0.36f, 0.75f);
+	style.Colors[ImGuiCol_MaximizeButtonActive] = ImVec4(0.1f, 0.39f, 0.36f, 1.f);
+	style.Colors[ImGuiCol_PlotLines] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+	style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+	style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+	style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+	style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+	style.Colors[ImGuiCol_PopupBg] = ImVec4(0.98f, 0.98f, 0.98f, 0.94f);
+	style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+
+	style.Colors[ImGuiCol_CollapseTriangle] = ImVec4(0.55f, 0.55f, 0.55f, 1.f);
+	style.Colors[ImGuiCol_WindowBgFocused] = ImVec4(0.96f, 0.96f, 0.96f, 1.f);
+
+    style.Alpha = 1.0f;
+	style.WindowPadding.x = 8;
+	style.WindowPadding.y = 8;
+	style.WindowRounding = 8.f; //4.f;
+	style.GrabRounding = 3;
+	style.ScrollbarSize = 15;
+	style.ScrollbarRounding = 16;
+	style.FramePadding.x = 4;
+	style.FramePadding.y = 1;
+	style.FrameRounding = 4;
+	style.SelectableRounding = 2;
+	style.ItemSpacing.x = 6;
+	style.ItemSpacing.y = 4;
+	style.WindowTitleAlign.x = 0.5f;
+	style.IndentSpacing = 20.f;
+	style.TitleBarHeight = 6.f;
+	style.CloseButtonSize = 6.5f;
+	style.DisplaySafeAreaPadding.x = 4.f;
+	style.DisplaySafeAreaPadding.y = 4.f;
+	style.CollapseTriangleScale = 0.85f;
+	style.CircleLineSegment = 50;
+	style.ColumnsMinSpacing = 0.f;
+}
+
 
 void SetStyle(int style,float fontSize)
 {
@@ -813,8 +894,11 @@ void SetStyle(int style,float fontSize)
 		g_FontWishSize = fontSize;
 	}
 
-	if ( style == 2 ) style2();
-	else if ( style == 1 ) style1();
+	if ( style == 1 ) style1();
+	else if ( style == 2 ) style2();
+	else if ( style == 3 ) style3();
+	else if ( style == 0 ) ImGui::GetStyle() = ImGuiStyle();
+
 }
 
 bool ImGui_ImplGLUT_Init()

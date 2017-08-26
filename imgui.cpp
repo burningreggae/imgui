@@ -773,7 +773,6 @@ void ImGui::DestroyInstance()
 	if (GImGui) { DestroyContext(GImGui); GImGui = 0; }
 }
 
-void msg(const char* fmt, ...);
 void ImGuiIO::redraw(int value, const char*func ,const char * caller)
 {
 	if ( value )
@@ -3701,6 +3700,7 @@ bool ImGui::BeginPopupModal(const char* name, bool* p_open, ImGuiWindowFlags ext
             ClosePopup(id);
         return false;
     }
+	g.IO.redraw(is_open,"BeginPopupModal",name);
 
     return is_open;
 }
@@ -5071,6 +5071,13 @@ const char* ImGui::GetStyleColName(ImGuiCol idx)
     case ImGuiCol_PlotHistogramHovered: return "PlotHistogramHovered";
     case ImGuiCol_TextSelectedBg: return "TextSelectedBg";
     case ImGuiCol_ModalWindowDarkening: return "ModalWindowDarkening";
+
+	case ImGuiCol_WindowBgFocused: return "WindowBgFocused";
+	case ImGuiCol_CollapseTriangle:	return "CollapseTriangle";
+	case ImGuiCol_MaximizeButton: return "MaximizeButton";
+	case ImGuiCol_MaximizeButtonHovered: return "MaximizeButtonHovered";
+	case ImGuiCol_MaximizeButtonActive: return "MaximizeButtonActive";
+
     }
     IM_ASSERT(0);
     return "Unknown";
@@ -8837,21 +8844,10 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 		{
 			float popup_width = (popup_x2 - popup_x1);
 
-			ImRect popup_rect(ImVec2(popup_x1, popup_y1), ImVec2(popup_x2, popup_y2));
-			SetNextWindowPos(popup_rect.Min);
-			SetNextWindowSize(popup_rect.GetSize(),line_count< 1 ? ImGuiSetCond_Always:ImGuiSetCond_FirstUseEver);
-			SetNextWindowSizeConstraints(
-				ImVec2(popup_width, 0),
-				ImVec2(g.IO.DisplaySize.x - style.DisplaySafeAreaPadding.x - popup_x1,
-				       g.IO.DisplaySize.y - style.DisplaySafeAreaPadding.y - popup_y1)
-				);
+			//auto size and visible columns
 			const char* item_text;
 			int column_index;
 
-			ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox | 
-				((window->Flags & ImGuiWindowFlags_ShowBorders) ? ImGuiWindowFlags_ShowBorders : 0);
-
-			//auto size and visible columns
 			float content_width = 0.f;
 			for (column_index = 0; column_index < columns; ++column_index)
 			{
@@ -8863,14 +8859,32 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 			//ask for virtual content width before open window
 			if(items_getter(data,0,(const char**) &content_width,ImGuiItemGetterCommand_get_region_width))
 			{
-				SetNextWindowContentWidth(content_width);
+				//SetNextWindowContentWidth(content_width);
+				if ( content_width > popup_width )
+				{
+					popup_width = ImMin(content_width,g.IO.DisplaySize.x-style.DisplaySafeAreaPadding.x - popup_x1);
+					popup_x2 = popup_x1 + popup_width;
+				}
 			}
 			else
 			{
 				content_width = popup_width;
 			}
-			if ( content_width > popup_width ) flags |= ImGuiWindowFlags_HorizontalScrollbar;
+			if ( content_width < popup_width ) content_width = popup_width;
 
+			ImRect popup_rect(ImVec2(popup_x1, popup_y1), ImVec2(popup_x2, popup_y2));
+			SetNextWindowPos(popup_rect.Min);
+			SetNextWindowSize(popup_rect.GetSize(),line_count< 1 ? ImGuiSetCond_Always:ImGuiSetCond_FirstUseEver);
+			SetNextWindowSizeConstraints(
+				ImVec2(frame_bb.GetSize().x, 0),
+				ImVec2(g.IO.DisplaySize.x - style.DisplaySafeAreaPadding.x - popup_x1,
+				       g.IO.DisplaySize.y - style.DisplaySafeAreaPadding.y - popup_y1)
+				);
+
+			SetNextWindowContentWidth(content_width);
+			ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox | 
+				((window->Flags & ImGuiWindowFlags_ShowBorders) ? ImGuiWindowFlags_ShowBorders : 0);
+			if ( content_width > popup_width ) flags |= ImGuiWindowFlags_HorizontalScrollbar;
 
 			PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
 
@@ -8881,7 +8895,7 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 				float scroll = GetScrollY();
 				if (popup_opened_now )
 				{
-					scroll = GetTextLineHeightWithSpacing()* ((*current_item/columns));
+					scroll = GetTextLineHeightWithSpacing() * (*current_item/columns);
 					scroll -= popup_rect.GetHeight() * 0.5f;
 					if ( scroll < 0.f ) scroll = 0.f;
 					SetScrollY(scroll);
@@ -8893,7 +8907,7 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 				//header
 				int id = 0;
 				bool multiSelect = true;
-				int selFlags = multiSelect ? 0: ImGuiSelectableFlags_SpanAllColumns;
+				int selFlags = ImGuiSelectableFlags_DontClosePopups | (multiSelect ? 0: ImGuiSelectableFlags_SpanAllColumns);
 				for ( column_index = 0; column_index < columns; ++column_index,++id )
 				{
 					if (items_getter(data, id, &item_text,ImGuiItemGetterCommand_get_text))
@@ -8908,10 +8922,10 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 						}
 						PopID();
 					}
-					Spacing();
+					//Spacing();
 					NextColumn();
 				}
-
+				Separator();
 				ImGuiListClipper clipper;
 				clipper.Begin(line_count-1, GetTextLineHeightWithSpacing());
 
@@ -8954,7 +8968,6 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 					//float offset = GetColumnOffset(column_index);
 					//items_getter(data, c, &item_text,&offset,0);
 				}
-
 				Columns(1,0,true,items_getter,data);
 
 				EndPopup();
@@ -10239,16 +10252,16 @@ static void AddLayoutSpring(ImGuiLayout* layout, float weight, float spacing)
             spring_spacing = ImVec2(style.ItemSpacing.x, 0.0f);
             spring_size    = ImVec2(layout->MaxExtent, spring_item->SpringSize);
         }
-
-        //if (layout->Type == ImGuiLayoutType_Horizontal)
-        //    ImGui::GetWindowDrawList()->AddRectFilled(
-        //        ImGui::GetCursorScreenPos(),
-        //        ImGui::GetCursorScreenPos() + ImVec2(springItem->SpringSize, layout->Bounds.y), ImColor(0, 1, 1));
-        //else
-        //    ImGui::GetWindowDrawList()->AddRectFilled(
-        //        ImGui::GetCursorScreenPos(),
-        //        ImGui::GetCursorScreenPos() + ImVec2(layout->Bounds.x, springItem->SpringSize), ImColor(0, 1, 1));
-
+/*
+        if (layout->Type == ImGuiLayoutType_Horizontal)
+            ImGui::GetWindowDrawList()->AddRectFilled(
+                ImGui::GetCursorScreenPos(),
+                ImGui::GetCursorScreenPos() + ImVec2(spring_item->SpringSize, layout->Bounds.y), ImColor(0, 1, 1));
+        else
+            ImGui::GetWindowDrawList()->AddRectFilled(
+                ImGui::GetCursorScreenPos(),
+                ImGui::GetCursorScreenPos() + ImVec2(layout->Bounds.x, spring_item->SpringSize), ImColor(0, 1, 1));
+*/
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, spring_spacing);
         ImGui::Dummy(spring_size);
         if (layout->Type == ImGuiLayoutType_Horizontal)
@@ -10459,6 +10472,7 @@ void ImGui::Columns(int columns_count, const char* id, bool border, ImGuiItemGet
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = GetCurrentWindow();
+	
     IM_ASSERT(columns_count >= 1);
 
     if (window->DC.ColumnsCount != 1)
@@ -10494,7 +10508,7 @@ void ImGui::Columns(int columns_count, const char* id, bool border, ImGuiItemGet
             // Draw before resize so our items positioning are in sync with the line being drawn
             const ImU32 col = GetColorU32(held ? ImGuiCol_ColumnActive : hovered ? ImGuiCol_ColumnHovered : ImGuiCol_Column);
             const float xi = (float)(int)x;
-            window->DrawList->AddLine(ImVec2(xi, y1+1.0f), ImVec2(xi, y2), col);
+            window->DrawList->AddLine(ImVec2(xi, y1+0.0f), ImVec2(xi, y2), col);
 
             if (held)
             {

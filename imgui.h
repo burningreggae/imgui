@@ -630,7 +630,6 @@ enum ImGuiCol_
     ImGuiCol_Text,
     ImGuiCol_TextDisabled,
     ImGuiCol_WindowBg,              // Background of normal windows
-	ImGuiCol_WindowBgFocused,
     ImGuiCol_ChildWindowBg,         // Background of child windows
     ImGuiCol_PopupBg,               // Background of popups, menus, tooltips windows
     ImGuiCol_Border,
@@ -665,16 +664,19 @@ enum ImGuiCol_
     ImGuiCol_CloseButton,
     ImGuiCol_CloseButtonHovered,
     ImGuiCol_CloseButtonActive,
-    ImGuiCol_MaximizeButton,
-    ImGuiCol_MaximizeButtonHovered,
-    ImGuiCol_MaximizeButtonActive,
     ImGuiCol_PlotLines,
     ImGuiCol_PlotLinesHovered,
     ImGuiCol_PlotHistogram,
     ImGuiCol_PlotHistogramHovered,
     ImGuiCol_TextSelectedBg,
     ImGuiCol_ModalWindowDarkening,  // darken entire screen when a modal window is active
+
 	ImGuiCol_CollapseTriangle,
+	ImGuiCol_WindowBgFocused,
+    ImGuiCol_MaximizeButton,
+    ImGuiCol_MaximizeButtonHovered,
+    ImGuiCol_MaximizeButtonActive,
+
     ImGuiCol_COUNT
 };
 

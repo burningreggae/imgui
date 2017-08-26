@@ -115,3 +115,4 @@ struct shaderparam
 };
 
 void setShader(shaderparam &shader);
+void msg(const char* fmt, ...);

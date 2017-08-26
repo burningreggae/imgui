@@ -12,11 +12,11 @@ namespace ImGui
 	IMGUI_API bool BeginDock(const char* name, bool* opened = 0, ImGuiWindowFlags extra_flags = 0, const ImVec2& default_size = ImVec2(-1, -1),bool border = false);
 	IMGUI_API void EndDock();
 	IMGUI_API void SetDockActive();
-	IMGUI_API void SaveDock(ImGuiTextBuffer &out);
-	IMGUI_API void LoadDock(const char *filename);
+	IMGUI_API void SaveDock(int slot, ImGuiTextBuffer &out);
+	IMGUI_API void LoadDock(int slot, const char *filename);
 	IMGUI_API void Print();
 
-	IMGUI_API bool DockBeginWorkspace(const char *name);
+	IMGUI_API bool DockBeginWorkspace(const char *name, int slot);
 	IMGUI_API void DockEndWorkspace();
 
 	IMGUI_API bool DockWorkspaceClosed();
