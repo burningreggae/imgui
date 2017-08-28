@@ -2144,6 +2144,11 @@ void* ImGui::MemAlloc(size_t sz)
 
 void ImGui::MemFree(void* ptr)
 {
+	if (!GImGui)
+	{
+		free(ptr);
+		return;
+	}
     if (ptr) GImGui->IO.MetricsAllocs--;
     return GImGui->IO.MemFreeFn(ptr);
 }
@@ -8849,17 +8854,27 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 			int column_index;
 
 			float content_width = 0.f;
+			int columns_visible = 0;
 			for (column_index = 0; column_index < columns; ++column_index)
 			{
-				if (!items_getter(data,column_index,&item_text,ImGuiItemGetterCommand_get_column_auto_size)) continue;
-				const ImVec2 textsize = CalcTextSize(item_text, 0, false);
-				if (textsize.x) content_width += textsize.x + 2.f * g.Style.ItemSpacing.x;
+				int column_visible = 1;
+				items_getter(data,column_index,(const char**) &column_visible,ImGuiItemGetterCommand_get_column_visible);
+				if (!column_visible) continue;
+
+				columns_visible += 1;
+				if (items_getter(data,column_index,&item_text,ImGuiItemGetterCommand_get_column_auto_size))
+				{
+					const ImVec2 textsize = CalcTextSize(item_text, 0, false);
+					if (textsize.x) content_width += textsize.x + 2.f * g.Style.ItemSpacing.x;
+				}
 			}
 
 			//ask for virtual content width before open window
+			bool doSetContentWidth = false;
 			if(items_getter(data,0,(const char**) &content_width,ImGuiItemGetterCommand_get_region_width))
 			{
 				//SetNextWindowContentWidth(content_width);
+				doSetContentWidth = true;
 				if ( content_width > popup_width )
 				{
 					popup_width = ImMin(content_width,g.IO.DisplaySize.x-style.DisplaySafeAreaPadding.x - popup_x1);
@@ -8881,7 +8896,7 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 				       g.IO.DisplaySize.y - style.DisplaySafeAreaPadding.y - popup_y1)
 				);
 
-			SetNextWindowContentWidth(content_width);
+			if ( doSetContentWidth ) SetNextWindowContentWidth(content_width);
 			ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox | 
 				((window->Flags & ImGuiWindowFlags_ShowBorders) ? ImGuiWindowFlags_ShowBorders : 0);
 			if ( content_width > popup_width ) flags |= ImGuiWindowFlags_HorizontalScrollbar;
@@ -8893,7 +8908,7 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 				// Display items
 
 				float scroll = GetScrollY();
-				if (popup_opened_now )
+				if (popup_opened_now)
 				{
 					scroll = GetTextLineHeightWithSpacing() * (*current_item/columns);
 					scroll -= popup_rect.GetHeight() * 0.5f;
@@ -8902,7 +8917,7 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 				}
 				//if (popup_opened_now ) scroll = GetTextLineHeightWithSpacing()* *current_item;
 
-				Columns(columns,0,true,items_getter,data);
+				Columns(columns_visible,"###table",true,items_getter,data);
 
 				//header
 				int id = 0;
@@ -8910,6 +8925,10 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 				int selFlags = ImGuiSelectableFlags_DontClosePopups | (multiSelect ? 0: ImGuiSelectableFlags_SpanAllColumns);
 				for ( column_index = 0; column_index < columns; ++column_index,++id )
 				{
+					int column_visible = 1;
+					items_getter(data,column_index,(const char**) &column_visible,ImGuiItemGetterCommand_get_column_visible);
+					if (!column_visible) continue;
+
 					if (items_getter(data, id, &item_text,ImGuiItemGetterCommand_get_text))
 					{
 						PushID(id);
@@ -8930,14 +8949,18 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 				clipper.Begin(line_count-1, GetTextLineHeightWithSpacing());
 
 				multiSelect = false;
+				//PushTextWrapPos(0.f);
 				selFlags = multiSelect ? 0: ImGuiSelectableFlags_SpanAllColumns;
 				while (clipper.Step())
 				for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
 				{
-					int id = (i+1)*columns;
-
-					for ( column_index = 0; column_index < columns; ++column_index,++id )
+					for ( column_index = 0; column_index < columns; ++column_index )
 					{
+						int column_visible = 1;
+						items_getter(data,column_index,(const char**) &column_visible,ImGuiItemGetterCommand_get_column_visible);
+						if (!column_visible) continue;
+
+						int id = (i+1)*columns + column_index;
 						if (items_getter(data, id, &item_text,ImGuiItemGetterCommand_get_text))
 						{
 							if (!multiSelect) SetItemAllowOverlap();
@@ -8956,19 +8979,20 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
 							else
 							{
 								TextUnformatted(item_text,0);
+								//TextWrapped("%s",item_text);
 							}
 						}
 						NextColumn();
 					}
 				}
-
+				//PopTextWrapPos();
 				//retreive dragged mouse column size
 				for (column_index = 0; column_index < columns; ++column_index )
 				{
 					//float offset = GetColumnOffset(column_index);
 					//items_getter(data, c, &item_text,&offset,0);
 				}
-				Columns(1,0,true,items_getter,data);
+				Columns(1,"###table",true,items_getter,data);
 
 				EndPopup();
 			}

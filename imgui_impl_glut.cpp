@@ -18,10 +18,12 @@
 //static float        g_MouseWheel = 0.0f;
 static GLuint       g_FontTexture = 0;
 float g_FontWishSize = 15.f;
+int fontUseBit = 8;
+
 
 // Data
 static GLhandleARB  g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
-static int          g_AttribLocationTex = -1, g_AttribLocationProjMtx = -1;
+static int          g_AttribLocationTex = -1, g_AttribLocationTime = -1,g_AttribLocationProjMtx = -1;
 static int          g_AttribLocationPosition = -1, g_AttribLocationUV = -1, g_AttribLocationColor =-1;
 static GLhandleARB g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
@@ -44,7 +46,7 @@ void setGUIShader(GLhandleARB shader)
 
 	glUseProgram(shader);
 	if (g_AttribLocationTex>=0) glUniform1i(g_AttribLocationTex, 0);
-
+	if (g_AttribLocationTime>=0) glUniform1fARB(g_AttribLocationTime, ImGui::GetTime()); 
 	glShadeModel(GL_SMOOTH);
 
 	glBlendEquationEXT(GL_FUNC_ADD_EXT);
@@ -479,6 +481,7 @@ void releaseFonts()
 	}
 }
 
+
 void createFonts()
 {
 	if (g_FontTexture) return;
@@ -533,12 +536,12 @@ void createFonts()
     io.Fonts->LoadFromFileTTF("myfontfile.ttf", size_pixels, NULL, &config, io.Fonts->GetGlyphRangesJapanese()); // Merge japanese glyphs
 */
 	// Build texture atlas
-	
 	unsigned char* pixels;
 	int width, height;
-	io.Fonts->GetTexDataAsAlpha8(&pixels, &width, &height);
+	if ( fontUseBit == 8 ) io.Fonts->GetTexDataAsAlpha8(&pixels, &width, &height);
+	else if ( fontUseBit == 32 ) io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-	//savePNG("font.png",pixels,width, height,1 );
+	//savePNG("font.png",pixels,width, height,fontUseBit/8 );
 	// Upload texture to graphics system
 	//GLint last_texture;
 	//glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
@@ -552,7 +555,8 @@ void createFonts()
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, pixels);
+	if ( fontUseBit == 8 ) glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, pixels);
+	else if ( fontUseBit == 32 ) glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
 	// Store our identifier
 	io.Fonts->TexID = (void *)(intptr_t)g_FontTexture;
@@ -569,8 +573,9 @@ extern void ShaderManager_build(GLhandleARB& program,const char *shadername);
 void createShader()
 {
 	if (g_ShaderHandle) return;
-	ShaderManager_build(g_ShaderHandle,"shader2d_imgui");
+	ShaderManager_build(g_ShaderHandle,fontUseBit == 32 ? "shader2d_imgui32":"shader2d_imgui");
 	g_AttribLocationTex = glGetUniformLocationARB(g_ShaderHandle, "Texture");
+	g_AttribLocationTime = glGetUniformLocationARB(g_ShaderHandle, "Time");
 	return;
 
     const GLchar *vertex_shader =
@@ -783,7 +788,7 @@ void style1()
     style.Alpha = 1.0f;
 	style.WindowPadding.x = 8;
 	style.WindowPadding.y = 8;
-	style.WindowRounding = 8.f; //4.f;
+	style.WindowRounding = 4.f;
 	style.GrabRounding = 3;
 	style.ScrollbarSize = 15;
 	style.ScrollbarRounding = 16;
