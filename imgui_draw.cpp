@@ -127,18 +127,18 @@ static ImVec2 circle_vtx[16*circle_supersample];
 
 void buildCircleVtx(int resolution)
 {
-	static int circle_vtx_builds = 0;
-	if (circle_vtx_builds == resolution ) return;
+    static int circle_vtx_builds = 0;
+    if (circle_vtx_builds == resolution ) return;
 
-	if ( resolution < 1 ) resolution = 1;
-	for (int i = 0; i < IM_ARRAYSIZE(circle_vtx); i++)
-	{
-		const float a = ((float)i / (float)resolution) * 2.f * IM_PI;
-		//round that 1 is 1 and not 0.999999
-		circle_vtx[i].x = floorf(0.5f + cosf(a) * 1000000.f)/1000000.f;
-		circle_vtx[i].y = floorf(0.5f + sinf(a) * 1000000.f)/1000000.f;
-	}
-	circle_vtx_builds = resolution;
+    if ( resolution < 1 ) resolution = 1;
+    for (int i = 0; i < IM_ARRAYSIZE(circle_vtx); i++)
+    {
+        const float a = ((float)i / (float)resolution) * 2.f * IM_PI;
+        //round that 1 is 1 and not 0.999999
+        circle_vtx[i].x = floorf(0.5f + cosf(a) * 1000000.f)/1000000.f;
+        circle_vtx[i].y = floorf(0.5f + sinf(a) * 1000000.f)/1000000.f;
+    }
+    circle_vtx_builds = resolution;
 }
 
 void ImDrawList::Clear()
@@ -156,7 +156,7 @@ void ImDrawList::Clear()
     _ChannelsCount = 1;
     // NB: Do not clear channels so our allocations are re-used after the first frame.
 
-	buildCircleVtx(12 * circle_supersample);
+    buildCircleVtx(12 * circle_supersample);
 }
 
 void ImDrawList::ClearFreeMemory()
@@ -615,14 +615,14 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
             const ImVec2& p1 = points[i1];
             const ImVec2& p2 = points[i2];
 
-			//glPrimitiveRestartIndex
-			if ( _primitiveRestartIndex && (p1.x <= _primitiveRestartIndex[0] || p2.x <= _primitiveRestartIndex[0]) )
-			{
-				CmdBuffer.Data[CmdBuffer.Size-1].ElemCount -= 6;
-				VtxBuffer.Size -= 4;
-				IdxBuffer.Size -= 6;
-				continue;
-			}
+            //glPrimitiveRestartIndex
+            if ( _primitiveRestartIndex && (p1.x <= _primitiveRestartIndex[0] || p2.x <= _primitiveRestartIndex[0]) )
+            {
+                CmdBuffer.Data[CmdBuffer.Size-1].ElemCount -= 6;
+                VtxBuffer.Size -= 4;
+                IdxBuffer.Size -= 6;
+                continue;
+            }
 
             ImVec2 diff = p2 - p1;
             diff *= ImInvLength(diff, 1.0f);
@@ -844,37 +844,37 @@ void ImDrawList::AddLine(const ImVec2& a, const ImVec2& b, ImU32 col, float thic
 void ImDrawList::PokeDrawCmd(shaderparam* shader)
 {
     ImDrawCmd* curr_cmd = CmdBuffer.Size ? &CmdBuffer.back() : NULL;
-	if (curr_cmd) curr_cmd->shader = shader;
+    if (curr_cmd) curr_cmd->shader = shader;
 }
 
 void ImDrawList::PrimArcToFast(const ImVec2& centre, const ImVec2& radius, const ImU32 co[2],int amin, int amax)
 {
     const ImVec2 uv = GImGui->FontTexUvWhitePixel;
-	int g;
+    int g;
 
-	_VtxWritePtr->pos = centre;
-	_VtxWritePtr->uv = uv;
-	_VtxWritePtr->col = co[0];
-	_VtxWritePtr++;
-	amax *= circle_supersample;
-	for ( g = amin * circle_supersample; g <= amax; ++g )
-	{
-		_VtxWritePtr->pos.x = centre.x + circle_vtx[g].x*radius.x;
-		_VtxWritePtr->pos.y = centre.y + circle_vtx[g].y*radius.y;
-		_VtxWritePtr->uv = uv;
-		_VtxWritePtr->col = co[1];
-		_VtxWritePtr++;
-	}
+    _VtxWritePtr->pos = centre;
+    _VtxWritePtr->uv = uv;
+    _VtxWritePtr->col = co[0];
+    _VtxWritePtr++;
+    amax *= circle_supersample;
+    for ( g = amin * circle_supersample; g <= amax; ++g )
+    {
+        _VtxWritePtr->pos.x = centre.x + circle_vtx[g].x*radius.x;
+        _VtxWritePtr->pos.y = centre.y + circle_vtx[g].y*radius.y;
+        _VtxWritePtr->uv = uv;
+        _VtxWritePtr->col = co[1];
+        _VtxWritePtr++;
+    }
 
-	for ( g = 0; g < 3 *circle_supersample; ++g )
-	{
-		_IdxWritePtr[0] = (ImDrawIdx)(_VtxCurrentIdx + 0);
-		_IdxWritePtr[1] = (ImDrawIdx)(_VtxCurrentIdx + 1+g);
-		_IdxWritePtr[2] = (ImDrawIdx)(_VtxCurrentIdx + 2+g);
-		_IdxWritePtr += 3;
-	}
-	_VtxCurrentIdx += 1 + 3 * circle_supersample + 1;
-	
+    for ( g = 0; g < 3 *circle_supersample; ++g )
+    {
+        _IdxWritePtr[0] = (ImDrawIdx)(_VtxCurrentIdx + 0);
+        _IdxWritePtr[1] = (ImDrawIdx)(_VtxCurrentIdx + 1+g);
+        _IdxWritePtr[2] = (ImDrawIdx)(_VtxCurrentIdx + 2+g);
+        _IdxWritePtr += 3;
+    }
+    _VtxCurrentIdx += 1 + 3 * circle_supersample + 1;
+    
 }
 
 // "skewed" Rectangle with "radial" color gradient
@@ -889,89 +889,89 @@ void ImDrawList::AddShadowRect(const ImVec2& a, const ImVec2& c,const ImVec2 sha
 {
     const ImVec2 uv = GImGui->FontTexUvWhitePixel;
 
-	int quads = 0;
-	int arcs = 0;
+    int quads = 0;
+    int arcs = 0;
 
-	arcs  += rounding_corners & 1 ? 1 : 0;
-	quads += rounding_corners & 2 ? 1 : 0;
-	arcs  += rounding_corners & 4 ? 1 : 0;
+    arcs  += rounding_corners & 1 ? 1 : 0;
+    quads += rounding_corners & 2 ? 1 : 0;
+    arcs  += rounding_corners & 4 ? 1 : 0;
 
-	quads += rounding_corners & 8 ? 1 : 0;
-	quads += rounding_corners & 16 ? 1 : 0;
-	quads += rounding_corners & 32 ? 1 : 0;
+    quads += rounding_corners & 8 ? 1 : 0;
+    quads += rounding_corners & 16 ? 1 : 0;
+    quads += rounding_corners & 32 ? 1 : 0;
 
-	arcs  += rounding_corners & 64 ? 1 : 0;
-	quads += rounding_corners & 128 ? 1 : 0;
-	arcs += rounding_corners & 256 ? 1 : 0;
+    arcs  += rounding_corners & 64 ? 1 : 0;
+    quads += rounding_corners & 128 ? 1 : 0;
+    arcs += rounding_corners & 256 ? 1 : 0;
 
 
     PrimReserve(6 * quads + (3 * 3 * circle_supersample) * arcs, 4 * quads + (1 + 3 * circle_supersample + 1) * arcs );
-	static ImDrawIdx lQuad[6] = { 0,1,2,0,2,3 };
-	static ImDrawIdx rQuad[6] = { 0,1,3,1,2,3 };
-	int g;
+    static ImDrawIdx lQuad[6] = { 0,1,2,0,2,3 };
+    static ImDrawIdx rQuad[6] = { 0,1,3,1,2,3 };
+    int g;
 
-	ImVec2 d,e;
-	//top left
-	if (rounding_corners & 1) PrimArcToFast(a,shadowSize[0],co,6,9);
+    ImVec2 d,e;
+    //top left
+    if (rounding_corners & 1) PrimArcToFast(a,shadowSize[0],co,6,9);
 
-	//top center
-	if (rounding_corners & 2)
-	{
-		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
-		PrimWriteVtx(ImVec2(a.x, a.y-shadowSize[0].y), uv, co[1]);
-		PrimWriteVtx(ImVec2(c.x, a.y-shadowSize[0].y), uv, co[1]);
-		PrimWriteVtx(ImVec2(c.x, a.y), uv, co[0]);
-		PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
-	}
+    //top center
+    if (rounding_corners & 2)
+    {
+        for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
+        PrimWriteVtx(ImVec2(a.x, a.y-shadowSize[0].y), uv, co[1]);
+        PrimWriteVtx(ImVec2(c.x, a.y-shadowSize[0].y), uv, co[1]);
+        PrimWriteVtx(ImVec2(c.x, a.y), uv, co[0]);
+        PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
+    }
 
-	//top right
-	if (rounding_corners & 4) PrimArcToFast(ImVec2(c.x,a.y),shadowSize[0],co,9,12);
+    //top right
+    if (rounding_corners & 4) PrimArcToFast(ImVec2(c.x,a.y),shadowSize[0],co,9,12);
 
-	//center left
-	if (rounding_corners & 8)
-	{
-		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
-		PrimWriteVtx(ImVec2(a.x-shadowSize[0].x, a.y), uv, co[1]);
-		PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
-		PrimWriteVtx(ImVec2(a.x, c.y), uv, co[0]);
-		PrimWriteVtx(ImVec2(a.x-shadowSize[1].x, c.y), uv, co[1]);
-	}
+    //center left
+    if (rounding_corners & 8)
+    {
+        for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
+        PrimWriteVtx(ImVec2(a.x-shadowSize[0].x, a.y), uv, co[1]);
+        PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
+        PrimWriteVtx(ImVec2(a.x, c.y), uv, co[0]);
+        PrimWriteVtx(ImVec2(a.x-shadowSize[1].x, c.y), uv, co[1]);
+    }
 
-	//center center
-	if (rounding_corners & 16)
-	{
-		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + rQuad[g]);
-		PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
-		PrimWriteVtx(ImVec2(c.x, a.y), uv, co[0]);
-		PrimWriteVtx(ImVec2(c.x, c.y), uv, co[0]);
-		PrimWriteVtx(ImVec2(a.x, c.y), uv, co[0]);
-	}
+    //center center
+    if (rounding_corners & 16)
+    {
+        for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + rQuad[g]);
+        PrimWriteVtx(ImVec2(a.x, a.y), uv, co[0]);
+        PrimWriteVtx(ImVec2(c.x, a.y), uv, co[0]);
+        PrimWriteVtx(ImVec2(c.x, c.y), uv, co[0]);
+        PrimWriteVtx(ImVec2(a.x, c.y), uv, co[0]);
+    }
 
-	//center right
-	if (rounding_corners & 32)
-	{
-		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + rQuad[g]);
-		PrimWriteVtx(ImVec2(c.x, a.y), uv, co[0]);
-		PrimWriteVtx(ImVec2(c.x+shadowSize[0].x, a.y), uv, co[1]);
-		PrimWriteVtx(ImVec2(c.x+shadowSize[1].x, c.y), uv, co[1]);
-		PrimWriteVtx(ImVec2(c.x, c.y), uv, co[0]);
-	}
+    //center right
+    if (rounding_corners & 32)
+    {
+        for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + rQuad[g]);
+        PrimWriteVtx(ImVec2(c.x, a.y), uv, co[0]);
+        PrimWriteVtx(ImVec2(c.x+shadowSize[0].x, a.y), uv, co[1]);
+        PrimWriteVtx(ImVec2(c.x+shadowSize[1].x, c.y), uv, co[1]);
+        PrimWriteVtx(ImVec2(c.x, c.y), uv, co[0]);
+    }
 
-	//bottom left
-	if (rounding_corners & 64) PrimArcToFast(ImVec2(a.x,c.y),shadowSize[1],co,3,6);
+    //bottom left
+    if (rounding_corners & 64) PrimArcToFast(ImVec2(a.x,c.y),shadowSize[1],co,3,6);
 
-	//bottom center
-	if (rounding_corners & 128)
-	{
-		for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
-		PrimWriteVtx(ImVec2(a.x, c.y), uv, co[0]);
-		PrimWriteVtx(ImVec2(c.x, c.y), uv, co[0]);
-		PrimWriteVtx(ImVec2(c.x, c.y+shadowSize[1].y), uv, co[1]);
-		PrimWriteVtx(ImVec2(a.x, c.y+shadowSize[1].y), uv, co[1]);
-	}
+    //bottom center
+    if (rounding_corners & 128)
+    {
+        for ( g = 0; g < 6; ++g,_IdxWritePtr++ ) *_IdxWritePtr = (ImDrawIdx)(_VtxCurrentIdx + lQuad[g]);
+        PrimWriteVtx(ImVec2(a.x, c.y), uv, co[0]);
+        PrimWriteVtx(ImVec2(c.x, c.y), uv, co[0]);
+        PrimWriteVtx(ImVec2(c.x, c.y+shadowSize[1].y), uv, co[1]);
+        PrimWriteVtx(ImVec2(a.x, c.y+shadowSize[1].y), uv, co[1]);
+    }
 
-	//bottom right
-	if (rounding_corners & 256) PrimArcToFast(c,shadowSize[1],co,0,3);
+    //bottom right
+    if (rounding_corners & 256) PrimArcToFast(c,shadowSize[1],co,0,3);
 
 }
 
@@ -1334,8 +1334,8 @@ ImFont* ImFontAtlas::AddFont(const ImFontConfig* font_cfg)
 
     ConfigData.push_back(*font_cfg);
     ImFontConfig& new_font_cfg = ConfigData.back();
-	if (!new_font_cfg.DstFont)
-	    new_font_cfg.DstFont = Fonts.back();
+    if (!new_font_cfg.DstFont)
+        new_font_cfg.DstFont = Fonts.back();
     if (!new_font_cfg.FontDataOwnedByAtlas)
     {
         new_font_cfg.FontData = ImGui::MemAlloc(new_font_cfg.FontDataSize);

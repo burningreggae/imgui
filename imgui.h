@@ -81,12 +81,12 @@ typedef int (*ImGuiTextEditCallback)(ImGuiTextEditCallbackData *data);
 typedef void (*ImGuiSizeConstraintCallback)(ImGuiSizeConstraintCallbackData* data);
 enum ImGuiItemGetterCommand
 {
-	ImGuiItemGetterCommand_get_text = 0,
-	ImGuiItemGetterCommand_get_combo_edit,
-	ImGuiItemGetterCommand_get_region_width,
-	ImGuiItemGetterCommand_get_column_auto_size,
-	ImGuiItemGetterCommand_get_column_visible,
-	ImGuiItemGetterCommand_set_current_item,
+    ImGuiItemGetterCommand_get_text = 0,
+    ImGuiItemGetterCommand_get_combo_edit,
+    ImGuiItemGetterCommand_get_region_width,
+    ImGuiItemGetterCommand_get_column_auto_size,
+    ImGuiItemGetterCommand_get_column_visible,
+    ImGuiItemGetterCommand_set_current_item,
 };
 typedef bool (*ImGuiItemGetter) (void* data, int idx, const char** out_text,ImGuiItemGetterCommand cmd);
 
@@ -128,8 +128,8 @@ struct ImVec4
 // In a namespace so that user can add extra functions in a separate file (e.g. Value() helpers for your vector or common types)
 namespace ImGui
 {
-	IMGUI_API void CreateInstance();									// Create (Default) Context and DefaultAtlas
-	IMGUI_API void DestroyInstance();
+    IMGUI_API void CreateInstance();									// Create (Default) Context and DefaultAtlas
+    IMGUI_API void DestroyInstance();
 
     // Main
     IMGUI_API ImGuiIO&      GetIO();
@@ -297,7 +297,7 @@ namespace ImGui
     IMGUI_API bool          SmallButton(const char* label);                                         // button with FramePadding=(0,0)
     IMGUI_API bool          InvisibleButton(const char* str_id, const ImVec2& size, bool *hovered = 0, bool *held = 0);
     IMGUI_API void          Image(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0 = ImVec2(0,0), const ImVec2& uv1 = ImVec2(1,1), const ImVec4& tint_col = ImVec4(1,1,1,1), const ImVec4& border_col = ImVec4(0,0,0,0));
-	IMGUI_API bool			Image4(ImTextureID user_texture_id, const ImVec2& size, const ImVec4 uv[4], unsigned tint_col, shaderparam* shaderparam, const char *str_id);
+    IMGUI_API bool			Image4(ImTextureID user_texture_id, const ImVec2& size, const ImVec4 uv[4], unsigned tint_col, shaderparam* shaderparam, const char *str_id);
     IMGUI_API bool          ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0 = ImVec2(0,0),  const ImVec2& uv1 = ImVec2(1,1), int frame_padding = -1, const ImVec4& bg_col = ImVec4(0,0,0,0), const ImVec4& tint_col = ImVec4(1,1,1,1));    // <0 frame_padding uses default frame padding settings. 0 for no padding
     IMGUI_API bool          Checkbox(const char* label, bool* v);
     IMGUI_API bool          CheckboxFlags(const char* label, unsigned int* flags, unsigned int flags_value);
@@ -431,7 +431,6 @@ namespace ImGui
     IMGUI_API void          PopClipRect();
 
     // Utilities
-	IMGUI_API void          SetParentFlag(unsigned flag ,int val);
     IMGUI_API bool          IsItemHovered();                                                    // was the last item hovered by mouse?
     IMGUI_API bool          IsItemHoveredRect();                                                // was the last item hovered by mouse? even if another item is active or window is blocked by popup while we are hovering this
     IMGUI_API bool          IsItemActive();                                                     // was the last item active? (e.g. button being held, text field being edited- items that don't interact will always return false)
@@ -512,6 +511,8 @@ namespace ImGui
     static inline bool      IsRectClipped(const ImVec2& size) { return !IsRectVisible(size); } // OBSOLETE 1.39+
 #endif
 
+    IMGUI_API void          SetParentFlag(unsigned flag ,int val);
+
 } // namespace ImGui
 
 // Flags for ImGui::Begin()
@@ -535,7 +536,7 @@ enum ImGuiWindowFlags_
     ImGuiWindowFlags_AlwaysVerticalScrollbar= 1 << 14,  // Always show vertical scrollbar (even if ContentSize.y < Size.y)
     ImGuiWindowFlags_AlwaysHorizontalScrollbar=1<< 15,  // Always show horizontal scrollbar (even if ContentSize.x < Size.x)
     ImGuiWindowFlags_AlwaysUseWindowPadding = 1 << 16,  // Ensure child windows without border uses style.WindowPadding (ignored by default for non-bordered child windows, because more convenient)
-	ImGuiWindowFlags_NoZoom                 = 1 << 17,  // Allow fontuserscaling
+    ImGuiWindowFlags_NoZoom                 = 1 << 17,  // Allow fontuserscaling
 
     // [Internal]
     ImGuiWindowFlags_ChildWindow            = 1 << 20,  // Don't use! For internal use by BeginChild()
@@ -621,7 +622,7 @@ enum ImGuiKey_
     ImGuiKey_X,         // for text edit CTRL+X: cut
     ImGuiKey_Y,         // for text edit CTRL+Y: redo
     ImGuiKey_Z,         // for text edit CTRL+Z: undo
-	ImGuiKey_Space,
+    ImGuiKey_Space,
     ImGuiKey_COUNT
 };
 
@@ -672,8 +673,8 @@ enum ImGuiCol_
     ImGuiCol_TextSelectedBg,
     ImGuiCol_ModalWindowDarkening,  // darken entire screen when a modal window is active
 
-	ImGuiCol_CollapseTriangle,
-	ImGuiCol_WindowBgFocused,
+    ImGuiCol_CollapseTriangle,
+    ImGuiCol_WindowBgFocused,
     ImGuiCol_MaximizeButton,
     ImGuiCol_MaximizeButtonHovered,
     ImGuiCol_MaximizeButtonActive,
@@ -712,7 +713,7 @@ enum ImGuiColorEditMode_
     ImGuiColorEditMode_RGB = 0,
     ImGuiColorEditMode_HSV = 1,
     ImGuiColorEditMode_HEX = 2,
-	ImGuiColorEditMode_HSB = 3
+    ImGuiColorEditMode_HSB = 3
 };
 
 // Enumeration for GetMouseCursor()
@@ -767,12 +768,12 @@ struct ImGuiStyle
     float       CurveTessellationTol;       // Tessellation tolerance. Decrease for highly tessellated curves (higher quality, more polygons), increase to reduce quality.
     ImVec4      Colors[ImGuiCol_COUNT];
 
-	float       SelectableRounding;      
-	float		Brightness;					// Global brightness applies to everything in ImGui
-	float		TitleBarHeight;				// Height of Titlebar ( Multiplicator of FramePadding.y Default: 2.f)
-	float		CollapseTriangleScale;		// Scaling of Collapsed Triangle Default 1.f
-	float		CloseButtonSize;			// Scaling of CloseButtonScale
-	int         CircleLineSegment;			// Circle Vertex Line Segments 16
+    float       SelectableRounding;      
+    float		Brightness;					// Global brightness applies to everything in ImGui
+    float		TitleBarHeight;				// Height of Titlebar ( Multiplicator of FramePadding.y Default: 2.f)
+    float		CollapseTriangleScale;		// Scaling of Collapsed Triangle Default 1.f
+    float		CloseButtonSize;			// Scaling of CloseButtonScale
+    int         CircleLineSegment;			// Circle Vertex Line Segments 16
 
     IMGUI_API ImGuiStyle();
 };
@@ -841,7 +842,7 @@ struct ImGuiIO
     ImVec2      MousePos;                   // Mouse position, in pixels (set to -1,-1 if no mouse / on another screen, etc.)
     bool        MouseDown[8];               // Mouse buttons: left, right, middle + extras. ImGui itself mostly only uses left button (BeginPopupContext** are using right button). Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
     float       MouseWheel;                 // Mouse wheel: 1 unit scrolls about 5 lines text.
-	float       MouseWheelH;                // Mouse wheel horizontal: 1 unit scrolls about 10 characters text.
+    float       MouseWheelH;                // Mouse wheel horizontal: 1 unit scrolls about 10 characters text.
     bool        MouseDrawCursor;            // Request ImGui to draw a mouse cursor for you (if you are on a platform without a mouse cursor).
     bool        KeyCtrl;                    // Keyboard modifier pressed: Control
     bool        KeyShift;                   // Keyboard modifier pressed: Shift
@@ -886,8 +887,8 @@ struct ImGuiIO
     float       KeysDownDuration[512];      // Duration the keyboard key has been down (0.0f == just pressed)
     float       KeysDownDurationPrev[512];  // Previous duration the key has been down
 
-	int _RedrawCount;				// Mark if a widget needs redraw
-	void redraw(int value, const char *func,const char * caller);
+    int _RedrawCount;				// Mark if a widget needs redraw
+    void redraw(int value, const char *func,const char * caller);
 
     IMGUI_API   ImGuiIO();
 };
@@ -951,20 +952,20 @@ public:
     inline iterator             erase(const_iterator it)        { IM_ASSERT(it >= Data && it < Data+Size); const ptrdiff_t off = it - Data; memmove(Data + off, Data + off + 1, ((size_t)Size - (size_t)off - 1) * sizeof(value_type)); Size--; return Data + off; }
     inline iterator             insert(const_iterator it, const value_type& v)  { IM_ASSERT(it >= Data && it <= Data+Size); const ptrdiff_t off = it - Data; if (Size == Capacity) reserve(Capacity ? Capacity * 2 : 4); if (off < (int)Size) memmove(Data + off + 1, Data + off, ((size_t)Size - (size_t)off) * sizeof(value_type)); Data[off] = v; Size++; return Data + off; }
 
-	const char *c_str() const { return (char*) Data; }
-	void ImStrdup(const char *str)
-	{
-		if ( 0 == str ) str = "";
-		int new_size = (int)strlen(str) + 1;
+    const char *c_str() const { return (char*) Data; }
+    void ImStrdup(const char *str)
+    {
+        if ( 0 == str ) str = "";
+        int new_size = (int)strlen(str) + 1;
         if (new_size > Capacity)
-		{
-			ImGui::MemFree(Data);
-			Capacity = new_size + 64;
-			Data = (value_type*)ImGui::MemAlloc(Capacity * sizeof(value_type));
-		}
-		memcpy(Data, (const void*)str, new_size);
-		Size = new_size;
-	}
+        {
+            ImGui::MemFree(Data);
+            Capacity = new_size + 64;
+            Data = (value_type*)ImGui::MemAlloc(Capacity * sizeof(value_type));
+        }
+        memcpy(Data, (const void*)str, new_size);
+        Size = new_size;
+    }
 
 };
 
@@ -1155,7 +1156,7 @@ struct ImColor
     inline void    SetHSV(float h, float s, float v, float a = 1.0f){ ImGui::ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
 
     static ImColor HSV(float h, float s, float v, float a = 1.0f)   { float r,g,b; ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r,g,b,a); }
-	static ImColor HSB(float hue, float sat, float bri, float a = 1.0f)   { float r, g, b; ImGui::ColorConvertHSVtoRGB(hue * (1.f / 360.f), sat, bri, r, g, b); return ImColor(r, g, b, a); }
+    static ImColor HSB(float hue, float sat, float bri, float a = 1.0f)   { float r, g, b; ImGui::ColorConvertHSVtoRGB(hue * (1.f / 360.f), sat, bri, r, g, b); return ImColor(r, g, b, a); }
 };
 
 // Helper: Manually clip large list of items.
@@ -1208,7 +1209,7 @@ struct ImDrawCmd
     ImDrawCallback  UserCallback;           // If != NULL, call the function instead of rendering the vertices. clip_rect and texture_id will be set normally.
     void*           UserCallbackData;       // The draw callback code can access this.
 
-	shaderparam *shader;
+    shaderparam *shader;
     ImDrawCmd() { ElemCount = 0; ClipRect.x = ClipRect.y = -8192.0f; ClipRect.z = ClipRect.w = +8192.0f; TextureId = NULL; UserCallback = NULL; UserCallbackData = NULL; shader = NULL; }
 };
 
@@ -1315,9 +1316,9 @@ struct ImDrawList
     // Advanced
     IMGUI_API void  AddCallback(ImDrawCallback callback, void* callback_data);  // Your rendering function must check for 'UserCallback' in ImDrawCmd and call the function instead of rendering triangles.
     IMGUI_API void  AddDrawCmd();                                               // This is useful if you need to forcefully create a new draw call (to allow for dependent rendering / blending). Otherwise primitives are merged into the same draw-call as much as possible
-	IMGUI_API void  PokeDrawCmd(shaderparam* shader);
-	IMGUI_API void  AddShadowRect(const ImVec2& a, const ImVec2& c,const ImVec2 shadowSize[2], const ImU32 col[2],int rounding_corners_flags);
-	IMGUI_API void  PrimArcToFast(const ImVec2& centre, const ImVec2& radius, const ImU32 co[2],int amin, int amax); // PathArcToFast
+    IMGUI_API void  PokeDrawCmd(shaderparam* shader);
+    IMGUI_API void  AddShadowRect(const ImVec2& a, const ImVec2& c,const ImVec2 shadowSize[2], const ImU32 col[2],int rounding_corners_flags);
+    IMGUI_API void  PrimArcToFast(const ImVec2& centre, const ImVec2& radius, const ImU32 co[2],int amin, int amax); // PathArcToFast
 
     // Internal helpers
     // NB: all primitives needs to be reserved via PrimReserve() beforehand!
@@ -1333,7 +1334,7 @@ struct ImDrawList
     IMGUI_API void  UpdateClipRect();
     IMGUI_API void  UpdateTextureID();
 
-	IMGUI_API void  PrimRectUV4(const ImVec2& a, const ImVec2& b, const ImVec4 uv[4], ImU32 col);
+    IMGUI_API void  PrimRectUV4(const ImVec2& a, const ImVec2& b, const ImVec4 uv[4], ImU32 col);
 
 };
 

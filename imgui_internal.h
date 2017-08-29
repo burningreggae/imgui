@@ -381,6 +381,7 @@ struct ImGuiPopupRef
     ImGuiPopupRef(ImGuiID id, ImGuiWindow* parent_window, ImGuiID parent_menu_set, const ImVec2& mouse_pos) { PopupId = id; Window = NULL; ParentWindow = parent_window; ParentMenuSet = parent_menu_set; MousePosOnOpen = mouse_pos; }
 };
 
+//Layout
 struct ImGuiLayoutItem
 {
     ImGuiLayoutItemType         Type;           // Type of an item
@@ -659,9 +660,9 @@ struct IMGUI_API ImGuiDrawContext
         ColorEditMode = ImGuiColorEditMode_RGB;
         memset(StackSizesBackup, 0, sizeof(StackSizesBackup));
 
-		Indent = ImVec2(0.0f,0.0f);
+        Indent = ImVec2(0.0f,0.0f);
         ColumnsOffset = ImVec2(0.0f, 0.0f);
-		GroupOffset = ImVec2(0.0f, 0.0f);
+        GroupOffset = ImVec2(0.0f, 0.0f);
         ColumnsOffset = ImVec2(0.0f, 0.0f);
 
         ColumnsCurrent = 0;
@@ -770,7 +771,7 @@ namespace ImGui
     IMGUI_API void          EndFrame();                 // Ends the ImGui frame. Automatically called by Render()! you most likely don't need to ever call that yourself directly. If you don't need to render you can call EndFrame() but you'll have wasted CPU already. If you don't need to render, don't create any windows instead!
 
     IMGUI_API void          SetActiveID(ImGuiID id, ImGuiWindow* window);
-	IMGUI_API void          ClearActiveID();
+    IMGUI_API void          ClearActiveID();
     IMGUI_API void          SetHoveredID(ImGuiID id);
     IMGUI_API void          KeepAliveID(ImGuiID id);
 
