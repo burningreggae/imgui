@@ -802,8 +802,8 @@ void style1()
 	style.IndentSpacing = 20.f;
 	style.TitleBarHeight = 6.f;
 	style.CloseButtonSize = 6.5f;
-	style.DisplaySafeAreaPadding.x = 4.f;
-	style.DisplaySafeAreaPadding.y = 4.f;
+	style.DisplaySafeAreaPadding.x = 10.f;
+	style.DisplaySafeAreaPadding.y = 10.f;
 	style.CollapseTriangleScale = 0.85f;
 	style.CircleLineSegment = 50;
 	style.ColumnsMinSpacing = 0.f;
