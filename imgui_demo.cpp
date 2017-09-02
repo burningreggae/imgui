@@ -678,6 +678,7 @@ void ImGui::ShowTestWindow(bool* p_open)
         {
             static bool animate = true;
             ImGui::Checkbox("Animate", &animate);
+			system_redraw(__FUNCTION__,"Plots widgets",animate);
 
             static float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };
             ImGui::PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr));

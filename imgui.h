@@ -638,6 +638,7 @@ enum ImGuiKey_
     ImGuiKey_X,         // for text edit CTRL+X: cut
     ImGuiKey_Y,         // for text edit CTRL+Y: redo
     ImGuiKey_Z,         // for text edit CTRL+Z: undo
+	ImGuiKey_D,			// for text edit CTRL+D: deselect all
     ImGuiKey_Space,
     ImGuiKey_COUNT
 };
@@ -930,9 +931,6 @@ struct ImGuiIO
     float       MouseDragMaxDistanceSqr[8]; // Squared maximum distance of how much mouse has traveled from the click point
     float       KeysDownDuration[512];      // Duration the keyboard key has been down (0.0f == just pressed)
     float       KeysDownDurationPrev[512];  // Previous duration the key has been down
-
-    int _RedrawCount;				// Mark if a widget needs redraw
-    void redraw(int value, const char *func,const char * caller);
 
     IMGUI_API   ImGuiIO();
 };

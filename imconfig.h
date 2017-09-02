@@ -116,3 +116,4 @@ struct shaderparam
 
 void setShader(shaderparam &shader);
 void msg(const char* fmt, ...);
+void system_redraw( const char *function, const char* caller = 0, int value=1);

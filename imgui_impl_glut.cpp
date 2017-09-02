@@ -497,6 +497,7 @@ void createFonts()
 	config.OversampleV = 1;
 	config.GlyphExtraSpacing.x = 0.f;
 	config.PixelSnapH = false;
+	//config.RasterizerMultiply = 1.5f;
 	//config.GlyphRanges = io.Fonts->GetGlyphRangesGreek();
 	//ImFont* font = io.Fonts->AddFontFromFileTTF("HelveticaLt.ttf", 12, &config);
 	//font->DisplayOffset.y -= 2;   // Render 1 pixel down
@@ -740,7 +741,7 @@ void style1()
 	style.Colors[ImGuiCol_WindowBg] = ImVec4(0.94f, 0.94f, 0.94f, 1.f);
 	style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.f);
 	style.Colors[ImGuiCol_Border] = ImVec4(0.00f, 0.00f, 0.00f, 0.25f);
-	style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.25f, 0.25f, 0.25f, 0.25f);
+	style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.25f, 0.25f, 0.25f, 0.f);
 	style.Colors[ImGuiCol_FrameBg] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
 	style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
 	style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
@@ -942,7 +943,7 @@ bool ImGui_ImplGLUT_Init()
 	io.KeyMap[ImGuiKey_X] = 24;  // for text edit CTRL+X: cut
 	io.KeyMap[ImGuiKey_Y] = 25;  // for text edit CTRL+Y: redo
 	io.KeyMap[ImGuiKey_Z] = 26;  // for text edit CTRL+Z: undo
-
+	io.KeyMap[ImGuiKey_D] = 4;   // for text edit CTRL+D: deselect all
 	return true;
 }
 

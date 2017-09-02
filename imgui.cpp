@@ -698,23 +698,6 @@ void ImGui::DestroyInstance()
     if (GImGui) { DestroyContext(GImGui); GImGui = 0; }
 }
 
-void ImGuiIO::redraw(int value, const char*func ,const char * caller)
-{
-    if ( value )
-    {
-/*
-        const char *window_name = "";
-        //ImGui::GetCurrentWindowRead()->Name;
-        if (GImGui && GImGui->CurrentWindow && GImGui->CurrentWindow->Name)
-        {
-            window_name = GImGui->CurrentWindow->Name;
-        }
-*/
-        //msg ( "redraw %s %s\n",func ? func : "", caller ? caller : "" );
-        _RedrawCount += value;
-    }
-}
-
 //-----------------------------------------------------------------------------
 // User facing structures
 //-----------------------------------------------------------------------------
@@ -849,7 +832,6 @@ ImGuiIO::ImGuiIO()
 #ifdef __APPLE__
     OSXBehaviors = true;
 #endif
-    _RedrawCount = 0;
 }
 
 // Pass in translated ASCII characters for text input.
@@ -3731,7 +3713,7 @@ bool ImGui::BeginPopupModal(const char* name, bool* p_open, ImGuiWindowFlags ext
             ClosePopup(id);
         return false;
     }
-    g.IO.redraw(is_open,"BeginPopupModal",name);
+    system_redraw("BeginPopupModal",name,is_open);
 
     return is_open;
 }
@@ -4606,7 +4588,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
             // Close button
             if (p_open != NULL)
             {
-                const float PAD = 2.0f;
+                const float PAD = 4.0f;
                 const float rad = (window->TitleBarHeight() - PAD*2.0f) * 0.5f;
                 if (CloseButton(window->GetID("#CLOSE"), window->Rect().GetTR() + ImVec2(-PAD - rad, PAD + rad), rad))
                     *p_open = false;
@@ -5904,7 +5886,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
 
     if (out_hovered) *out_hovered = hovered;
     if (out_held) *out_held = held;
-
+	system_redraw(__FUNCTION__,"",pressed);
     return pressed;
 }
 
@@ -7966,7 +7948,7 @@ static bool InputTextFilterCharacter(unsigned int* p_char, ImGuiInputTextFlags f
     {
         if (flags & ImGuiInputTextFlags_CharsDecimal)
         {
-            if ( c == ',' ) c = *p_char = '.';	//allow german
+            if ( c == ',' ) c = *p_char = '.';	//allow german punctuation
             if (!(c >= '0' && c <= '9') && (c != '.') && (c != '-') && (c != '+') && (c != '*') && (c != '/'))
                 return false;
         }
@@ -9020,8 +9002,8 @@ bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_ge
                         if (Selectable(item_text, item_selected,selFlags))
                         {
                             ClearActiveID();
-                            value_changed = true;
-                            *current_item = id;
+                            //value_changed = true;
+                            //*current_item = id;
                         }
                         PopID();
                     }
@@ -10414,6 +10396,12 @@ static void BeginLayout(ImGuiID id, ImGuiLayoutType type, ImVec2 size, float ali
     ImGui::PushID(id);
     ImGui::BeginGroup();
 
+    const ImVec2 content_avail = ImGui::GetContentRegionAvail();
+    if (size.x <= 0.0f)
+        size.x = ImMax(content_avail.x, 4.0f) - fabsf(size.x); // Arbitrary minimum zero-ish child size of 4.0f (0.0f causing too much issues)
+    if (size.y <= 0.0f)
+        size.y = ImMax(content_avail.y, 4.0f) - fabsf(size.y);
+
     // Find or create
     ImGuiLayout* layout = FindLayout(id, type);
     if (!layout)
@@ -11248,6 +11236,7 @@ void ImGui::Columns(int columns_count, const char* id, bool border,ImGuiItemGett
         EndColumns();
     
     ImGuiColumnsFlags flags = (border ? 0 : ImGuiColumnsFlags_NoBorder);
+	flags |= ImGuiColumnsFlags_NoForceWithinWindow;
     //flags |= ImGuiColumnsFlags_NoPreserveWidths; // NB: Legacy behavior
     if (columns_count != 1)
         BeginColumns(id, columns_count, flags);
