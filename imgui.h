@@ -722,7 +722,6 @@ enum ImGuiStyleVar_
     ImGuiStyleVar_IndentSpacing,       // float     IndentSpacing
     ImGuiStyleVar_GrabMinSize,         // float     GrabMinSize
     ImGuiStyleVar_ButtonTextAlign,     // ImVec2    ButtonTextAlign
-    ImGuiStyleVar_LayoutAlign,         // float
     ImGuiStyleVar_Count_
 };
 
@@ -819,7 +818,7 @@ struct ImGuiStyle
     float		CollapseTriangleScale;		// Scaling of Collapsed Triangle Default 1.f
     float		CloseButtonSize;			// Scaling of CloseButtonScale
     int         CircleLineSegment;			// Circle Vertex Line Segments 16
-
+	float       PopupRounding;              // Radius of window corners rounding. Set to 0.0f to have rectangular windows
     IMGUI_API ImGuiStyle();
 };
 

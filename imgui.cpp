@@ -778,6 +778,7 @@ ImGuiStyle::ImGuiStyle()
     CollapseTriangleScale	= 1.f;				// Scaling of Collapsed Triangle Default 1.f
     CloseButtonSize			= 8.f;				// Scaling of Closes Button
     CircleLineSegment       = 16;				// Circle Vertex Line Segments
+	PopupRounding           = 0.f;
     Colors[ImGuiCol_CollapseTriangle]       = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
     Colors[ImGuiCol_MaximizeButton]         = ImVec4(0.10f, 0.50f, 0.90f, 0.50f);
     Colors[ImGuiCol_MaximizeButtonHovered]  = ImVec4(0.20f, 0.70f, 0.90f, 0.60f);
@@ -3653,7 +3654,7 @@ static bool BeginPopupEx(ImGuiID id, ImGuiWindowFlags extra_flags)
         return false;
     }
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, g.Style.PopupRounding);
     ImGuiWindowFlags flags = extra_flags|ImGuiWindowFlags_Popup|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoSavedSettings;
 
     char name[20];
@@ -4355,7 +4356,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
 
         // Draw window + handle manual resize
         ImRect title_bar_rect = window->TitleBarRect();
-        const float window_rounding = (flags & ImGuiWindowFlags_ChildWindow) ? style.ChildWindowRounding : style.WindowRounding;
+		const float window_rounding = (flags & ImGuiWindowFlags_ChildWindow) ? style.ChildWindowRounding : (flags & ImGuiWindowFlags_Tooltip) ? style.PopupRounding : style.WindowRounding;
         if (window->Collapsed)
         {
             // Title bar only
@@ -5010,7 +5011,6 @@ static const ImGuiStyleVarInfo GStyleVarInfo[ImGuiStyleVar_Count_] =
     { ImGuiDataType_Float,  (ImU32)IM_OFFSETOF(ImGuiStyle, IndentSpacing) },        // ImGuiStyleVar_IndentSpacing
     { ImGuiDataType_Float,  (ImU32)IM_OFFSETOF(ImGuiStyle, GrabMinSize) },          // ImGuiStyleVar_GrabMinSize
     { ImGuiDataType_Float2, (ImU32)IM_OFFSETOF(ImGuiStyle, ButtonTextAlign) },      // ImGuiStyleVar_ButtonTextAlign
-    { ImGuiDataType_Float,  (ImU32)IM_OFFSETOF(ImGuiStyle, LayoutAlign) },
 };
 
 static const ImGuiStyleVarInfo* GetStyleVarInfo(ImGuiStyleVar idx)

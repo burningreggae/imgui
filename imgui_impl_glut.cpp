@@ -808,6 +808,7 @@ void style1()
 	style.CollapseTriangleScale = 0.85f;
 	style.CircleLineSegment = 50;
 	style.ColumnsMinSpacing = 0.f;
+	style.PopupRounding = 4.f;
 }
 
 void style2()
