@@ -37,7 +37,7 @@ enum EndAction_
 };
 
 
-enum Status_
+enum DockState
 {
 	Status_Docked,
 	Status_Float,
@@ -202,7 +202,7 @@ struct Dock
 	bool active;
 	ImVec2 pos;
 	ImVec2 size;
-	int status; // Status_
+	DockState status; // Status_
 	int last_frame;
 	int invalid_frames;
 	char location[16];
@@ -1384,11 +1384,13 @@ void DockContext::designer(bool *v_open)
 		Text("size_y = %.0f,\n",dock.size.y);
 		Text("location = '%s',\n",dock.location);
 
-		RadioButton("Docked", &dock.status, Status_Docked);
+		int state = dock.status;
+		RadioButton("Docked", &state, Status_Docked);
 		SameLine();
-		RadioButton("Dragged", &dock.status, Status_Dragged);
+		RadioButton("Dragged", &state, Status_Dragged);
 		SameLine();
-		RadioButton("Float", &dock.status, Status_Float);
+		RadioButton("Float", &state, Status_Float);
+		dock.status = (DockState)state;
 /*
 		Text("status = %d (%s),\n",dock.status, dock.status == Status_Docked?"Docked":
 				dock.status == Status_Dragged?"Dragged": 
@@ -1552,6 +1554,7 @@ void DockContext::load(const char *filename)
 		current = (Dock*)MemAlloc(sizeof(Dock));
 		current->last_frame = 0;
 		current->invalid_frames = 0;
+		current->location[0] = 0;
 		IM_PLACEMENT_NEW(current) Dock();
 		m_docks.push_back(current);
 	}
@@ -1591,7 +1594,7 @@ void DockContext::load(const char *filename)
 					else if ( !strcmp(var,"size_x")) current->size.x=(float)atof(token);
 					else if ( !strcmp(var,"size_y")) current->size.y=(float)atof(token);
 					else if ( !strcmp(var,"location")) strncpy(current->location,token,sizeof(current->location)),current->location[sizeof(current->location)-1]=0;
-					else if ( !strcmp(var,"status")) current->status=(Status_)atoi(token);
+					else if ( !strcmp(var,"status")) current->status=(DockState)atoi(token);
 					else if ( !strcmp(var,"active")) current->active=atoi(token) != 0;
 					else if ( !strcmp(var,"opened")) current->opened=atoi(token) != 0;
 					else if ( !strcmp(var,"first")) current->first=atoi(token) != 0;
@@ -1666,7 +1669,7 @@ void DockContext::load(const char *filename)
 					strcpy(dock.location, lua_tostring(L, -1));
 				if (lua_getfield(L, -8, "status") == LUA_TNUMBER)
 				{
-					dock.status = (Status_)lua_tointeger(L, -1);
+					dock.status = (DockStatus)lua_tointeger(L, -1);
 				}
 				lua_pop(L, 8);
 

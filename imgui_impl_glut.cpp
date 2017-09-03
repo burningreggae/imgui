@@ -18,6 +18,7 @@
 //static float        g_MouseWheel = 0.0f;
 static GLuint       g_FontTexture = 0;
 float g_FontWishSize = 15.f;
+int g_StyleWish = 0;
 int fontUseBit = 8;
 
 
@@ -486,23 +487,33 @@ void createFonts()
 {
 	if (g_FontTexture) return;
 
-
 	ImGuiIO& io = ImGui::GetIO();
-	io.Fonts->Clear();
-
 	io.FontAllowUserScaling = false;
 
+	ImFontAtlas& atlas = *io.Fonts;
+
+	atlas.Clear();
+
 	ImFontConfig config;
+	config.OversampleH = 1;
+	config.OversampleV = 1;
+	config.PixelSnapH = true;
+	config.GlyphExtraSpacing.x = 0.f;
+	config.SizePixels = g_FontWishSize;
+	config.MergeMode = false;
+	atlas.AddFontDefault(&config);
+
 	config.OversampleH = 3;
 	config.OversampleV = 1;
-	config.GlyphExtraSpacing.x = 0.f;
 	config.PixelSnapH = false;
+	config.GlyphExtraSpacing.x = 0.f;
 	//config.RasterizerMultiply = 1.5f;
 	//config.GlyphRanges = io.Fonts->GetGlyphRangesGreek();
 	//ImFont* font = io.Fonts->AddFontFromFileTTF("HelveticaLt.ttf", 12, &config);
 	//font->DisplayOffset.y -= 2;   // Render 1 pixel down
-
+	config.SizePixels = g_FontWishSize;
 	config.MergeMode = false;
+
 	ImWchar r0[] = { 0x0020, 0x007F, 0, };	//	// Basic Latin
 	//io.Fonts->AddFontFromFileTTF("HelveticaNeue.ttf", 15.f, &config,r0);
 	ImWchar r1[] = { 
@@ -516,7 +527,11 @@ void createFonts()
 		0x03A3, 0x03A3,
 		0x03C3, 0x03C3,
 		0,0 };	
-	io.Fonts->AddFontFromFileTTF("OptimaNeue.ttf", g_FontWishSize, &config,r1);
+	atlas.AddFontFromFileTTF("OptimaNeue.ttf", g_FontWishSize, &config,r1);
+
+	if ( g_StyleWish == 1 && atlas.Fonts.size() > 1 ) io.FontDefault = atlas.Fonts[1];
+	else io.FontDefault = 0;
+
 
 	// Degree Sign     ALT-248, 0x00B0, \xc2\xb0
 	// Uppercase Sigma ALT-228, 0x03A3, \xce\xa3
@@ -566,6 +581,7 @@ void createFonts()
 	//glBindTexture(GL_TEXTURE_2D, last_texture);
 
 	io.Fonts->ClearTexData();
+
 }
 
 extern void ShaderManager_log(GLhandleARB object, const char* filename, int type);
@@ -895,10 +911,11 @@ void style2()
 void SetStyle(int style,float fontSize)
 {
 	float d = g_FontWishSize-fontSize;
-	if ( d*d >= 0.999f )
+	if ( d*d >= 0.999f && fontSize>=1.f || g_StyleWish != style )
 	{
 		releaseFonts();
 		g_FontWishSize = fontSize;
+		g_StyleWish = style;
 	}
 
 	if ( style == 1 ) style1();
