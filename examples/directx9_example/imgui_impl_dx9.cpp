@@ -218,6 +218,10 @@ IMGUI_API LRESULT ImGui_ImplDX9_WndProcHandler(HWND, UINT msg, WPARAM wParam, LP
     return 0;
 }
 
+void system_redraw( const char *function, const char* caller, int value)
+{
+}
+
 bool    ImGui_ImplDX9_Init(void* hwnd, IDirect3DDevice9* device)
 {
     g_hWnd = (HWND)hwnd;
@@ -228,6 +232,7 @@ bool    ImGui_ImplDX9_Init(void* hwnd, IDirect3DDevice9* device)
     if (!QueryPerformanceCounter((LARGE_INTEGER *)&g_Time))
         return false;
 
+	ImGui::CreateInstance();
     ImGuiIO& io = ImGui::GetIO();
     io.KeyMap[ImGuiKey_Tab] = VK_TAB;                       // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array that we will update during the application lifetime.
     io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
@@ -259,6 +264,7 @@ void ImGui_ImplDX9_Shutdown()
 {
     ImGui_ImplDX9_InvalidateDeviceObjects();
     ImGui::Shutdown();
+	ImGui::DestroyInstance();
     g_pd3dDevice = NULL;
     g_hWnd = 0;
 }

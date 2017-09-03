@@ -22,7 +22,7 @@ int main(int, char**)
     glfwSwapInterval(1); // Enable vsync
 
     // Setup ImGui binding
-    ImGui_ImplGlfw_Init(window, true);
+    ImGui_ImplGlfwGL2_Init(window, true);
 
     // Load Fonts
     // (there is a default font, this is only if you want to change it. see extra_fonts/README.txt for more details)
@@ -42,7 +42,7 @@ int main(int, char**)
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
-        ImGui_ImplGlfw_NewFrame();
+        ImGui_ImplGlfwGL2_NewFrame();
 
         // 1. Show a simple window
         // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
@@ -59,16 +59,15 @@ int main(int, char**)
         // 2. Show another simple window, this time using an explicit Begin/End pair
         if (show_another_window)
         {
-            ImGui::SetNextWindowSize(ImVec2(200,100), ImGuiSetCond_FirstUseEver);
             ImGui::Begin("Another Window", &show_another_window);
-            ImGui::Text("Hello");
+            ImGui::Text("Hello from another window!");
             ImGui::End();
         }
 
         // 3. Show the ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
         if (show_test_window)
         {
-            ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+            ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
             ImGui::ShowTestWindow(&show_test_window);
         }
 
@@ -84,7 +83,7 @@ int main(int, char**)
     }
 
     // Cleanup
-    ImGui_ImplGlfw_Shutdown();
+    ImGui_ImplGlfwGL2_Shutdown();
     glfwTerminate();
 
     return 0;
