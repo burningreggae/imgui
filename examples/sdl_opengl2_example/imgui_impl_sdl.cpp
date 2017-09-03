@@ -194,8 +194,14 @@ void    ImGui_ImplSdlGL2_InvalidateDeviceObjects()
     }
 }
 
+void system_redraw( const c8 *function, const c8* caller, int value)
+{
+
+}
+
 bool    ImGui_ImplSdlGL2_Init(SDL_Window* window)
 {
+	ImGui::CreateInstance();
     ImGuiIO& io = ImGui::GetIO();
     io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
     io.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
@@ -238,6 +244,7 @@ void ImGui_ImplSdlGL2_Shutdown()
 {
     ImGui_ImplSdlGL2_InvalidateDeviceObjects();
     ImGui::Shutdown();
+	ImGui::DestroyInstance();
 }
 
 void ImGui_ImplSdlGL2_NewFrame(SDL_Window *window)

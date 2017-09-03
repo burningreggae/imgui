@@ -195,10 +195,15 @@ void    ImGui_ImplGlfwGL2_InvalidateDeviceObjects()
     }
 }
 
+void system_redraw( const char *function, const char* caller, int value)
+{
+}
+
 bool    ImGui_ImplGlfwGL2_Init(GLFWwindow* window, bool install_callbacks)
 {
     g_Window = window;
 
+	ImGui::CreateInstance();
     ImGuiIO& io = ImGui::GetIO();
     io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
     io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
@@ -243,6 +248,7 @@ void ImGui_ImplGlfwGL2_Shutdown()
 {
     ImGui_ImplGlfwGL2_InvalidateDeviceObjects();
     ImGui::Shutdown();
+	ImGui::DestroyInstance();
 }
 
 void ImGui_ImplGlfwGL2_NewFrame()
