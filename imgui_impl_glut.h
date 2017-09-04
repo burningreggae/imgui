@@ -13,7 +13,8 @@ IMGUI_API void ImGui_ImplGLUT_CreateDeviceObjects();
 IMGUI_API void ImGui_ImplGLUT_Shutdown();
 IMGUI_API void ImGui_ImplGLUT_MouseCursor();
 IMGUI_API int SystemMouseCursor( int cursorID );
-IMGUI_API void SetStyle(int style,float fontSize);
+IMGUI_API void SetStyle(int style,bool invert, int fontNr,float fontSize, float fontRasterMultiply);
+
 void savePNG ( const char *filename,unsigned char* pixels,int width, int height,int samples );
 
 struct Camera
@@ -42,6 +43,8 @@ struct Camera
 	unsigned char pickedFrameBuffer[16];
 	int pickedId;
 };
+
+#define GLUT_SPECIAL_OFFSET 256	//Map Glut special key
 
 #endif// __IMGUI_IMPL_GLUT_H_INCLUDED__
 

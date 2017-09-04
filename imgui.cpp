@@ -4152,7 +4152,8 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
     window->RootWindow = g.CurrentWindowStack[root_idx];
     window->RootNonPopupWindow = g.CurrentWindowStack[root_non_popup_idx];      // Used to display TitleBgActive color and for selecting which window to use for NavWindowing
 
-    const int titlebar_active = 1; //g.FocusedWindow && window->RootNonPopupWindow == g.FocusedWindow->RootNonPopupWindow;
+    // Title bar
+    const bool is_focused = g.NavWindow && window->RootNonPopupWindow == g.NavWindow->RootNonPopupWindow;
 
     // When reusing window again multiple times a frame, just append content (don't need to setup again)
     if (first_begin_of_the_frame)
@@ -4422,7 +4423,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 shadowFlags = ~0 & ~16; //center center off
                 col[0] = 0x22222222;
                 col[1] = 0x00222222;
-                if (titlebar_active)
+                if (is_focused)
                 {
                     shadowSize[0].x = 48+nudge;
                     shadowSize[0].y = 24+nudge;
@@ -4453,7 +4454,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 shadowFlags = ~0 & ~16; //center center off
                 col[0] = 0x22222222;
                 col[1] = 0x00222222;
-                if (titlebar_active)
+                if (is_focused)
                 {
                     shadowSize[0].x = 20+nudge;
                     shadowSize[0].y = 8+nudge;
@@ -4499,7 +4500,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 window->DrawList->AddRectFilled(window->Pos+ImVec2(0,window->TitleBarHeight()), window->Pos+window->Size, ColorConvertFloat4ToU32(bg_color), window_rounding, (flags & ImGuiWindowFlags_NoTitleBar) ? ImGuiCorner_All : ImGuiCorner_BotLeft|ImGuiCorner_BotRight);
 
             // Title bar
-            const bool is_focused = g.NavWindow && window->RootNonPopupWindow == g.NavWindow->RootNonPopupWindow;
+            //const bool is_focused = g.NavWindow && window->RootNonPopupWindow == g.NavWindow->RootNonPopupWindow;
             if (!(flags & ImGuiWindowFlags_NoTitleBar))
                 window->DrawList->AddRectFilled(title_bar_rect.GetTL(), title_bar_rect.GetBR(), GetColorU32(is_focused ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg), window_rounding, ImGuiCorner_TopLeft|ImGuiCorner_TopRight);
 
@@ -4614,9 +4615,9 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
             text_min.x += pad_left;
             text_max.x -= pad_right;
             clip_rect.Min = ImVec2(text_min.x, window->Pos.y);
-            if (!titlebar_active) PushStyleColor(ImGuiCol_Text, GImGui->Style.Colors[ImGuiCol_TextDisabled]);
+            if (!is_focused) PushStyleColor(ImGuiCol_Text, GImGui->Style.Colors[ImGuiCol_TextDisabled]);
             RenderTextClipped(text_min, text_max, name, NULL, &text_size, style.WindowTitleAlign, &clip_rect);
-            if (!titlebar_active) PopStyleColor();
+            if (!is_focused) PopStyleColor();
         }
 
         // Save clipped aabb so we can access it in constant-time in FindHoveredWindow()
@@ -8941,7 +8942,9 @@ bool ImGui::Combo2(const char* label, int* current_item, ImGuiItemGetter items_g
     if (window->SkipItems)
         return false;
 
+	//items_getter(data,0,(const char**) &items_count,ImGuiItemGetterCommand_get_item_count);
     items_count *= columns;
+
     ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window->GetID(label);
@@ -9733,8 +9736,8 @@ bool ImGui::ColorButton(const char* desc_id, const ImVec4& col, ImGuiColorEditFl
     }
     if (window->Flags & ImGuiWindowFlags_ShowBorders)
         RenderFrameBorder(bb.Min, bb.Max, rounding);
-    else
-        window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), rounding); // Color button are often in need of some sort of border
+    //else
+    //    window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), rounding); // Color button are often in need of some sort of border
 
     if (hovered && !(flags & ImGuiColorEditFlags_NoTooltip))
         ColorTooltip(desc_id, &col.x, flags & (ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf));

@@ -18,7 +18,9 @@
 //static float        g_MouseWheel = 0.0f;
 static GLuint       g_FontTexture = 0;
 float g_FontWishSize = 15.f;
+float g_FontWishRasterizerMultiply = 1.f;
 int g_StyleWish = 0;
+int g_FontWish = 0;
 int fontUseBit = 8;
 
 
@@ -500,6 +502,7 @@ void createFonts()
 	config.PixelSnapH = true;
 	config.GlyphExtraSpacing.x = 0.f;
 	config.SizePixels = g_FontWishSize;
+	config.RasterizerMultiply = 1.f;
 	config.MergeMode = false;
 	atlas.AddFontDefault(&config);
 
@@ -507,11 +510,11 @@ void createFonts()
 	config.OversampleV = 1;
 	config.PixelSnapH = false;
 	config.GlyphExtraSpacing.x = 0.f;
-	//config.RasterizerMultiply = 1.5f;
 	//config.GlyphRanges = io.Fonts->GetGlyphRangesGreek();
 	//ImFont* font = io.Fonts->AddFontFromFileTTF("HelveticaLt.ttf", 12, &config);
 	//font->DisplayOffset.y -= 2;   // Render 1 pixel down
 	config.SizePixels = g_FontWishSize;
+	config.RasterizerMultiply = g_FontWishRasterizerMultiply;
 	config.MergeMode = false;
 
 	ImWchar r0[] = { 0x0020, 0x007F, 0, };	//	// Basic Latin
@@ -529,8 +532,7 @@ void createFonts()
 		0,0 };	
 	atlas.AddFontFromFileTTF("OptimaNeue.ttf", g_FontWishSize, &config,r1);
 
-	if ( g_StyleWish == 1 && atlas.Fonts.size() > 1 ) io.FontDefault = atlas.Fonts[1];
-	else io.FontDefault = 0;
+	io.FontDefault = g_FontWish > 0 && atlas.Fonts.size() > g_FontWish ? atlas.Fonts[g_FontWish] : 0;
 
 
 	// Degree Sign     ALT-248, 0x00B0, \xc2\xb0
@@ -743,6 +745,63 @@ void style3()
     style.Colors[ImGuiCol_PopupBg] = ImVec4(0.82f, 0.92f, 1.00f, 0.90f);
     style.Alpha = 1.0f;
     style.FrameRounding = 4;
+
+}
+
+void style4()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+        
+    // light style from Pacôme Danhiez (user itamago) https://github.com/ocornut/imgui/pull/511#issuecomment-175719267
+    style.Alpha = 1.0f;
+    style.FrameRounding = 3.0f;
+    style.Colors[ImGuiCol_Text]                  = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+    style.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
+    style.Colors[ImGuiCol_WindowBg]              = ImVec4(0.94f, 0.94f, 0.94f, 0.94f);
+    style.Colors[ImGuiCol_ChildWindowBg]         = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+    style.Colors[ImGuiCol_PopupBg]               = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
+    style.Colors[ImGuiCol_Border]                = ImVec4(0.00f, 0.00f, 0.00f, 0.39f);
+    style.Colors[ImGuiCol_BorderShadow]          = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
+    style.Colors[ImGuiCol_FrameBg]               = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
+    style.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+    style.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+    style.Colors[ImGuiCol_TitleBg]               = ImVec4(0.96f, 0.96f, 0.96f, 1.00f);
+    style.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(1.00f, 1.00f, 1.00f, 0.51f);
+    style.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
+    style.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
+    style.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
+    style.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.69f, 0.69f, 0.69f, 1.00f);
+    style.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
+    style.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
+    style.Colors[ImGuiCol_ComboBg]               = ImVec4(0.86f, 0.86f, 0.86f, 0.99f);
+    style.Colors[ImGuiCol_CheckMark]             = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    style.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
+    style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    style.Colors[ImGuiCol_Button]                = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+    style.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    style.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
+    style.Colors[ImGuiCol_Header]                = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
+    style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+    style.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    style.Colors[ImGuiCol_Column]                = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+    style.Colors[ImGuiCol_ColumnHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 0.78f);
+    style.Colors[ImGuiCol_ColumnActive]          = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    style.Colors[ImGuiCol_ResizeGrip]            = ImVec4(1.00f, 1.00f, 1.00f, 0.50f);
+    style.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+    style.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+    style.Colors[ImGuiCol_CloseButton]           = ImVec4(0.59f, 0.59f, 0.59f, 0.50f);
+    style.Colors[ImGuiCol_CloseButtonHovered]    = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
+    style.Colors[ImGuiCol_CloseButtonActive]     = ImVec4(0.98f, 0.39f, 0.36f, 1.00f);
+    style.Colors[ImGuiCol_PlotLines]             = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+    style.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+    style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+    style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+    style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+    style.Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+
+    style.Alpha = 1.0f;
+    style.FrameRounding = 4;
+
 }
 
 // https://github.com/ocornut/imgui/pull/511#issuecomment-175719267
@@ -905,23 +964,59 @@ void style2()
 	style.CollapseTriangleScale = 0.85f;
 	style.CircleLineSegment = 50;
 	style.ColumnsMinSpacing = 0.f;
+
 }
 
+void StyleAdjust(bool invert, float alpha )
+{
+	ImGuiStyle& style = ImGui::GetStyle();
 
-void SetStyle(int style,float fontSize)
+	for (int i = 0; i <= ImGuiCol_COUNT; i++)
+	{
+		ImVec4& col = style.Colors[i];
+		float H, S, V;
+		ImGui::ColorConvertRGBtoHSV( col.x, col.y, col.z, H, S, V );
+
+		if( invert && S < 0.1f )
+		{
+			V = 1.0f - V;
+		}
+		ImGui::ColorConvertHSVtoRGB( H, S, V, col.x, col.y, col.z );
+		if( col.w < 1.00f )
+		{
+			col.w *= alpha;
+		}
+	}
+}
+
+void SetStyle(int style,bool styleInvert, int fontNr, float fontSize, float fontRasterMultiply)
 {
 	float d = g_FontWishSize-fontSize;
-	if ( d*d >= 0.999f && fontSize>=1.f || g_StyleWish != style )
+	float d1 = g_FontWishRasterizerMultiply-fontRasterMultiply;
+	if ( d*d >= 0.999f && fontSize>=1.f || g_StyleWish != style || d1*d1 >= 0.01f )
 	{
 		releaseFonts();
 		g_FontWishSize = fontSize;
 		g_StyleWish = style;
+		g_FontWishRasterizerMultiply = fontRasterMultiply;
 	}
 
+	g_FontWish = fontNr;
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		ImFontAtlas& atlas = *io.Fonts;
+		io.FontDefault = g_FontWish > 0 && atlas.Fonts.size() > g_FontWish ? atlas.Fonts[g_FontWish] : 0;
+	}
+
+	ImGui::GetStyle() = ImGuiStyle();
 	if ( style == 1 ) style1();
-	else if ( style == 2 ) style2();
+	else if ( style == 2 ) style4();
 	else if ( style == 3 ) style3();
-	else if ( style == 0 ) ImGui::GetStyle() = ImGuiStyle();
+
+	if ( styleInvert )
+	{
+		StyleAdjust(styleInvert,1.f);
+	}
 
 }
 
@@ -944,12 +1039,15 @@ bool ImGui_ImplGLUT_Init()
 #endif
 
 	io.KeyMap[ImGuiKey_Tab] = 9;    // tab
-	io.KeyMap[ImGuiKey_LeftArrow] = GLUT_KEY_LEFT + 256;	// Left
-	io.KeyMap[ImGuiKey_RightArrow] = GLUT_KEY_RIGHT + 256;	// Right
-	io.KeyMap[ImGuiKey_UpArrow] = GLUT_KEY_UP + 256;		// Up
-	io.KeyMap[ImGuiKey_DownArrow] = GLUT_KEY_DOWN + 256;	// Down
-	io.KeyMap[ImGuiKey_Home] = GLUT_KEY_HOME + 256;			// Home
-	io.KeyMap[ImGuiKey_End] = GLUT_KEY_END + 256;			// End
+	io.KeyMap[ImGuiKey_LeftArrow] = GLUT_KEY_LEFT + GLUT_SPECIAL_OFFSET;	// Left
+	io.KeyMap[ImGuiKey_RightArrow] = GLUT_KEY_RIGHT + GLUT_SPECIAL_OFFSET;	// Right
+	io.KeyMap[ImGuiKey_UpArrow] = GLUT_KEY_UP + GLUT_SPECIAL_OFFSET;		// Up
+	io.KeyMap[ImGuiKey_DownArrow] = GLUT_KEY_DOWN + GLUT_SPECIAL_OFFSET;	// Down
+	io.KeyMap[ImGuiKey_Home] = GLUT_KEY_HOME + GLUT_SPECIAL_OFFSET;			// Home
+	io.KeyMap[ImGuiKey_End] = GLUT_KEY_END + GLUT_SPECIAL_OFFSET;			// End
+	io.KeyMap[ImGuiKey_PageUp] = GLUT_KEY_PAGE_UP + GLUT_SPECIAL_OFFSET;
+	io.KeyMap[ImGuiKey_PageDown] = GLUT_KEY_PAGE_DOWN + GLUT_SPECIAL_OFFSET;
+
 	io.KeyMap[ImGuiKey_Delete] = 127;  // Delete
 	io.KeyMap[ImGuiKey_Backspace] = 8;    // Backspace
 	io.KeyMap[ImGuiKey_Enter] = 13;   // Enter

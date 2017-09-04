@@ -995,6 +995,7 @@ void ImDrawList::AddRectFilled(const ImVec2& a, const ImVec2& b, ImU32 col, floa
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+
     if (rounding > 0.0f)
     {
         PathRect(a, b, rounding, rounding_corners_flags);
