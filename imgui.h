@@ -85,6 +85,7 @@ typedef void (*ImGuiSizeConstraintCallback)(ImGuiSizeConstraintCallbackData* dat
 enum ImGuiItemGetterCommand
 {
     ImGuiItemGetterCommand_get_text = 0,
+	ImGuiItemGetterCommand_get_item_count,
     ImGuiItemGetterCommand_get_combo_edit,
     ImGuiItemGetterCommand_get_region_width,
     ImGuiItemGetterCommand_get_column_auto_size,
