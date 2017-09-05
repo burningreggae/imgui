@@ -2407,16 +2407,24 @@ void ImGui::NewFrame()
         }
     }
 
-    //Horizonal Scrolling
-    if (g.HoveredWindow && g.IO.MouseWheelH != 0.0f && !g.HoveredWindow->Collapsed)
-    {
-        ImGuiWindow* window = g.HoveredWindow;
-        if (!(window->Flags & ImGuiWindowFlags_NoScrollWithMouse))
-        {
-            // Scroll X
-            window->ScrollTarget.x = window->Scroll.x + g.IO.MouseWheelH * window->DC.CursorMaxPos.x / 20.f;
-        }
-    }
+	//Scroll additional
+	{
+		ImGuiWindow* window = g.HoveredWindow;
+		if ( window && !window->Collapsed && !(window->Flags & ImGuiWindowFlags_NoScrollWithMouse))
+		{
+			int scroll_lines = IsKeyPressedMap(ImGuiKey_UpArrow) - IsKeyPressedMap(ImGuiKey_DownArrow);
+			scroll_lines += (IsKeyPressedMap(ImGuiKey_PageUp) - IsKeyPressedMap(ImGuiKey_PageDown) ) * 20;
+			if ( scroll_lines ) SetWindowScrollY(window, window->Scroll.y - window->CalcFontSize() * scroll_lines);
+
+			// Horizonal Scrolling
+			if (g.IO.MouseWheelH != 0.f)
+			{
+				window->ScrollTarget.x = window->Scroll.x + g.IO.MouseWheelH * window->DC.CursorMaxPos.x / 20.f;
+				window->ScrollTargetCenterRatio.x = 0.0f;
+			}
+		}
+
+	}
 
     // Pressing TAB activate widget focus
     // NB: Don't discard FocusedWindow if it isn't active, so that a window that go on/off programatically won't lose its keyboard focus.
@@ -8548,7 +8556,10 @@ bool ImGui::InputTextEx(const char* label, char* buf, int buf_size, const ImVec2
         ImVec2 cursor_screen_pos = render_pos + cursor_offset - render_scroll;
         ImRect cursor_screen_rect(cursor_screen_pos.x, cursor_screen_pos.y-g.FontSize+0.5f, cursor_screen_pos.x+1.0f, cursor_screen_pos.y-1.5f);
         if (cursor_is_visible && cursor_screen_rect.Overlaps(clip_rect))
-            draw_window->DrawList->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
+		{
+			draw_window->DrawList->AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text));
+		}
+		system_redraw(__FUNCTION__);
 
         // Notify OS of text input position for advanced IME (-1 x offset so that Windows IME can cover our cursor. Bit of an extra nicety.)
         if (is_editable)
