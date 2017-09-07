@@ -373,8 +373,8 @@ void DockContext::splits()
 		}
 	}
 
-	ImU32 color = GetColorU32(ImGuiCol_Column);
-	ImU32 color_hovered = GetColorU32(ImGuiCol_ColumnHovered);
+	ImU32 color = GetColorU32(ImGuiCol_Separator);
+	ImU32 color_hovered = GetColorU32(ImGuiCol_SeparatorHovered);
 	ImDrawList* draw_list = GetWindowDrawList();
 	ImGuiIO& io = GetIO();
 	for (i = 0; i < m_docks.size(); ++i)
