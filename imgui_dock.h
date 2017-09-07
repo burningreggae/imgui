@@ -1,5 +1,5 @@
-#ifndef __IMGUI_H_INCLUDED__
-#define __IMGUI_H_INCLUDED__
+#ifndef __IMGUI_DOCK_H_INCLUDED__
+#define __IMGUI_DOCK_H_INCLUDED__
 
 #include "imgui.h"
 

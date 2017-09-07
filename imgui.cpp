@@ -9107,7 +9107,7 @@ bool ImGui::Combo2(const char* label, int* current_item, ImGuiItemGetter items_g
 
             ImRect popup_rect(ImVec2(popup_x1, popup_y1), ImVec2(popup_x2, popup_y2));
             SetNextWindowPos(popup_rect.Min);
-            SetNextWindowSize(popup_rect.GetSize(),line_count< 1 ? ImGuiSetCond_Always:ImGuiSetCond_FirstUseEver);
+            SetNextWindowSize(popup_rect.GetSize(),line_count< 1 ? ImGuiCond_Always:ImGuiCond_FirstUseEver);
             SetNextWindowSizeConstraints(
                 ImVec2(frame_bb.GetSize().x, 0),
                 ImVec2(g.IO.DisplaySize.x - style.DisplaySafeAreaPadding.x - popup_x1,
@@ -9333,7 +9333,7 @@ bool ImGui::ListBoxHeader(const char* label, const ImVec2& size_arg)
     if (label_size.x > 0)
         RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
 
-    BeginChildFrame(id, frame_bb.GetSize());
+    BeginChildFrame(id, frame_bb.GetSize(),ImGuiWindowFlags_HorizontalScrollbar);
     return true;
 }
 
