@@ -2198,7 +2198,7 @@ ImDrawData* ImGui::GetDrawData()
 
 float ImGui::GetTime()
 {
-    return GImGui->Time;
+    return GImGui ? GImGui->Time : 0.f;
 }
 
 int ImGui::GetFrameCount()
@@ -4060,6 +4060,9 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
 
     if (flags & ImGuiWindowFlags_NoInputs)
         flags |= ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
+
+	//TA
+	flags |= ImGuiWindowFlags_NoSavedSettings;
 
     // Find or create
     bool window_is_new = false;
