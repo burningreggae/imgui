@@ -87,9 +87,10 @@ enum ImGuiItemGetterCommand
     ImGuiItemGetterCommand_get_text = 0,
 	ImGuiItemGetterCommand_get_item_count,
     ImGuiItemGetterCommand_get_combo_edit,
-    ImGuiItemGetterCommand_get_region_width,
+    ImGuiItemGetterCommand_get_content_width,
     ImGuiItemGetterCommand_get_column_auto_size,
     ImGuiItemGetterCommand_get_column_visible,
+	ImGuiItemGetterCommand_get_visible_column_width_norm,
     ImGuiItemGetterCommand_set_current_item,
 };
 typedef bool (*ImGuiItemGetter) (void* data, int idx, const char** out_text,ImGuiItemGetterCommand cmd);

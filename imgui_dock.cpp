@@ -1221,6 +1221,8 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 	}
 	dock.opened = true;
 
+	ImGuiContext& g = *GImGui;
+	ImVec2 nextWindowContentSizeVal = g.SetNextWindowContentSizeVal;
 	//m_end_action = EndAction_Panel;
 	//beginPanel();
 
@@ -1288,12 +1290,8 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 		full_size.x += CalcTextSize(label, text_end).x + pad;
 		dock_tab = dock_tab->next_tab;
 	}
+	bool need_HorizontalScrollbar = full_size.x > dock.size.x;
 
-	bool need_HorizontalScrollbar = full_size.x > GetContentRegionAvailWidth();
-	if ( need_HorizontalScrollbar )
-	{
-		int g = 1;
-	}
 	if (tabbar(dock.getFirstTab(),
 		opened != 0,
 		extra_flags & ImGuiWindowFlags_NoInputs ? false : true,
@@ -1319,6 +1317,11 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 	// to avoid https://github.com/ocornut/imgui/issues/713
 	char tmp[256];
 	ImFormatString(tmp,IM_ARRAYSIZE(tmp),"%s_docked",label);
+	if ( extra_flags & ImGuiWindowFlags_HorizontalScrollbar )
+	{
+		size.y -= GetStyle().ScrollbarSize * 0.5f;
+		SetNextWindowContentSize(nextWindowContentSizeVal);
+	}
 
 	bool ret = BeginChild(tmp, size, border, flags);
 	//PopStyleColor();

@@ -9108,7 +9108,7 @@ bool ImGui::Combo2(const char* label, int* current_item, ImGuiItemGetter items_g
 
             //ask for virtual content width before open window
             bool doSetContentWidth = false;
-            if(items_getter(data,0,(const char**) &content_width,ImGuiItemGetterCommand_get_region_width))
+            if(items_getter(data,0,(const char**) &content_width,ImGuiItemGetterCommand_get_content_width))
             {
                 //SetNextWindowContentWidth(content_width);
                 doSetContentWidth = true;
@@ -11278,7 +11278,7 @@ void ImGui::PushColumnClipRect(int column_index)
     PushClipRect(window->DC.ColumnsData[column_index].ClipRect.Min, window->DC.ColumnsData[column_index].ClipRect.Max, false);
 }
 
-void ImGui::BeginColumns(const char* id, int columns_count, ImGuiColumnsFlags flags)
+void ImGui::BeginColumns(const char* id, int columns_count, ImGuiColumnsFlags flags,ImGuiItemGetter items_getter, void *data)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = GetCurrentWindow();
@@ -11314,7 +11314,11 @@ void ImGui::BeginColumns(const char* id, int columns_count, ImGuiColumnsFlags fl
     {
         const ImGuiID column_id = window->DC.ColumnsSetId + ImGuiID(column_index);
         KeepAliveID(column_id);
-        const float default_t = column_index / (float)window->DC.ColumnsCount;
+        float default_t = column_index / (float)window->DC.ColumnsCount;
+		if (items_getter)
+		{
+            items_getter(data,column_index,(const char**) &default_t,ImGuiItemGetterCommand_get_visible_column_width_norm);
+		}
         float t = window->DC.StateStorage->GetFloat(column_id, default_t);
         if (!(window->DC.ColumnsFlags & ImGuiColumnsFlags_NoForceWithinWindow))
             t = ImMin(t, PixelsToOffsetNorm(window, window->DC.ColumnsMaxX - g.Style.ColumnsMinSpacing * (window->DC.ColumnsCount - column_index)));
@@ -11413,7 +11417,7 @@ void ImGui::Columns(int columns_count, const char* id, bool border,ImGuiItemGett
 	flags |= ImGuiColumnsFlags_NoForceWithinWindow;
     //flags |= ImGuiColumnsFlags_NoPreserveWidths; // NB: Legacy behavior
     if (columns_count != 1)
-        BeginColumns(id, columns_count, flags);
+        BeginColumns(id, columns_count, flags,items_getter,data);
 }
 
 void ImGui::Indent(float indent_w)
