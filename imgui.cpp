@@ -4428,7 +4428,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 int shadowFlags;
 
                 //light shadow
-                shadowFlags = ~0 & ~16; //center center off
+                shadowFlags = ~0 & ~16; //all on + center center off
                 col[0] = 0x22222222;
                 col[1] = 0x00222222;
                 if (is_focused)
@@ -4449,17 +4449,17 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 }
                 if ( flags & ImGuiWindowFlags_Tooltip)
                 {
-                    shadowSize[0].x *= 0.5f;
-                    shadowSize[0].y *= 0.5f;
-                    shadowSize[1].x *= 0.5f;
-                    shadowSize[1].y *= 0.5f;
+                    //shadowSize[0].x *= 0.5f;
+                    //shadowSize[0].y *= 0.5f;
+                    //shadowSize[1].x *= 0.5f;
+                    //shadowSize[1].y *= 0.5f;
                 }
                 shadow.Min = window->Pos + ofs[0];
                 shadow.Max = window->Pos + window->Size - ofs[1];
                 window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,shadowFlags);
 
                 //darker shadow
-                shadowFlags = ~0 & ~16; //center center off
+                shadowFlags = ~0 & ~16; //all on + center center off
                 col[0] = 0x22222222;
                 col[1] = 0x00222222;
                 if (is_focused)
@@ -4480,10 +4480,10 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 }
                 if ( flags & ImGuiWindowFlags_Tooltip)
                 {
-                    shadowSize[0].x *= 0.5f;
-                    shadowSize[0].y *= 0.5f;
-                    shadowSize[1].x *= 0.5f;
-                    shadowSize[1].y *= 0.5f;
+                    //shadowSize[0].x *= 0.5f;
+                    //shadowSize[0].y *= 0.5f;
+                    //shadowSize[1].x *= 0.5f;
+                    //shadowSize[1].y *= 0.5f;
                 }
 
                 shadow.Min = window->Pos + ofs[0];
@@ -7508,9 +7508,9 @@ void ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_ge
             const float v0 = values_getter(data, (v_idx + values_offset) % values_count);
             const float v1 = values_getter(data, (v_idx + 1 + values_offset) % values_count);
             if (plot_type == ImGuiPlotType_Lines)
-                SetTooltip("%d: %8.4g\n%d: %8.4g", v_idx, v0, v_idx+1, v1);
+                SetTooltip("%d: %+8.4g\n%d: %8.4g", v_idx, v0, v_idx+1, v1);
             else if (plot_type == ImGuiPlotType_Histogram)
-                SetTooltip("%d: %8.4g", v_idx, v0);
+                SetTooltip("%d: %+8.4g", v_idx, v0);
             v_hovered = v_idx;
         }
 
