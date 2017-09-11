@@ -248,6 +248,7 @@ struct DockContext
 	bool tabbar(Dock& dock, bool close_button, bool enabled, bool need_HorizontalScrollbar);
 	void rootDock(const ImVec2& pos, const ImVec2& size);
 	void setDockActive(const char* name);
+	void setDockWindowPos(const char* name, const ImVec2& pos);
 	const char* getDockActive();
 	void tryDockToStoredLocation(Dock& dock);
 	bool begin(const char* label, bool* opened, bool border, ImGuiWindowFlags extra_flags, const ImVec2& default_size);
@@ -1137,7 +1138,10 @@ const char* DockContext::getDockActive()
 
 void DockContext::setDockActive(const char* name)
 {
-	if (0==name && m_current) m_current->setActive();
+	if (0==name && m_current)
+	{
+		m_current->setActive();
+	}
 	else if (name)
 	{
 		ImU32 id = ImHash(name, 0);
@@ -1150,6 +1154,27 @@ void DockContext::setDockActive(const char* name)
 			}
 		}
 	}
+}
+
+void DockContext::setDockWindowPos(const char* name, const ImVec2& pos)
+{
+	if (0==name && m_current)
+	{
+		m_current->pos = pos;
+	}
+	else if (name)
+	{
+		ImU32 id = ImHash(name, 0);
+		for (int i = 0; i < m_docks.size(); ++i)
+		{
+			if (m_docks[i]->id == id)
+			{
+				m_docks[i]->pos = pos;
+				break;
+			}
+		}
+	}
+
 }
 
 
@@ -1831,6 +1856,10 @@ const char* GetDockActive(int slot)
 	return g_dock[slot].getDockActive();
 }
 
+void SetDockWindowPos(int slot, const char* name, const ImVec2& pos)
+{
+	g_dock[slot].setDockWindowPos(name,pos);
+}
 
 bool BeginDock(const char* name, bool* opened,ImGuiWindowFlags extra_flags, const ImVec2& default_size, bool border)
 {
