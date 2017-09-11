@@ -4428,7 +4428,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 int shadowFlags;
 
                 //light shadow
-                shadowFlags = ~0 & ~16; //center center off
+                shadowFlags = ~0 & ~16; //all on + center center off
                 col[0] = 0x22222222;
                 col[1] = 0x00222222;
                 if (is_focused)
@@ -4449,17 +4449,17 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 }
                 if ( flags & ImGuiWindowFlags_Tooltip)
                 {
-                    shadowSize[0].x *= 0.5f;
-                    shadowSize[0].y *= 0.5f;
-                    shadowSize[1].x *= 0.5f;
-                    shadowSize[1].y *= 0.5f;
+                    //shadowSize[0].x *= 0.5f;
+                    //shadowSize[0].y *= 0.5f;
+                    //shadowSize[1].x *= 0.5f;
+                    //shadowSize[1].y *= 0.5f;
                 }
                 shadow.Min = window->Pos + ofs[0];
                 shadow.Max = window->Pos + window->Size - ofs[1];
                 window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,shadowFlags);
 
                 //darker shadow
-                shadowFlags = ~0 & ~16; //center center off
+                shadowFlags = ~0 & ~16; //all on + center center off
                 col[0] = 0x22222222;
                 col[1] = 0x00222222;
                 if (is_focused)
@@ -4480,10 +4480,10 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 }
                 if ( flags & ImGuiWindowFlags_Tooltip)
                 {
-                    shadowSize[0].x *= 0.5f;
-                    shadowSize[0].y *= 0.5f;
-                    shadowSize[1].x *= 0.5f;
-                    shadowSize[1].y *= 0.5f;
+                    //shadowSize[0].x *= 0.5f;
+                    //shadowSize[0].y *= 0.5f;
+                    //shadowSize[1].x *= 0.5f;
+                    //shadowSize[1].y *= 0.5f;
                 }
 
                 shadow.Min = window->Pos + ofs[0];
@@ -7508,9 +7508,9 @@ void ImGui::PlotEx(ImGuiPlotType plot_type, const char* label, float (*values_ge
             const float v0 = values_getter(data, (v_idx + values_offset) % values_count);
             const float v1 = values_getter(data, (v_idx + 1 + values_offset) % values_count);
             if (plot_type == ImGuiPlotType_Lines)
-                SetTooltip("%d: %8.4g\n%d: %8.4g", v_idx, v0, v_idx+1, v1);
+                SetTooltip("%d: %+8.4g\n%d: %8.4g", v_idx, v0, v_idx+1, v1);
             else if (plot_type == ImGuiPlotType_Histogram)
-                SetTooltip("%d: %8.4g", v_idx, v0);
+                SetTooltip("%d: %+8.4g", v_idx, v0);
             v_hovered = v_idx;
         }
 
@@ -9108,7 +9108,7 @@ bool ImGui::Combo2(const char* label, int* current_item, ImGuiItemGetter items_g
 
             //ask for virtual content width before open window
             bool doSetContentWidth = false;
-            if(items_getter(data,0,(const char**) &content_width,ImGuiItemGetterCommand_get_region_width))
+            if(items_getter(data,0,(const char**) &content_width,ImGuiItemGetterCommand_get_content_width))
             {
                 //SetNextWindowContentWidth(content_width);
                 doSetContentWidth = true;
@@ -11278,7 +11278,7 @@ void ImGui::PushColumnClipRect(int column_index)
     PushClipRect(window->DC.ColumnsData[column_index].ClipRect.Min, window->DC.ColumnsData[column_index].ClipRect.Max, false);
 }
 
-void ImGui::BeginColumns(const char* id, int columns_count, ImGuiColumnsFlags flags)
+void ImGui::BeginColumns(const char* id, int columns_count, ImGuiColumnsFlags flags,ImGuiItemGetter items_getter, void *data)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = GetCurrentWindow();
@@ -11314,7 +11314,11 @@ void ImGui::BeginColumns(const char* id, int columns_count, ImGuiColumnsFlags fl
     {
         const ImGuiID column_id = window->DC.ColumnsSetId + ImGuiID(column_index);
         KeepAliveID(column_id);
-        const float default_t = column_index / (float)window->DC.ColumnsCount;
+        float default_t = column_index / (float)window->DC.ColumnsCount;
+		if (items_getter)
+		{
+            items_getter(data,column_index,(const char**) &default_t,ImGuiItemGetterCommand_get_visible_column_width_norm);
+		}
         float t = window->DC.StateStorage->GetFloat(column_id, default_t);
         if (!(window->DC.ColumnsFlags & ImGuiColumnsFlags_NoForceWithinWindow))
             t = ImMin(t, PixelsToOffsetNorm(window, window->DC.ColumnsMaxX - g.Style.ColumnsMinSpacing * (window->DC.ColumnsCount - column_index)));
@@ -11413,7 +11417,7 @@ void ImGui::Columns(int columns_count, const char* id, bool border,ImGuiItemGett
 	flags |= ImGuiColumnsFlags_NoForceWithinWindow;
     //flags |= ImGuiColumnsFlags_NoPreserveWidths; // NB: Legacy behavior
     if (columns_count != 1)
-        BeginColumns(id, columns_count, flags);
+        BeginColumns(id, columns_count, flags,items_getter,data);
 }
 
 void ImGui::Indent(float indent_w)

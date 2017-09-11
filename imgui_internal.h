@@ -842,7 +842,7 @@ namespace ImGui
     IMGUI_API int           CalcTypematicPressedRepeatAmount(float t, float t_prev, float repeat_delay, float repeat_rate);
 
     // FIXME-WIP: New Columns API
-    IMGUI_API void          BeginColumns(const char* id, int count, ImGuiColumnsFlags flags = 0); // setup number of columns. use an identifier to distinguish multiple column sets. close with EndColumns().
+    IMGUI_API void          BeginColumns(const char* id, int count, ImGuiColumnsFlags flags = 0, ImGuiItemGetter items_getter= 0, void *data=0); // setup number of columns. use an identifier to distinguish multiple column sets. close with EndColumns().
     IMGUI_API void          EndColumns();                                                         // close columns
     IMGUI_API void          PushColumnClipRect(int column_index = -1);
 
