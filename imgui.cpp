@@ -4418,7 +4418,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
             window->BorderSize = (flags & ImGuiWindowFlags_ShowBorders) ? 1.0f : 0.0f;
 
             //shadow
-            if ( !(flags & ImGuiWindowFlags_ChildWindow))
+            if ( !(flags & (ImGuiWindowFlags_NoShadows|ImGuiWindowFlags_ChildWindow)) )
             {
                 float nudge = window_rounding * 0.5f;
                 ImVec2 shadowSize[2];

@@ -95,6 +95,7 @@ struct shaderparamlayer
 	int _colorshift;
 	int _tex_gen;
 	int _alpha_premul;
+	int _colorMode;
 
 	unsigned int octTex;
 	unsigned int octTexType; 
@@ -105,6 +106,7 @@ struct shaderparamlayer
 	unsigned int transferTexPrivate;	//private colormap
 	unsigned int transferTexLink;		//linked colormap
 	float colorshift;
+	int colorMode;
 };
 
 struct shaderparam
