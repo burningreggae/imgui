@@ -26,14 +26,14 @@ int fontUseBit = 8;
 
 // Data
 static GLhandleARB  g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
-static int          g_AttribLocationTex = -1, g_AttribLocationTime = -1,g_AttribLocationProjMtx = -1;
+static int          g_AttribLocationTex = -1, g_AttribLocationTime = -1,g_AttribLocationProjMtx = -1,g_AttribLocationColorMode=-1;
 static int          g_AttribLocationPosition = -1, g_AttribLocationUV = -1, g_AttribLocationColor =-1;
 static GLhandleARB g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
 #define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
 
 extern Camera cam;
-
+extern int gui_ColorMode;
 GLuint currentTexture2D = 0;
 
 void setGUIShader(GLhandleARB shader)
@@ -50,6 +50,7 @@ void setGUIShader(GLhandleARB shader)
 	glUseProgram(shader);
 	if (g_AttribLocationTex>=0) glUniform1i(g_AttribLocationTex, 0);
 	if (g_AttribLocationTime>=0) glUniform1fARB(g_AttribLocationTime, ImGui::GetTime()); 
+	if (g_AttribLocationColorMode>=0) glUniform1i(g_AttribLocationColorMode, gui_ColorMode); 
 	glShadeModel(GL_SMOOTH);
 
 	glBlendEquationEXT(GL_FUNC_ADD_EXT);
@@ -586,15 +587,33 @@ void createFonts()
 
 }
 
-extern void ShaderManager_log(GLhandleARB object, const char* filename, int type);
-extern void ShaderManager_build(GLhandleARB& program,const char *shadername);
+extern void shaderManager_log(GLhandleARB object, const char* filename, int type);
+extern void shaderManager_build(GLhandleARB& program,const char *shadername);
+extern int& shaderManager_reload();
+
+void releaseShader()
+{
+    if (g_ShaderHandle && g_VertHandle) glDetachShader(g_ShaderHandle, g_VertHandle);
+    if (g_VertHandle) glDeleteShader(g_VertHandle),g_VertHandle = 0;
+
+    if (g_ShaderHandle && g_FragHandle) glDetachShader(g_ShaderHandle, g_FragHandle);
+    if (g_FragHandle) glDeleteShader(g_FragHandle),g_FragHandle = 0;
+
+    if (g_ShaderHandle) glDeleteProgram(g_ShaderHandle),g_ShaderHandle = 0;
+
+}
 
 void createShader()
 {
-	if (g_ShaderHandle) return;
-	ShaderManager_build(g_ShaderHandle,fontUseBit == 32 ? "shader2d_imgui32":"shader2d_imgui");
+	if (!(shaderManager_reload() & 2)) return;
+	
+	releaseShader();
+	shaderManager_build(g_ShaderHandle,fontUseBit == 32 ? "shader2d_imgui32":"shader2d_imgui");
 	g_AttribLocationTex = glGetUniformLocationARB(g_ShaderHandle, "Texture");
 	g_AttribLocationTime = glGetUniformLocationARB(g_ShaderHandle, "Time");
+	g_AttribLocationColorMode = glGetUniformLocationARB(g_ShaderHandle, "colorMode");
+
+	shaderManager_reload() &= ~2;
 	return;
 
     const GLchar *vertex_shader =
@@ -629,16 +648,16 @@ void createShader()
     g_FragHandle = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(g_VertHandle, 1, &vertex_shader, 0);
     glCompileShader(g_VertHandle);
-	ShaderManager_log(g_VertHandle,"vertex_shader",GL_OBJECT_COMPILE_STATUS_ARB);
+	shaderManager_log(g_VertHandle,"vertex_shader",GL_OBJECT_COMPILE_STATUS_ARB);
 
     glShaderSource(g_FragHandle, 1, &fragment_shader, 0);
     glCompileShader(g_FragHandle);
-	ShaderManager_log(g_FragHandle,"fragment_shader",GL_OBJECT_COMPILE_STATUS_ARB);
+	shaderManager_log(g_FragHandle,"fragment_shader",GL_OBJECT_COMPILE_STATUS_ARB);
 
     glAttachShader(g_ShaderHandle, g_VertHandle);
     glAttachShader(g_ShaderHandle, g_FragHandle);
     glLinkProgram(g_ShaderHandle);
-	ShaderManager_log(g_ShaderHandle,"g_ShaderHandle",GL_OBJECT_LINK_STATUS_ARB);
+	shaderManager_log(g_ShaderHandle,"g_ShaderHandle",GL_OBJECT_LINK_STATUS_ARB);
 	
     g_AttribLocationTex = glGetUniformLocation(g_ShaderHandle, "Texture");
     g_AttribLocationProjMtx = glGetUniformLocation(g_ShaderHandle, "ProjMtx");
@@ -672,25 +691,25 @@ void createBuffer()
 
 void ImGui_ImplGLUT_CreateDeviceObjects()
 {
-	if (g_FontTexture) return;
-
+/*
 	// Backup GL state
     GLint last_texture, last_array_buffer, last_vertex_array;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
-
-
+*/
 	createFonts();
 	createShader();
 	createBuffer();
 
+/*
     // Restore modified GL state
     glBindTexture(GL_TEXTURE_2D, last_texture);
     glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
     glBindVertexArray(last_vertex_array);
-
+*/
 }
+
 
 void ImGui_ImplGLUT_InvalidateDeviceObjects()
 {
@@ -699,14 +718,7 @@ void ImGui_ImplGLUT_InvalidateDeviceObjects()
     if (g_ElementsHandle) glDeleteBuffers(1, &g_ElementsHandle);
     g_VaoHandle = g_VboHandle = g_ElementsHandle = 0;
 
-    if (g_ShaderHandle && g_VertHandle) glDetachShader(g_ShaderHandle, g_VertHandle);
-    if (g_VertHandle) glDeleteShader(g_VertHandle),g_VertHandle = 0;
-
-    if (g_ShaderHandle && g_FragHandle) glDetachShader(g_ShaderHandle, g_FragHandle);
-    if (g_FragHandle) glDeleteShader(g_FragHandle),g_FragHandle = 0;
-
-    if (g_ShaderHandle) glDeleteProgram(g_ShaderHandle),g_ShaderHandle = 0;
-
+	releaseShader();
 	releaseFonts();
 }
 

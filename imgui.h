@@ -557,6 +557,7 @@ enum ImGuiWindowFlags_
     ImGuiWindowFlags_AlwaysHorizontalScrollbar=1<< 15,  // Always show horizontal scrollbar (even if ContentSize.x < Size.x)
     ImGuiWindowFlags_AlwaysUseWindowPadding = 1 << 16,  // Ensure child windows without border uses style.WindowPadding (ignored by default for non-bordered child windows, because more convenient)
     ImGuiWindowFlags_NoZoom                 = 1 << 17,  // Allow fontuserscaling
+	ImGuiWindowFlags_NoShadows				= 1 << 18,  // Disable Shadows
 
     // [Internal]
     ImGuiWindowFlags_ChildWindow            = 1 << 22,  // Don't use! For internal use by BeginChild()
