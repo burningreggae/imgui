@@ -118,8 +118,14 @@ struct Dock
 	{
 		active = true;
 		system_redraw(__FUNCTION__,label.c_str());
-		for (Dock* tmp = prev_tab; tmp; tmp = tmp->prev_tab) tmp->active = false;
-		for (Dock* tmp = next_tab; tmp; tmp = tmp->next_tab) tmp->active = false;
+		int run = 0;
+		Dock* tmp;
+		for (tmp = prev_tab; tmp && run < 1000; tmp = tmp->prev_tab) tmp->active = false;
+		for (tmp = next_tab; tmp && run < 1000; tmp = tmp->next_tab) tmp->active = false;
+		if ( run >= 1000 )
+		{
+			int g = 1;
+		}
 	}
 
 
