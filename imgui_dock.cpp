@@ -9,7 +9,7 @@
 // https://bitbucket.org/duangle/liminal/src/tip/src/liminal/imgui_dock.cpp?fileviewer=file-view-default
 const char* COM_Parse( const char* *data_p, bool allowLineBreaks = true );
 char* loadFile(const char* filename);
-void saveFile(const char* filename, const void* data, size_t size);
+int saveFile(const char* filename, const void* data, size_t size);
 
 
 namespace ImGui

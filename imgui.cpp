@@ -5950,7 +5950,7 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
     // Render
-    const ImU32 col = GetColorU32((hovered && held) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    const ImU32 col = GetColorU32(flags & ImGuiButtonFlags_Disabled ? ImGuiCol_TextDisabled : (hovered && held) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
     RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
     RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
 
