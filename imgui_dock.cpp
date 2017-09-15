@@ -1350,7 +1350,7 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 	ImFormatString(tmp,IM_ARRAYSIZE(tmp),"%s_docked",label);
 	if ( extra_flags & ImGuiWindowFlags_HorizontalScrollbar )
 	{
-		size.y -= GetStyle().ScrollbarSize * 0.5f;
+		size.y -= GetStyle().ScrollbarSize + GetStyle().WindowPadding.y;
 		SetNextWindowContentSize(nextWindowContentSizeVal);
 	}
 
@@ -1825,7 +1825,7 @@ bool DockBeginWorkspace(const char* name, int slot)
 	{
 		//above dockbar
 		g_dock[dock_current].m_workspace_pos = GetWindowPos() + GetCursorPos();
-		g_dock[dock_current].m_workspace_size = GetContentRegionAvail();
+		g_dock[dock_current].m_workspace_size = GetContentRegionMax() - GetStyle().WindowPadding;
 	}
 	return true;
 }

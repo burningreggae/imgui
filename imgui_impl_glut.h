@@ -13,7 +13,7 @@ IMGUI_API void ImGui_ImplGLUT_CreateDeviceObjects();
 IMGUI_API void ImGui_ImplGLUT_Shutdown();
 IMGUI_API void ImGui_ImplGLUT_MouseCursor();
 IMGUI_API int SystemMouseCursor( int cursorID );
-IMGUI_API void SetStyle(int style,bool invert, int fontNr,float fontSize, float fontRasterMultiply);
+IMGUI_API void SetStyle(int style,bool styleInvert, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply);
 
 void savePNG ( const char *filename,unsigned char* pixels,int width, int height,int samples );
 

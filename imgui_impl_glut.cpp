@@ -33,7 +33,7 @@ static GLhandleARB g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 #define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
 
 extern Camera cam;
-extern int gui_ColorMode;
+int sceneFile_ColorMode();
 GLuint currentTexture2D = 0;
 
 void setGUIShader(GLhandleARB shader)
@@ -50,7 +50,7 @@ void setGUIShader(GLhandleARB shader)
 	glUseProgram(shader);
 	if (g_AttribLocationTex>=0) glUniform1i(g_AttribLocationTex, 0);
 	if (g_AttribLocationTime>=0) glUniform1fARB(g_AttribLocationTime, ImGui::GetTime()); 
-	if (g_AttribLocationColorMode>=0) glUniform1i(g_AttribLocationColorMode, gui_ColorMode); 
+	if (g_AttribLocationColorMode>=0) glUniform1i(g_AttribLocationColorMode, sceneFile_ColorMode()); 
 	glShadeModel(GL_SMOOTH);
 
 	glBlendEquationEXT(GL_FUNC_ADD_EXT);
@@ -979,10 +979,11 @@ void style2()
 
 }
 
-void StyleAdjust(bool invert, float alpha )
+void StyleAdjust(bool invert, float alpha,float saturate )
 {
-	ImGuiStyle& style = ImGui::GetStyle();
+	if ( alpha < 0.1f ) alpha = 0.1f;
 
+	ImGuiStyle& style = ImGui::GetStyle();
 	for (int i = 0; i <= ImGuiCol_COUNT; i++)
 	{
 		ImVec4& col = style.Colors[i];
@@ -993,15 +994,18 @@ void StyleAdjust(bool invert, float alpha )
 		{
 			V = 1.0f - V;
 		}
+		S *= saturate;
+		if ( S < 0.f ) S = 0.f; else if (S > 1.f ) S = 1.f;
 		ImGui::ColorConvertHSVtoRGB( H, S, V, col.x, col.y, col.z );
-		if( col.w < 1.00f )
+		//if( col.w < 1.00f )
 		{
 			col.w *= alpha;
 		}
+		if ( col.w < 0.f ) col.w = 0.f; else if ( col.w > 1.f ) col.w = 1.f;
 	}
 }
 
-void SetStyle(int style,bool styleInvert, int fontNr, float fontSize, float fontRasterMultiply)
+void SetStyle(int style,bool styleInvert, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply)
 {
 	float d = g_FontWishSize-fontSize;
 	float d1 = g_FontWishRasterizerMultiply-fontRasterMultiply;
@@ -1025,10 +1029,7 @@ void SetStyle(int style,bool styleInvert, int fontNr, float fontSize, float font
 	else if ( style == 2 ) style4();
 	else if ( style == 3 ) style3();
 
-	if ( styleInvert )
-	{
-		StyleAdjust(styleInvert,1.f);
-	}
+	StyleAdjust(styleInvert,alpha,saturate);
 
 }
 
@@ -1072,6 +1073,7 @@ bool ImGui_ImplGLUT_Init()
 	io.KeyMap[ImGuiKey_Y] = 25;  // for text edit CTRL+Y: redo
 	io.KeyMap[ImGuiKey_Z] = 26;  // for text edit CTRL+Z: undo
 	io.KeyMap[ImGuiKey_D] = 4;   // for text edit CTRL+D: deselect all
+	io.KeyMap[ImGuiKey_R] = 18;  // for text edit CTRL+R: revert
 	return true;
 }
 
