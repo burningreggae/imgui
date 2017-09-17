@@ -3775,7 +3775,7 @@ bool ImGui::BeginPopupContextVoid(const char* str_id, int mouse_button)
 static bool BeginChildEx(const char* name, ImGuiID id, const ImVec2& size_arg, bool border, ImGuiWindowFlags extra_flags)
 {
     ImGuiWindow* parent_window = ImGui::GetCurrentWindow();
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_ChildWindow;
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_ChildWindow|ImGuiWindowFlags_NoShadows;
 
     const ImVec2 content_avail = ImGui::GetContentRegionAvail();
     ImVec2 size = ImFloor(size_arg);
@@ -4418,7 +4418,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
             window->BorderSize = (flags & ImGuiWindowFlags_ShowBorders) ? 1.0f : 0.0f;
 
             //shadow
-            if ( !(flags & (ImGuiWindowFlags_NoShadows|ImGuiWindowFlags_ChildWindow)) )
+            if ( !(flags & ImGuiWindowFlags_NoShadows) )
             {
                 float nudge = window_rounding * 0.5f;
                 ImVec2 shadowSize[2];
@@ -4427,7 +4427,9 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 ImRect shadow;
                 int shadowFlags;
 
-                //light shadow
+	            if ( !(flags & ImGuiWindowFlags_ChildWindow) ) {
+
+                //light shadow, the bigger one
                 shadowFlags = ~0 & ~16; //all on + center center off
                 col[0] = 0x22222222;
                 col[1] = 0x00222222;
@@ -4457,6 +4459,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 shadow.Min = window->Pos + ofs[0];
                 shadow.Max = window->Pos + window->Size - ofs[1];
                 window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,shadowFlags);
+				} // child
 
                 //darker shadow
                 shadowFlags = ~0 & ~16; //all on + center center off
@@ -4478,12 +4481,12 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                     shadowSize[1].x = 14+nudge;
                     shadowSize[1].y = 20+nudge;
                 }
-                if ( flags & ImGuiWindowFlags_Tooltip)
+                if ( flags & ImGuiWindowFlags_ChildWindow)
                 {
-                    //shadowSize[0].x *= 0.5f;
-                    //shadowSize[0].y *= 0.5f;
-                    //shadowSize[1].x *= 0.5f;
-                    //shadowSize[1].y *= 0.5f;
+                    shadowSize[0].x *= 0.25f;
+                    shadowSize[0].y *= 0.25f;
+                    shadowSize[1].x *= 0.25f;
+                    shadowSize[1].y *= 0.25f;
                 }
 
                 shadow.Min = window->Pos + ofs[0];
