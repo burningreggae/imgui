@@ -15,17 +15,6 @@ int saveFile(const char* filename, const void* data, size_t size);
 namespace ImGui
 {
 
-enum Slot_
-{
-	Slot_Left,
-	Slot_Right,
-	Slot_Top,
-	Slot_Bottom,
-	Slot_Tab,
-
-	Slot_Float,
-	Slot_None
-};
 
 
 enum EndAction_
@@ -39,7 +28,7 @@ enum EndAction_
 
 enum DockState
 {
-	Status_Docked,
+	Status_Docked = 0,
 	Status_Float,
 	Status_Dragged
 };
@@ -61,6 +50,7 @@ struct Dock
 		, invalid_frames(0)
 		, first(true)
 	{
+		label[0] = 0;
 		location[0] = 0;
 		children[0] = children[1] = 0;
 	}
@@ -68,7 +58,10 @@ struct Dock
 
 	virtual ~Dock()
 	{
-		label.clear();
+		//label.clear();
+		//label[0] = 0;
+		invalid_frames += 1;
+		printf("Free for %p %s\n",this,label);
 	}
 
 
@@ -120,11 +113,11 @@ struct Dock
 	void setActive()
 	{
 		active = true;
-		system_redraw(__FUNCTION__,label.c_str());
+		system_redraw(__FUNCTION__,label);
 		int run = 0;
 		Dock* tmp;
-		for (tmp = prev_tab; tmp && run < 1000; tmp = tmp->prev_tab) tmp->active = false;
-		for (tmp = next_tab; tmp && run < 1000; tmp = tmp->next_tab) tmp->active = false;
+		for (tmp = prev_tab; tmp && ++run < 1000; tmp = tmp->prev_tab) tmp->active = false;
+		for (tmp = next_tab; tmp && ++run < 1000; tmp = tmp->next_tab) tmp->active = false;
 		if ( run >= 1000 )
 		{
 			int g = 1;
@@ -202,7 +195,8 @@ struct Dock
 	}
 
 	ImU32 id;
-	ImVector<char> label;
+	//ImVector<char> label;
+	char label[1024];
 
 	Dock* next_tab;
 	Dock* prev_tab;
@@ -233,7 +227,8 @@ struct DockContext
 	Slot_ m_next_dock_slot;
 	bool dock_open;
 	bool asChild;
-	ImVector<char> label;
+	//ImVector<char> label;
+	char label[1024];
 	int index;
 
 	DockContext();
@@ -257,7 +252,7 @@ struct DockContext
 	bool tabbar(Dock* dock, bool close_button, bool enabled, bool need_HorizontalScrollbar);
 	void rootDock(const ImVec2& pos, const ImVec2& size);
 	void setDockActive(const char* name);
-	void setDockWindowPos(const char* name, const ImVec2& pos);
+	void setDockWindowPos(const char* name, const ImVec2& pos, const ImVec2& size,int newState);
 	const char* getDockActive();
 	void tryDockToStoredLocation(Dock& dock);
 	bool begin(const char* label, bool* opened, bool border, ImGuiWindowFlags extra_flags, const ImVec2& default_size);
@@ -285,8 +280,8 @@ void DockContext::verify()
 	for (int i = 0; i < m_docks.size(); ++i)
 	{
 		Dock* d = m_docks[i];
-		const char* name = d->label.c_str();
-		d->id = ImHash(name ? name : "",0);
+
+		d->id = ImHash(d->label,0);
 		if ( d->children[0] == d ) d->children[0] = 0;
 		if ( d->children[1] == d ) d->children[1] = 0;
 		if ( d->next_tab == d )
@@ -316,7 +311,8 @@ void DockContext::reset()
 	m_next_dock_slot = Slot_Tab;
 	dock_open = true;
 	asChild = true;
-	label.clear();
+	//label.clear();
+	label[0] = 0;
 	index = 0;
 }
 
@@ -333,7 +329,10 @@ Dock& DockContext::getDock(const char* label, bool opened, const ImVec2& default
 	Dock* new_dock = (Dock*)MemAlloc(sizeof(Dock));
 	IM_PLACEMENT_NEW(new_dock) Dock();
 	m_docks.push_back(new_dock);
-	new_dock->label.ImStrdup(label);
+	//new_dock->label.ImStrdup(label);
+	strncpy(new_dock->label,label ? label : "",sizeof(new_dock->label));
+	new_dock->label[sizeof(new_dock->label)-1] = 0;
+
 	//IM_ASSERT(new_dock->label);
 	new_dock->id = id;
 	new_dock->setActive();
@@ -471,7 +470,7 @@ void DockContext::splits()
 		if (isItemHovered)
 		{
 	        SetMouseCursor(cursor);
-			system_redraw(__FUNCTION__,dock.label.c_str());
+			system_redraw(__FUNCTION__,dock.label);
 		}
             
 		if (isItemHovered && IsMouseClicked(0))
@@ -524,7 +523,10 @@ void DockContext::checkNonexistent()
 				//Call as closed dock
 				bool open = false;
 				//label.ImStrdup(dock.label.c_str());
-				begin(dock.label.c_str(),&open,false,0,ImVec2(100,10));
+				strncpy(label,dock.label,sizeof(label));
+				label[sizeof(label)-1] = 0;
+
+				begin(dock.label,&open,false,0,ImVec2(100,10));
 				end();
 				dock.invalid_frames = 0;
 				i = 0;
@@ -780,7 +782,7 @@ void fillLocation(Dock& dock)
 
 void DockContext::doUndock(Dock& dock)
 {
-	system_redraw(__FUNCTION__,dock.label.c_str());
+	system_redraw(__FUNCTION__,dock.label);
 
 	if (dock.prev_tab)
 		dock.prev_tab->setActive();
@@ -788,8 +790,8 @@ void DockContext::doUndock(Dock& dock)
 		dock.next_tab->setActive();
 	else
 		dock.active = false;
-	Dock* container = dock.parent;
 
+	Dock* container = dock.parent;
 	if (container)
 	{
 		Dock* sibling = dock.getSibling();
@@ -807,9 +809,7 @@ void DockContext::doUndock(Dock& dock)
 		{
 			if (container->parent)
 			{
-				Dock*& child = container->parent->children[0] == container
-					? container->parent->children[0]
-				: container->parent->children[1];
+				Dock*& child = container->parent->children[0] == container ? container->parent->children[0]	: container->parent->children[1];
 				child = sibling;
 				if ( child )
 				{
@@ -832,10 +832,24 @@ void DockContext::doUndock(Dock& dock)
 			}
 			for (int i = 0; i < m_docks.size(); ++i)
 			{
-				if (m_docks[i] == container)
+				Dock* d = m_docks[i];
+
+				if ( d->parent == container )
+					d->parent = 0;
+				if ( d->next_tab == container )
+					d->next_tab = 0;
+				if ( d->prev_tab == container )
+					d->prev_tab = 0;
+				if ( d->children[0] == container )
+					d->children[0] = 0;
+				if ( d->children[1] == container )
+					d->children[1] = 0;
+
+				if (d == container)
 				{
 					m_docks.erase(m_docks.begin() + i);
-					break;
+					//break;
+					i = 0;
 				}
 			}
 
@@ -844,6 +858,7 @@ void DockContext::doUndock(Dock& dock)
 
 			container->~Dock();
 			MemFree(container);
+			container = 0;
 		}
 	}
 	if (dock.prev_tab)
@@ -870,7 +885,7 @@ void drawTabbarListButton(Dock& dock)
 		while (tmp)
 		{
 			bool dummy = false;
-			if (Selectable(tmp->label.c_str(), &dummy))
+			if (Selectable(tmp->label, &dummy))
 			{
 				tmp->setActive();
 			}
@@ -936,7 +951,7 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 	while (dock_tab)
 	{
 		//SameLine(0, 15);
-		const char* label = dock_tab->label.c_str();
+		const char* label = dock_tab->label;
 		const char* text_end = FindRenderedTextEnd(label);
 					
 		ImVec2 size(CalcTextSize(label, text_end).x+ style.FramePadding.x * 2.0f, line_height);
@@ -1043,7 +1058,9 @@ static void setDockPosSize(Dock& dest, Dock& dock, Slot_ dock_slot, Dock& contai
 		dock.size.y *= 0.5f;
 		dest.pos.y += dock.size.y;
 		break;
-	default: IM_ASSERT(false); break;
+	default:
+		IM_ASSERT(false);
+		break;
 	}
 	dest.setPosSize(dest.pos, dest.size);
 
@@ -1117,7 +1134,7 @@ void DockContext::doDock(Dock& dock, Dock* dest, Slot_ dock_slot)
 		container->size = dest->size;
 		container->pos = dest->pos;
 		container->status = Status_Docked;
-		container->label.ImStrdup("");
+		container->label[0] = 0; //.ImStrdup("");
 
 		if (!dest->parent)
 		{
@@ -1138,7 +1155,7 @@ void DockContext::doDock(Dock& dock, Dock* dest, Slot_ dock_slot)
 		setDockPosSize(*dest, dock, dock_slot, *container);
 	}
 	dock.setActive();
-	system_redraw(__FUNCTION__,dock.label.c_str());
+	system_redraw(__FUNCTION__,dock.label);
 }
 
 
@@ -1158,7 +1175,7 @@ const char* DockContext::getDockActive()
 	{
 		if (m_docks[i]->active)
 		{
-			return m_docks[i]->label.c_str();
+			return m_docks[i]->label;
 		}
 	}
 	return "";
@@ -1184,21 +1201,36 @@ void DockContext::setDockActive(const char* name)
 	}
 }
 
-void DockContext::setDockWindowPos(const char* name, const ImVec2& pos)
+void DockContext::setDockWindowPos(const char* name, const ImVec2& pos,const ImVec2& size,int newdockstate)
 {
 	if (0==name && m_current)
 	{
 		m_current->pos = pos;
+		m_current->size = size;
+		if ( newdockstate>=0 ) m_current->status = (DockState) newdockstate;
 	}
 	else if (name)
 	{
 		ImU32 id = ImHash(name, 0);
 		for (int i = 0; i < m_docks.size(); ++i)
 		{
-			if (m_docks[i]->id == id)
+			if ( !m_docks[i] ) continue;
+			Dock &dock = *m_docks[i];
+
+			if (dock.id == id)
 			{
-				m_docks[i]->pos = pos;
-				break;
+				dock.pos = pos;
+				dock.size = size;
+				if ( newdockstate>=0 ) dock.status = (DockState) newdockstate;
+/*
+				if ( newdockstate == Status_Float )
+				{
+					fillLocation(dock);
+					doUndock(dock);
+					dock.status = Status_Float;
+				}
+*/
+				//break;
 			}
 		}
 	}
@@ -1248,10 +1280,12 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 	Dock& dock = getDock(label, !opened || *opened, default_size);
 	if (!dock.opened && (!opened || *opened)) tryDockToStoredLocation(dock);
 	dock.last_frame = ImGui::GetFrameCount();
-	if (strcmp(dock.label.c_str(), label) != 0)
+	if (strcmp(dock.label, label) != 0)
 	{
 		//MemFree(dock.label);
-		dock.label.ImStrdup(label);
+		//dock.label.ImStrdup(label);
+		strncpy(dock.label,label,sizeof(dock.label));
+		dock.label[sizeof(dock.label)-1] = 0;
 	}
 
 	m_end_action = EndAction_None;
@@ -1305,7 +1339,8 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 			extra_flags);
 		m_end_action = EndAction_End;
 		dock.pos = GetWindowPos();
-		if (ret) dock.size = GetWindowSize();
+		if (ret) 
+			dock.size = GetWindowSize();
 
 		ImGuiContext& g = *GImGui;
 
@@ -1337,7 +1372,7 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 	float pad = GetStyle().FramePadding.x * 2.f;
 	while (dock_tab)
 	{
-		const char* label = dock_tab->label.c_str();
+		const char* label = dock_tab->label;
 		const char* text_end = FindRenderedTextEnd(label);
 				
 		full_size.x += CalcTextSize(label, text_end).x + pad;
@@ -1424,16 +1459,16 @@ void DockContext::designer(bool *v_open)
 		return;
 	}
 	PushID((void*)this);
-	Text("%s",label.c_str());
+	Text("%s",label);
 	for (int i = 0; i < m_docks.size(); ++i)
 	{
-		if (!TreeNode((void*)(i), "Dock %d %s", i, m_docks[i]->label.c_str()))
+		if (!TreeNode((void*)(i), "Dock %d %s", i, m_docks[i]->label))
 			continue;
 		Dock &dock = *m_docks[i];
 
 		Text("index = %d,\n",i);
 		Text("id = 0x%x,\n",dock.id);
-		Text("label = '%s',\n",dock.label.c_str());
+		Text("label = '%s',\n",dock.label);
 		Text("pos_x = %.0f,\n",dock.pos.x);
 		Text("pos_y = %.0f,\n",dock.pos.y);
 		Text("size_x = %.0f,\n",dock.size.x);
@@ -1520,7 +1555,7 @@ Dock* DockContext::getDockByIndex(const char* name)
 void DockContext::dump()
 {
 	msg("docks={\n");
-	msg("label=\"%s\",\n",label.c_str());
+	msg("label=\"%s\",\n",label);
 	for (int i = 0; i < m_docks.size(); ++i)
 	{
 		Dock& dock = *m_docks[i];
@@ -1528,7 +1563,7 @@ void DockContext::dump()
 		msg( "dock%d={\n",i);
 
 		msg("index=%d,\n",i);
-		msg("label=\"%s\",\n",dock.label.c_str() ? dock.label.c_str() : "" );
+		msg("label=\"%s\",\n",dock.label );
 		msg("pos_x=%.0f,\n",dock.pos.x);
 		msg("pos_y=%.0f,\n",dock.pos.y);
 		msg("size_x=%.0f,\n",dock.size.x);
@@ -1554,7 +1589,7 @@ void DockContext::dump()
 void DockContext::save(ImGuiTextBuffer &out)
 {
 	out.append("docks={\n");
-	out.append("label=\"%s\",\n",label.c_str());
+	out.append("label=\"%s\",\n",label);
 	for (int i = 0; i < m_docks.size(); ++i)
 	{
 		Dock& dock = *m_docks[i];
@@ -1562,7 +1597,7 @@ void DockContext::save(ImGuiTextBuffer &out)
 		out.append( "dock%d={\n",i);
 
 		out.append("index=%d,\n",i);
-		out.append("label=\"%s\",\n",dock.label.c_str() ? dock.label.c_str() : "" );
+		out.append("label=\"%s\",\n",dock.label );
 		out.append("pos_x=%.0f,\n",dock.pos.x);
 		out.append("pos_y=%.0f,\n",dock.pos.y);
 		out.append("size_x=%.0f,\n",dock.size.x);
@@ -1673,12 +1708,12 @@ void DockContext::load(const char *filename)
 				if ( state != 2 ) break;
 				if ( depth == 1 )
 				{
-					if ( !strcmp(var,"label")) label.ImStrdup(token);
+					if ( !strcmp(var,"label")) strncpy(label,token,sizeof(label)),label[sizeof(label)-1]=0; // label.ImStrdup(token);
 				}
 				else if ( depth == 2 )
 				{
 					if ( !strcmp(var,"index")) current = getDockByIndex(token), current->first = false;
-					else if ( !strcmp(var,"label")) current->label.ImStrdup(token);
+					else if ( !strcmp(var,"label")) strncpy(current->label,token,sizeof(current->label)),current->label[sizeof(current->label)-1]=0;// current->label.ImStrdup(token);
 					else if ( !strcmp(var,"pos_x")) current->pos.x=(float)atof(token);
 					else if ( !strcmp(var,"pos_y")) current->pos.y=(float)atof(token);
 					else if ( !strcmp(var,"size_x")) current->size.x=(float)atof(token);
@@ -1810,14 +1845,14 @@ void Print()
 			d->pos.y,
 			d->size.x,
 			d->size.y,
-			d->children[0] ? d->children[0]->label.c_str() : "None",
-			d->children[1] ? d->children[1]->label.c_str() : "None",
-			d->prev_tab    ? d->prev_tab->label.c_str()    : "None",
-			d->next_tab    ? d->next_tab->label.c_str()    : "None",
-			d->parent      ? d->parent->label.c_str()      : "None",
+			d->children[0] ? d->children[0]->label : "None",
+			d->children[1] ? d->children[1]->label : "None",
+			d->prev_tab    ? d->prev_tab->label    : "None",
+			d->next_tab    ? d->next_tab->label    : "None",
+			d->parent      ? d->parent->label     : "None",
 			d->status,
 			d->location,
-			d->label.c_str());
+			d->label);
 	}
 }
 
@@ -1828,9 +1863,9 @@ void ShutdownDock()
 }
 
 
-void SetNextDock()
+void SetNextDockSlot(Slot_ val)
 {
-	g_dock[dock_current].m_next_dock_slot = Slot_Tab;
+	g_dock[dock_current].m_next_dock_slot = val;
 }
 
 bool DockWorkspaceClosed()
@@ -1864,7 +1899,10 @@ bool DockBeginWorkspace(const char* name, int slot)
 	{
 		g_dock[dock_current].asChild = true;
 	}
-	g_dock[dock_current].label.ImStrdup(name);
+	//g_dock[dock_current].label.ImStrdup(name);
+	strncpy(g_dock[dock_current].label,name,sizeof(g_dock[dock_current].label));
+	g_dock[dock_current].label[sizeof(g_dock[dock_current].label)-1] = 0;
+
 	bool doBegin = g_dock[dock_current].asChild ?
 		BeginChild(name,ImVec2(0,0), false,flags):
 		Begin(name,&g_dock[dock_current].dock_open, flags);
@@ -1918,9 +1956,9 @@ const char* GetDockActive(int slot)
 	return g_dock[slot].getDockActive();
 }
 
-void SetDockWindowPos(int slot, const char* name, const ImVec2& pos)
+void SetDockWindowPos(int slot, const char* name, const ImVec2& pos,const ImVec2& size,int dockState)
 {
-	g_dock[slot].setDockWindowPos(name,pos);
+	g_dock[slot].setDockWindowPos(name,pos,size,dockState);
 }
 
 bool BeginDock(const char* name, bool* opened,ImGuiWindowFlags extra_flags, const ImVec2& default_size, bool border)

@@ -5,15 +5,26 @@
 
 namespace ImGui
 {
+	enum Slot_
+	{
+		Slot_Left,
+		Slot_Right,
+		Slot_Top,
+		Slot_Bottom,
+		Slot_Tab,
+
+		Slot_Float,
+		Slot_None
+	};
 
 	IMGUI_API void ShutdownDock();
-	IMGUI_API void SetNextDock();
+	IMGUI_API void SetNextDockSlot(Slot_ val);
 	IMGUI_API void RootDock(const ImVec2& pos, const ImVec2& size);
 	IMGUI_API bool BeginDock(const char* label, bool* opened = 0, ImGuiWindowFlags extra_flags = 0, const ImVec2& default_size = ImVec2(-1, -1),bool border = false);
 	IMGUI_API void EndDock();
 	IMGUI_API void SetDockActive(int slot, const char* label);
 	IMGUI_API const char* GetDockActive(int slot);
-	IMGUI_API void SetDockWindowPos(int slot, const char* name, const ImVec2& pos);
+	IMGUI_API void SetDockWindowPos(int slot, const char* name, const ImVec2& pos,const ImVec2& size, int dockState );
 
 	IMGUI_API void SaveDock(int slot, ImGuiTextBuffer &out);
 	IMGUI_API void LoadDock(int slot, const char *filename);
