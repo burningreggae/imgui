@@ -26,12 +26,6 @@ enum EndAction_
 };
 
 
-enum DockState
-{
-	Status_Docked = 0,
-	Status_Float,
-	Status_Dragged
-};
 
 
 struct Dock
@@ -252,7 +246,7 @@ struct DockContext
 	bool tabbar(Dock* dock, bool close_button, bool enabled, bool need_HorizontalScrollbar);
 	void rootDock(const ImVec2& pos, const ImVec2& size);
 	void setDockActive(const char* name);
-	void setDockWindowPos(const char* name, const ImVec2& pos, const ImVec2& size,int newState);
+	void setDockWindowPos(const char* name, const ImVec2& pos, const ImVec2& size,DockState newState);
 	const char* getDockActive();
 	void tryDockToStoredLocation(Dock& dock);
 	bool begin(const char* label, bool* opened, bool border, ImGuiWindowFlags extra_flags, const ImVec2& default_size);
@@ -277,6 +271,7 @@ DockContext::~DockContext()
 
 void DockContext::verify()
 {
+	int lastActive = -1;
 	for (int i = 0; i < m_docks.size(); ++i)
 	{
 		Dock* d = m_docks[i];
@@ -288,6 +283,13 @@ void DockContext::verify()
 			d->next_tab = 0;
 		if ( d->prev_tab == d )
 			d->prev_tab = 0;
+/*
+		if ( d->active )
+		{
+			if (lastActive<0) lastActive = d->active;
+			else d->active = 0;
+		}
+*/
 	}
 
 }
@@ -523,12 +525,16 @@ void DockContext::checkNonexistent()
 				//Call as closed dock
 				bool open = false;
 				//label.ImStrdup(dock.label.c_str());
-				strncpy(label,dock.label,sizeof(label));
-				label[sizeof(label)-1] = 0;
+				//strncpy(label,dock.label,sizeof(label));
+				//label[sizeof(label)-1] = 0;
 
-				begin(dock.label,&open,false,0,ImVec2(100,10));
-				end();
+				if (dock.status != Status_Float)
+				{
+					begin(dock.label,&open,false,0,ImVec2(100,10));
+					end();
+				}
 				dock.invalid_frames = 0;
+				dock.active = 0;
 				i = 0;
 				//doUndock(dock);
 				//dock.status = Status_Float;
@@ -1201,13 +1207,13 @@ void DockContext::setDockActive(const char* name)
 	}
 }
 
-void DockContext::setDockWindowPos(const char* name, const ImVec2& pos,const ImVec2& size,int newdockstate)
+void DockContext::setDockWindowPos(const char* name, const ImVec2& pos,const ImVec2& size,DockState newdockstate)
 {
 	if (0==name && m_current)
 	{
 		m_current->pos = pos;
 		m_current->size = size;
-		if ( newdockstate>=0 ) m_current->status = (DockState) newdockstate;
+		m_current->status = newdockstate;
 	}
 	else if (name)
 	{
@@ -1221,7 +1227,7 @@ void DockContext::setDockWindowPos(const char* name, const ImVec2& pos,const ImV
 			{
 				dock.pos = pos;
 				dock.size = size;
-				if ( newdockstate>=0 ) dock.status = (DockState) newdockstate;
+				dock.status = newdockstate;
 /*
 				if ( newdockstate == Status_Float )
 				{
@@ -1956,7 +1962,7 @@ const char* GetDockActive(int slot)
 	return g_dock[slot].getDockActive();
 }
 
-void SetDockWindowPos(int slot, const char* name, const ImVec2& pos,const ImVec2& size,int dockState)
+void SetDockWindowPos(int slot, const char* name, const ImVec2& pos,const ImVec2& size,DockState dockState)
 {
 	g_dock[slot].setDockWindowPos(name,pos,size,dockState);
 }

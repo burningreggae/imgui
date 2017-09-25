@@ -17,6 +17,13 @@ namespace ImGui
 		Slot_None
 	};
 
+	enum DockState
+	{
+		Status_Docked = 0,
+		Status_Float,
+		Status_Dragged
+	};
+
 	IMGUI_API void ShutdownDock();
 	IMGUI_API void SetNextDockSlot(Slot_ val);
 	IMGUI_API void RootDock(const ImVec2& pos, const ImVec2& size);
@@ -24,7 +31,7 @@ namespace ImGui
 	IMGUI_API void EndDock();
 	IMGUI_API void SetDockActive(int slot, const char* label);
 	IMGUI_API const char* GetDockActive(int slot);
-	IMGUI_API void SetDockWindowPos(int slot, const char* name, const ImVec2& pos,const ImVec2& size, int dockState );
+	IMGUI_API void SetDockWindowPos(int slot, const char* name, const ImVec2& pos,const ImVec2& size, DockState newDockState );
 
 	IMGUI_API void SaveDock(int slot, ImGuiTextBuffer &out);
 	IMGUI_API void LoadDock(int slot, const char *filename);
