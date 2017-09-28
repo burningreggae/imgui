@@ -4655,7 +4655,8 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
             // Collapse button
             if (!(flags & ImGuiWindowFlags_NoCollapse))
             {
-                RenderCollapseTriangle(window->Pos + style.FramePadding, !window->Collapsed, 1.0f);
+                //RenderCollapseTriangle(window->Pos + style.FramePadding, !window->Collapsed, 1.0f);
+				RenderCollapseTriangle(window->Pos + ImVec2( style.FramePadding.x,title_bar_rect.GetHeight()*0.5f), !window->Collapsed, style.CollapseTriangleScale);
             }
 
             // Close button
@@ -4669,8 +4670,6 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
 
             // Title text (FIXME: refactor text alignment facilities along with RenderText helpers)
             const ImVec2 text_size = CalcTextSize(name, NULL, true);
-            if (!(flags & ImGuiWindowFlags_NoCollapse))
-                RenderCollapseTriangle(window->Pos + ImVec2( style.FramePadding.x,title_bar_rect.GetHeight()*0.5f), !window->Collapsed, style.CollapseTriangleScale);
 
             ImVec2 text_min = window->Pos;
             ImVec2 text_max = window->Pos + ImVec2(window->Size.x, style.FramePadding.y*2 + text_size.y);
