@@ -232,8 +232,8 @@ struct DockContext
 	void verify();
 	Dock& getDock(const char* label, bool opened, const ImVec2& default_size);
 	void putInBackground();
-	void beginPanel();
-	void endPanel();
+	//void beginPanel();
+	//void endPanel();
 	void splits();
 	void checkNonexistent();
 	Dock* getDockAt(const ImVec2& pos);
@@ -528,11 +528,9 @@ void DockContext::checkNonexistent()
 				//strncpy(label,dock.label,sizeof(label));
 				//label[sizeof(label)-1] = 0;
 
-				if (dock.status != Status_Float)
-				{
-					begin(dock.label,&open,false,0,ImVec2(100,10));
-					end();
-				}
+				begin(dock.label,&open,false,0,ImVec2(100,10));
+				end();
+
 				dock.invalid_frames = 0;
 				dock.active = 0;
 				i = 0;
@@ -545,7 +543,7 @@ void DockContext::checkNonexistent()
 	}
 }
 
-
+#if 0
 void DockContext::beginPanel()
 {
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
@@ -577,7 +575,7 @@ void DockContext::endPanel()
 	End();
 	//ImGui::PopStyleVar();
 }
-
+#endif
 
 Dock* DockContext::getDockAt(const ImVec2& pos)
 {
