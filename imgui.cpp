@@ -2066,7 +2066,7 @@ bool ImGui::IsItemRectHovered()
 }
 
 // Internal facing ItemHoverable() used when submitting widgets. Differs slightly from IsItemHovered().
-bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id)
+bool ImGui::_ItemHoverable(const ImRect& bb, ImGuiID id)
 {
     ImGuiContext& g = *GImGui;
     if (g.HoveredId != 0 && g.HoveredId != id && !g.HoveredIdAllowOverlap)
@@ -2084,6 +2084,17 @@ bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id)
 
     SetHoveredID(id);
     return true;
+}
+
+
+extern void hover_gate(ImGuiID id, bool isHovered );
+extern float hover_envelope(ImGuiID id);
+
+bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id)
+{
+	bool isHovered = _ItemHoverable(bb,id);
+	hover_gate(id,isHovered);
+	return isHovered;
 }
 
 bool ImGui::IsClippedEx(const ImRect& bb, const ImGuiID* id, bool clip_even_when_logged)
@@ -4865,7 +4876,7 @@ static void Scrollbar(ImGuiWindow* window, bool horizontal)
     }
 
     // Render
-    const ImU32 grab_col = ImGui::GetColorU32(held ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_ScrollbarGrab);
+    const ImU32 grab_col = ImGui::GetColorU32(held ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_ScrollbarGrab,hover_envelope(id));
     if (horizontal)
         window->DrawList->AddRectFilled(ImVec2(ImLerp(bb.Min.x, bb.Max.x, grab_v_norm), bb.Min.y), ImVec2(ImLerp(bb.Min.x, bb.Max.x, grab_v_norm) + grab_h_pixels, bb.Max.y), grab_col, style.ScrollbarRounding);
     else
@@ -6001,7 +6012,8 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
     // Render
-    const ImU32 col = GetColorU32(flags & ImGuiButtonFlags_Disabled ? ImGuiCol_TextDisabled : (hovered && held) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    const ImU32 col = GetColorU32(flags & ImGuiButtonFlags_Disabled ? ImGuiCol_TextDisabled : (hovered && held) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button,
+		hover_envelope(id));
     RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
     RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
 
@@ -6355,7 +6367,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
         SetItemAllowOverlap();
 
     // Render
-    const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+    const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header,hover_envelope(id));
     const ImVec2 text_pos = bb.Min + ImVec2(text_offset_x, padding.y + text_base_offset_y);
     if (display_frame)
     {
@@ -9340,9 +9352,10 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
         selected = false;
 
     // Render
-    if (hovered || selected)
+	float a = hover_envelope(id);
+    if (hovered || selected || a>0.f)
     {
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header,a);
         RenderFrame(bb_with_spacing.Min, bb_with_spacing.Max, col, false, 0.0f);
     }
 
