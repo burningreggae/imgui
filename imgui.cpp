@@ -1276,6 +1276,23 @@ ImU32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)
     return ColorConvertFloat4ToU32(c); 
 }
 
+ImU32 ImGui::GetColorU32(ImGuiCol idx0,ImGuiCol idx1,float a)  
+{ 
+	if ( idx0 == idx1 )
+		return GetColorU32(idx0,a);
+    const ImGuiStyle& style = GImGui->Style;
+	const ImVec4& c0 = style.Colors[idx0];
+	const ImVec4& c1 = style.Colors[idx1];
+    ImVec4 c;
+	c.x = (c0.x * (1.f - a) + c1.x * a) * style.Brightness;
+	c.y = (c0.y * (1.f - a) + c1.y * a) * style.Brightness;
+	c.z = (c0.z * (1.f - a) + c1.z * a) * style.Brightness;
+	c.w = (c0.w * (1.f - a) + c1.w * a) * style.Alpha;
+
+    return ColorConvertFloat4ToU32(c); 
+}
+
+
 ImU32 ImGui::GetColorU32(const ImVec4& col)
 { 
     ImGuiStyle& style = GImGui->Style;
@@ -2088,7 +2105,7 @@ bool ImGui::_ItemHoverable(const ImRect& bb, ImGuiID id)
 
 
 extern void hover_gate(ImGuiID id, bool isHovered );
-extern float hover_envelope(ImGuiID id);
+extern float hover_envelope(ImGuiID id, const float def);
 
 bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id)
 {
@@ -4236,7 +4253,9 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
     window->RootWindow = g.CurrentWindowStack[root_idx];
     window->RootNonPopupWindow = g.CurrentWindowStack[root_non_popup_idx];      // Used to display TitleBgActive color and for selecting which window to use for NavWindowing
 
-   // Title bar
+	//hover_gate(window->ID,p_open ? *p_open: !window->Collapsed);
+
+    // Title bar
     const bool is_focused = g.NavWindow && window->RootNonPopupWindow == g.NavWindow->RootNonPopupWindow;
     // When reusing window again multiple times a frame, just append content (don't need to setup again)
     if (first_begin_of_the_frame)
@@ -4465,7 +4484,7 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 title_bar_rect = window->TitleBarRect();
             }
 
-            // Scrollbars
+            // Scrollbarsf
             window->ScrollbarY = (flags & ImGuiWindowFlags_AlwaysVerticalScrollbar) || ((window->SizeContents.y > window->Size.y + style.ItemSpacing.y) && !(flags & ImGuiWindowFlags_NoScrollbar));
             window->ScrollbarX = (flags & ImGuiWindowFlags_AlwaysHorizontalScrollbar) || ((window->SizeContents.x > window->Size.x - (window->ScrollbarY ? style.ScrollbarSize : 0.0f) - window->WindowPadding.x) && !(flags & ImGuiWindowFlags_NoScrollbar) && (flags & ImGuiWindowFlags_HorizontalScrollbar));
             if (window->ScrollbarX && !window->ScrollbarY)
@@ -4562,7 +4581,8 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
             ImVec4 bg_color = style.Colors[bg_color_idx]; // We don't use GetColorU32() because bg_alpha is assigned (not multiplied) below
             if (bg_alpha >= 0.0f)
                 bg_color.w = bg_alpha;
-            bg_color.w *= style.Alpha;
+			//bg_color.w *= hover_envelope(window->ID,0.f);
+			bg_color.w *= style.Alpha;
             if (bg_color.w > 0.0f)
                 window->DrawList->AddRectFilled(window->Pos+ImVec2(0,window->TitleBarHeight()), window->Pos+window->Size, ColorConvertFloat4ToU32(bg_color), window_rounding, (flags & ImGuiWindowFlags_NoTitleBar) ? ImGuiCorner_All : ImGuiCorner_BotLeft|ImGuiCorner_BotRight);
 
@@ -4876,7 +4896,8 @@ static void Scrollbar(ImGuiWindow* window, bool horizontal)
     }
 
     // Render
-    const ImU32 grab_col = ImGui::GetColorU32(held ? ImGuiCol_ScrollbarGrabActive : hovered ? ImGuiCol_ScrollbarGrabHovered : ImGuiCol_ScrollbarGrab,hover_envelope(id));
+    const ImU32 grab_col = ImGui::GetColorU32(held ? ImGuiCol_ScrollbarGrabActive : ImGuiCol_ScrollbarGrab,ImGuiCol_ScrollbarGrabHovered,hover_envelope(id,0.f));
+
     if (horizontal)
         window->DrawList->AddRectFilled(ImVec2(ImLerp(bb.Min.x, bb.Max.x, grab_v_norm), bb.Min.y), ImVec2(ImLerp(bb.Min.x, bb.Max.x, grab_v_norm) + grab_h_pixels, bb.Max.y), grab_col, style.ScrollbarRounding);
     else
@@ -5908,6 +5929,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
         if (out_hovered) *out_hovered = false;
         if (out_held) *out_held = false;
         if (g.ActiveId == id) ClearActiveID();
+		hover_gate(id,false);
         return false;
     }
 
@@ -6012,8 +6034,7 @@ bool ImGui::ButtonEx(const char* label, const ImVec2& size_arg, ImGuiButtonFlags
     bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
     // Render
-    const ImU32 col = GetColorU32(flags & ImGuiButtonFlags_Disabled ? ImGuiCol_TextDisabled : (hovered && held) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button,
-		hover_envelope(id));
+    const ImU32 col = GetColorU32(flags & ImGuiButtonFlags_Disabled ? ImGuiCol_TextDisabled : held ? ImGuiCol_ButtonActive : ImGuiCol_Button,ImGuiCol_ButtonHovered,hover_envelope(id,0.f));
     RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
     RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
 
@@ -6367,7 +6388,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
         SetItemAllowOverlap();
 
     // Render
-    const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header,hover_envelope(id));
+    const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : ImGuiCol_Header,ImGuiCol_HeaderHovered,hover_envelope(id,0.f));
     const ImVec2 text_pos = bb.Min + ImVec2(text_offset_x, padding.y + text_base_offset_y);
     if (display_frame)
     {
@@ -6962,7 +6983,7 @@ bool ImGui::SliderBehavior(const ImRect& frame_bb, ImGuiID id, float* v, float v
         grab_bb = ImRect(ImVec2(grab_pos - grab_sz*0.5f, frame_bb.Min.y + grab_padding), ImVec2(grab_pos + grab_sz*0.5f, frame_bb.Max.y - grab_padding));
     else
         grab_bb = ImRect(ImVec2(frame_bb.Min.x + grab_padding, grab_pos - grab_sz*0.5f), ImVec2(frame_bb.Max.x - grab_padding, grab_pos + grab_sz*0.5f));
-    window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab), style.GrabRounding);
+    window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab,hover_envelope(id,1.f)), style.GrabRounding);
 
     return value_changed;
 }
@@ -7192,7 +7213,7 @@ bool ImGui::DragBehavior(const ImRect& frame_bb, ImGuiID id, float* v, float v_s
     const ImGuiStyle& style = g.Style;
 
     // Draw frame
-    const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : g.HoveredId == id ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
+    const ImU32 frame_col = GetColorU32(g.ActiveId == id ? ImGuiCol_FrameBgActive : ImGuiCol_FrameBg,ImGuiCol_FrameBgHovered,hover_envelope(id,0.f));
     RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, style.FrameRounding);
 
     bool value_changed = false;
@@ -7720,7 +7741,10 @@ bool ImGui::Checkbox(const char* label, bool* v)
     if (pressed)
         *v = !(*v);
 
-    RenderFrame(check_bb.Min, check_bb.Max, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
+	RenderFrame(check_bb.Min, check_bb.Max,
+		GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive :  ImGuiCol_FrameBg,ImGuiCol_FrameBgHovered,hover_envelope(id,0.f)),
+		true, style.FrameRounding);
+
     if (*v)
     {
         const float check_sz = ImMin(check_bb.GetWidth(), check_bb.GetHeight());
@@ -9352,12 +9376,19 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
         selected = false;
 
     // Render
-	float a = hover_envelope(id);
-    if (hovered || selected || a>0.f)
+	float a = hover_envelope(id,0.f);
+/*
+    if (hovered || selected)
     {
-        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header,a);
+        const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
         RenderFrame(bb_with_spacing.Min, bb_with_spacing.Max, col, false, 0.0f);
     }
+*/
+	if (held || selected || a > 0.f)
+	{
+        const ImU32 col = GetColorU32(held ? ImGuiCol_HeaderActive: selected ? ImGuiCol_Header:ImGuiCol_HeaderHovered,ImGuiCol_HeaderHovered,a);
+        RenderFrame(bb_with_spacing.Min, bb_with_spacing.Max, col, false, 0.0f);
+	}
 
     if ((flags & ImGuiSelectableFlags_SpanAllColumns) && window->DC.ColumnsCount > 1)
     {
@@ -9619,7 +9650,7 @@ bool ImGui::BeginMenu(const char* label, bool enabled)
         float extra_w = ImMax(0.0f, GetContentRegionAvail().x - w);
         pressed = Selectable(label, menu_is_open, ImGuiSelectableFlags_Menu | ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_DrawFillAvailWidth | (!enabled ? ImGuiSelectableFlags_Disabled : 0), ImVec2(w, 0.0f));
         if (!enabled) PushStyleColor(ImGuiCol_Text, g.Style.Colors[ImGuiCol_TextDisabled]);
-        RenderCollapseTriangle(pos + ImVec2(window->MenuColumns.Pos[2] + extra_w + g.FontSize * 0.20f, 0.0f), false,style.CollapseTriangleScale);
+        RenderCollapseTriangle(pos + ImVec2(window->MenuColumns.Pos[2] + extra_w + g.FontSize * 0.20f, label_size.y*0.5f), false,style.CollapseTriangleScale);
         if (!enabled) PopStyleColor();
     }
 
