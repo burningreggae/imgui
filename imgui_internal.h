@@ -49,6 +49,7 @@ typedef int ImGuiTreeNodeFlags;     // enum ImGuiTreeNodeFlags_
 typedef int ImGuiSliderFlags;       // enum ImGuiSliderFlags_
 typedef int ImGuiSeparatorFlags;  // enum ImGuiSeparatorFlags_
 typedef int ImGuiItemFlags;       // enum ImGuiItemFlags_
+typedef int ImGuiLayoutType;      // enum ImGuiLayoutType_
 
 //-------------------------------------------------------------------------
 // STB libraries
@@ -168,13 +169,13 @@ inline void operator delete(void*, ImPlacementNewDummy, void*) {}
 enum ImGuiButtonFlags_
 {
     ImGuiButtonFlags_Repeat                 = 1 << 0,   // hold to repeat
-    ImGuiButtonFlags_PressedOnClickRelease  = 1 << 1,   // (default) return pressed on click+release on same item (default if no PressedOn** flag is set)
-    ImGuiButtonFlags_PressedOnClick         = 1 << 2,   // return pressed on click (default requires click+release)
-    ImGuiButtonFlags_PressedOnRelease       = 1 << 3,   // return pressed on release (default requires click+release)
-    ImGuiButtonFlags_PressedOnDoubleClick   = 1 << 4,   // return pressed on double-click (default requires click+release)
-    ImGuiButtonFlags_FlattenChilds          = 1 << 5,   // allow interaction even if a child window is overlapping
-    ImGuiButtonFlags_DontClosePopups        = 1 << 6,   // disable automatically closing parent popup on press
-    ImGuiButtonFlags_Disabled               = 1 << 7,   // disable interaction
+    ImGuiButtonFlags_PressedOnClickRelease  = 1 << 1,   // return true on click + release on same item [DEFAULT if no PressedOn* flag is set]
+    ImGuiButtonFlags_PressedOnClick         = 1 << 2,   // return true on click (default requires click+release)
+    ImGuiButtonFlags_PressedOnRelease       = 1 << 3,   // return true on release (default requires click+release)
+    ImGuiButtonFlags_PressedOnDoubleClick   = 1 << 4,   // return true on double-click (default requires click+release)
+    ImGuiButtonFlags_FlattenChilds          = 1 << 5,   // allow interactions even if a child window is overlapping
+    ImGuiButtonFlags_DontClosePopups        = 1 << 6,   // disable automatically closing parent popup on press // [UNUSED]
+    ImGuiButtonFlags_Disabled               = 1 << 7,   // disable interactions
     ImGuiButtonFlags_AlignTextBaseLine      = 1 << 8,   // vertically align button to match text baseline - ButtonEx() only
     ImGuiButtonFlags_NoKeyModifiers         = 1 << 9,   // disable interaction if a key modifier is held
     ImGuiButtonFlags_AllowOverlapMode       = 1 << 10   // require previous frame HoveredId to either match id or be null before being usable
@@ -834,10 +835,10 @@ namespace ImGui
 
     IMGUI_API void          ItemSize(const ImVec2& size, float text_offset_y = 0.0f);
     IMGUI_API void          ItemSize(const ImRect& bb, float text_offset_y = 0.0f);
-    IMGUI_API bool          ItemAdd(const ImRect& bb, const ImGuiID* id);
-    IMGUI_API bool          IsClippedEx(const ImRect& bb, const ImGuiID* id, bool clip_even_when_logged);
+    IMGUI_API bool          ItemAdd(const ImRect& bb, ImGuiID id);
     IMGUI_API bool          _ItemHoverable(const ImRect& bb, ImGuiID id);
 	IMGUI_API bool          ItemHoverable(const ImRect& bb, ImGuiID id);
+    IMGUI_API bool          IsClippedEx(const ImRect& bb, ImGuiID id, bool clip_even_when_logged);
     IMGUI_API bool          FocusableItemRegister(ImGuiWindow* window, ImGuiID id, bool tab_stop = true);      // Return true if focus is requested
     IMGUI_API void          FocusableItemUnregister(ImGuiWindow* window);
     IMGUI_API ImVec2        CalcItemSize(ImVec2 size, float default_x, float default_y);
