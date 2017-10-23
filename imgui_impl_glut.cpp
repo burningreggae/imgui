@@ -892,7 +892,8 @@ void style1()
 	style.CloseButtonSize = 6.5f;
 	style.DisplaySafeAreaPadding.x = 10.f;
 	style.DisplaySafeAreaPadding.y = 10.f;
-	style.CollapseTriangleScale = 0.85f;
+	style.TriangleScale = 0.85f;
+	style.CheckmarkScale = 1.f/8.f;
 	style.CircleLineSegment = 50;
 	style.ColumnsMinSpacing = 0.f;
 	style.PopupRounding = 4.f;
@@ -973,7 +974,8 @@ void style2()
 	style.CloseButtonSize = 6.5f;
 	style.DisplaySafeAreaPadding.x = 4.f;
 	style.DisplaySafeAreaPadding.y = 4.f;
-	style.CollapseTriangleScale = 0.85f;
+	style.TriangleScale = 0.85f;
+	style.CheckmarkScale = 1.f/8.f;
 	style.CircleLineSegment = 50;
 	style.ColumnsMinSpacing = 0.f;
 

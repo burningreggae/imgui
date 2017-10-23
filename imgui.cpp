@@ -759,7 +759,8 @@ ImGuiStyle::ImGuiStyle()
 
     Brightness				= 1.0f;				// Global brightness applies to everything in ImGui
     TitleBarHeight			= 6.f;				// Height of Titlebar
-    CollapseTriangleScale	= 1.f;				// Scaling of Collapsed Triangle Default 1.f
+    TriangleScale	        = 1.f;				// Scaling of Collapsed Triangle Default 1
+	CheckmarkScale	        = 1.f/5.f;			// Scaling of Checkmark Default: 1/5
     CloseButtonSize			= 8.f;				// Scaling of Closes Button
     CircleLineSegment       = 16;				// Circle Vertex Line Segments
 	PopupRounding           = 0.f;
@@ -3252,10 +3253,10 @@ void ImGui::RenderTriangle(ImVec2 p_min, ImGuiDir dir, float scale)
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
 
-	scale *= g.Style.CollapseTriangleScale;
+	//TA: center on frame, p_min.y == center.y
     const float h = g.FontSize * 1.00f;
-    float r = h * 0.40f * scale;
-    ImVec2 center = p_min + ImVec2(h * 0.50f, h * 0.50f * scale);
+    float r = h * 0.40f * scale * g.Style.TriangleScale;
+    ImVec2 center = p_min + ImVec2(h * 0.50f, 0.f); //h * 0.50f * scale);
 
     ImVec2 a, b, c;
     switch (dir)
@@ -3295,7 +3296,7 @@ void ImGui::RenderCheckMark(ImVec2 pos, ImU32 col, float sz)
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
 
-    float thickness = ImMax(sz / 5.0f, 1.0f);
+	float thickness = ImMax(sz * g.Style.CheckmarkScale, 1.0f);
     sz -= thickness*0.5f;
     pos += ImVec2(thickness*0.25f, thickness*0.25f);
 
@@ -4622,7 +4623,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 			const float window_alpha = hover_envelope(window->ID,0.f);
 
             //shadow
-            if ( !(flags & (ImGuiWindowFlags_NoShadows|ImGuiWindowFlags_ChildWindow)) )
+            if ( ~flags & ImGuiWindowFlags_NoShadows )
             {
                 float nudge = window_rounding * 0.5f;
                 ImVec2 shadowSize[2];
@@ -4672,7 +4673,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
                     shadowSize[0].y = 8+nudge;
                     shadowSize[1].x = 20+nudge;
                     shadowSize[1].y = 20+nudge;
-                    shadowFlags &= ~2  & ~16; //top center off
+                    //shadowFlags &= ~2  & ~16; //top center off
                     ofs[0].y += title_bar_rect.GetHeight() * 0.5f;
                 }
                 else
@@ -4696,7 +4697,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             }
 
             // Window background, Default Alpha
-            ImU32 bg_col = GetColorU32(GetWindowBgColorIdxFromFlags(flags));
+            ImU32 bg_col = GetColorU32(GetWindowBgColorIdxFromFlags(flags),hover_envelope(window->ID,0.f));
             window->DrawList->AddRectFilled(window->Pos+ImVec2(0,window->TitleBarHeight()), window->Pos+window->Size, bg_col, window_rounding, (flags & ImGuiWindowFlags_NoTitleBar) ? ImGuiCorner_All : ImGuiCorner_BotLeft|ImGuiCorner_BotRight);
 
 			// Title bar
@@ -4799,7 +4800,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             // Collapse button
             if (!(flags & ImGuiWindowFlags_NoCollapse))
             {
-                RenderTriangle(window->Pos + style.FramePadding, window->Collapsed ? ImGuiDir_Right : ImGuiDir_Down);
+                RenderTriangle(window->Pos + ImVec2( style.FramePadding.x,title_bar_rect.GetHeight()*0.5f), window->Collapsed ? ImGuiDir_Right : ImGuiDir_Down, 1.0f);
             }
 
             // Close button
@@ -6552,8 +6553,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     {
         // Framed type
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTriangle(bb.Min + ImVec2(padding.x, bb.GetHeight()*0.5f), is_open ? ImGuiDir_Down : ImGuiDir_Right);
-
+        RenderTriangle(bb.Min + ImVec2(padding.x, bb.GetHeight()*0.5f), is_open ? ImGuiDir_Down : ImGuiDir_Right, 1.0f);
         if (g.LogEnabled)
         {
             // NB: '##' is normally used to hide text (as a library-wide feature), so we need to specify the text range to make sure the ## aren't stripped out here.
@@ -6577,8 +6577,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
         if (flags & ImGuiTreeNodeFlags_Bullet)
             RenderBullet(bb.Min + ImVec2(text_offset_x * 0.5f, g.FontSize*0.50f + text_base_offset_y));
         else if (!(flags & ImGuiTreeNodeFlags_Leaf))
-            RenderTriangle(bb.Min + ImVec2(padding.x, bb.GetHeight()*0.5f), is_open ? ImGuiDir_Down : ImGuiDir_Right, 0.70f);
-
+            RenderTriangle(bb.Min + ImVec2(padding.x,bb.GetHeight()*0.5f), is_open ? ImGuiDir_Down : ImGuiDir_Right, 0.70f);
         if (g.LogEnabled)
             LogRenderedText(&text_pos, ">");
         RenderText(text_pos, label, label_end, false);
@@ -9099,7 +9098,7 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImVec2 popu
     if (!ItemAdd(total_bb, id))
         return false;
 
-    const float arrow_size = SmallSquareSize();
+    const float arrow_size = g.FontSize + g.Style.FramePadding.x * 2.0f; //SmallSquareSize();
 
     bool hovered, held;
     bool pressed = ButtonBehavior(frame_bb, id, &hovered, &held);
@@ -9109,7 +9108,7 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImVec2 popu
     const ImRect value_bb(frame_bb.Min, frame_bb.Max - ImVec2(arrow_size, 0.0f));
     RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
     RenderFrame(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y), frame_bb.Max, GetColorU32(popup_open || hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button), true, style.FrameRounding); // FIXME-ROUNDING
-    RenderTriangle(ImVec2(frame_bb.Max.x - arrow_size + style.FramePadding.y, frame_bb.Min.y + frame_bb.GetHeight()*0.5f), ImGuiDir_Down);
+    RenderTriangle(ImVec2(frame_bb.Max.x - arrow_size + style.FramePadding.x, frame_bb.Min.y + frame_bb.GetHeight()*0.5f), ImGuiDir_Down);
 
     if (preview_value != NULL)
         RenderTextClipped(frame_bb.Min + style.FramePadding, value_bb.Max, preview_value, NULL, NULL, ImVec2(0.0f,0.0f));

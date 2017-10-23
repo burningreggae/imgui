@@ -822,7 +822,8 @@ struct ImGuiStyle
     float       SelectableRounding;      
     float		Brightness;					// Global brightness applies to everything in ImGui
     float		TitleBarHeight;				// Height of Titlebar ( Multiplicator of FramePadding.y Default: 2.f)
-    float		CollapseTriangleScale;		// Scaling of Collapsed Triangle Default 1.f
+    float		TriangleScale;		        // Scaling of Collapsed Triangle Default 1.f
+    float		CheckmarkScale;		        // Scaling of Checkmark Default 1.f/5.f
     float		CloseButtonSize;			// Scaling of CloseButtonScale
     int         CircleLineSegment;			// Circle Vertex Line Segments 16
 	float       PopupRounding;              // Radius of window corners rounding. Set to 0.0f to have rectangular windows
