@@ -2167,6 +2167,7 @@ bool ImGui::_ItemHoverable(const ImRect& bb, ImGuiID id)
 
 extern void hover_gate(ImGuiID id, bool isHovered );
 extern float hover_envelope(ImGuiID id, const float def);
+extern void hover_step();
 
 bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id)
 {
@@ -2970,11 +2971,15 @@ void ImGui::EndFrame()
     IM_ASSERT(g.Windows.Size == g.WindowsSortBuffer.Size);  // we done something wrong
     g.Windows.swap(g.WindowsSortBuffer);
 
+	//Trigger Envelope for Window
     for (int i = 0; i != g.Windows.Size; ++i)
     {
         ImGuiWindow* window = g.Windows[i];
 		hover_gate(window->ID,window->Active && !window->Collapsed);
     }
+
+	//Advance Envelope System
+	hover_step();
 
     // Clear Input data for next frame
     g.IO.MouseWheel = 0.0f;
@@ -3004,7 +3009,13 @@ void ImGui::Render()
         for (int i = 0; i != g.Windows.Size; i++)
         {
             ImGuiWindow* window = g.Windows[i];
-			if ((window->Active || hover_envelope(window->ID,0.f)>0.f) && window->HiddenFrames <= 0 && (window->Flags & (ImGuiWindowFlags_ChildWindow)) == 0)
+			float e = hover_envelope(window->ID,0.f);
+			for (int cmd_i = 0; cmd_i < window->DrawList->CmdBuffer.Size; cmd_i++)
+			{
+				window->DrawList->CmdBuffer[cmd_i].envelope = e;
+			}
+
+			if ((window->Active || e > 0.f) && window->HiddenFrames <= 0 && (window->Flags & (ImGuiWindowFlags_ChildWindow)) == 0)
                 AddWindowToRenderListSelectLayer(window);
         }
 
@@ -4380,8 +4391,6 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
     window->RootWindow = g.CurrentWindowStack[root_idx];
     window->RootNonPopupWindow = g.CurrentWindowStack[root_non_popup_idx];      // Used to display TitleBgActive color and for selecting which window to use for NavWindowing
 
-	//hover_gate(window->ID,p_open ? *p_open: !window->Collapsed);
-
     // Title bar
     const bool is_focused = g.NavWindow && window->RootNonPopupWindow == g.NavWindow->RootNonPopupWindow;
     // When reusing window again multiple times a frame, just append content (don't need to setup again)
@@ -4620,7 +4629,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             window->ScrollbarSizes = ImVec2(window->ScrollbarY ? style.ScrollbarSize : 0.0f, window->ScrollbarX ? style.ScrollbarSize : 0.0f);
             window->BorderSize = (flags & ImGuiWindowFlags_ShowBorders) ? 1.0f : 0.0f;
 
-			const float window_alpha = hover_envelope(window->ID,0.f);
+			const float window_alpha = 1.f; //hover_envelope(window->ID,0.f);
 
             //shadow
             if ( ~flags & ImGuiWindowFlags_NoShadows )
@@ -4697,7 +4706,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             }
 
             // Window background, Default Alpha
-            ImU32 bg_col = GetColorU32(GetWindowBgColorIdxFromFlags(flags),hover_envelope(window->ID,0.f));
+            ImU32 bg_col = GetColorU32(GetWindowBgColorIdxFromFlags(flags),window_alpha);
             window->DrawList->AddRectFilled(window->Pos+ImVec2(0,window->TitleBarHeight()), window->Pos+window->Size, bg_col, window_rounding, (flags & ImGuiWindowFlags_NoTitleBar) ? ImGuiCorner_All : ImGuiCorner_BotLeft|ImGuiCorner_BotRight);
 
 			// Title bar
@@ -7147,7 +7156,7 @@ bool ImGui::SliderBehavior(const ImRect& frame_bb, ImGuiID id, float* v, float v
         grab_bb = ImRect(ImVec2(grab_pos - grab_sz*0.5f, frame_bb.Min.y + grab_padding), ImVec2(grab_pos + grab_sz*0.5f, frame_bb.Max.y - grab_padding));
     else
         grab_bb = ImRect(ImVec2(frame_bb.Min.x + grab_padding, grab_pos - grab_sz*0.5f), ImVec2(frame_bb.Max.x - grab_padding, grab_pos + grab_sz*0.5f));
-    window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(g.ActiveId == id ? ImGuiCol_SliderGrabActive : ImGuiCol_SliderGrab,hover_envelope(id,1.f)), style.GrabRounding);
+    window->DrawList->AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(ImGuiCol_SliderGrabActive,ImGuiCol_SliderGrab,hover_envelope(id,0.f)), style.GrabRounding);
 
     return value_changed;
 }

@@ -96,6 +96,7 @@ struct shaderparamlayer
 	int _tex_gen;
 	int _alpha_premul;
 	int _colorMode;
+	int _envelope;
 
 	unsigned int octTex;
 	unsigned int octTexType; 
@@ -107,6 +108,7 @@ struct shaderparamlayer
 	unsigned int transferTexLink;		//linked colormap
 	float colorshift;
 	int colorMode;
+	float envelope;
 };
 
 struct shaderparam

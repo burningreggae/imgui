@@ -26,7 +26,7 @@ int fontUseBit = 8;
 
 // Data
 static GLhandleARB  g_ShaderHandle = 0, g_VertHandle = 0, g_FragHandle = 0;
-static int          g_AttribLocationTex = -1, g_AttribLocationTime = -1,g_AttribLocationProjMtx = -1,g_AttribLocationColorMode=-1;
+static int          g_AttribLocationTex = -1, g_AttribLocationEnvelope = -1,g_AttribLocationProjMtx = -1,g_AttribLocationColorMode=-1;
 static int          g_AttribLocationPosition = -1, g_AttribLocationUV = -1, g_AttribLocationColor =-1;
 static GLhandleARB g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
@@ -35,6 +35,19 @@ static GLhandleARB g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 extern Camera cam;
 int sceneFile_ColorMode();
 GLuint currentTexture2D = 0;
+
+void setEnvelope(const ImDrawCmd* cmd)
+{
+	if ( cmd->shader )
+	{
+		if (cmd->shader->layer[0]._envelope>=0) glUniform1f(cmd->shader->layer[0]._envelope, cmd->envelope);
+		if (cmd->shader->layer[1]._envelope>=0) glUniform1f(cmd->shader->layer[1]._envelope, cmd->envelope);
+	}
+	else
+	{
+		if (g_AttribLocationEnvelope>=0) glUniform1f(g_AttribLocationEnvelope, cmd->envelope);
+	}
+}
 
 void setGUIShader(GLhandleARB shader)
 {
@@ -49,7 +62,7 @@ void setGUIShader(GLhandleARB shader)
 
 	glUseProgram(shader);
 	if (g_AttribLocationTex>=0) glUniform1i(g_AttribLocationTex, 0);
-	if (g_AttribLocationTime>=0) glUniform1f(g_AttribLocationTime, ImGui::GetTime()); 
+	//if (g_AttribLocationEnvelope>=0) glUniform1f(g_AttribLocationEnvelope, ImGui::GetTime()); 
 	if (g_AttribLocationColorMode>=0) glUniform1i(g_AttribLocationColorMode, sceneFile_ColorMode()); 
 	glShadeModel(GL_SMOOTH);
 
@@ -186,6 +199,7 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 					currentTexture2D = t;
 				}
 
+				setEnvelope(pcmd);
 				glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
 				glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer);
 
@@ -610,7 +624,7 @@ void createShader()
 	releaseShader();
 	shaderManager_build(g_ShaderHandle,fontUseBit == 32 ? "shader2d_imgui32":"shader2d_imgui");
 	g_AttribLocationTex = glGetUniformLocationARB(g_ShaderHandle, "Texture");
-	g_AttribLocationTime = glGetUniformLocationARB(g_ShaderHandle, "Time");
+	g_AttribLocationEnvelope = glGetUniformLocationARB(g_ShaderHandle, "Envelope");
 	g_AttribLocationColorMode = glGetUniformLocationARB(g_ShaderHandle, "colorMode");
 
 	shaderManager_reload() &= ~2;

@@ -1978,6 +1978,11 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
         ImGui::SliderFloat("GrabMinSize", &style.GrabMinSize, 1.0f, 20.0f, "%.0f");
         ImGui::SliderFloat("GrabRounding", &style.GrabRounding, 0.0f, 16.0f, "%.0f");
 		ImGui::SliderFloat("TitleBarHeight", &style.TitleBarHeight, 0.0f, 40.0f, "%.0f");
+		ImGui::SliderFloat("CloseButtonSize", &style.CloseButtonSize, 0.0f, 40.0f, "%.2f");
+		ImGui::SliderFloat("TriangleScale", &style.TriangleScale, 0.0f, 2.0f, "%.2f");
+		ImGui::SliderFloat("CheckmarkScale", &style.CheckmarkScale, 0.0f, 2.0f, "%.2f");
+		ImGui::SliderInt("CircleLineSegment", &style.CircleLineSegment, 0, 200);
+
         ImGui::Text("Alignment");
         ImGui::SliderFloat2("WindowTitleAlign", (float*)&style.WindowTitleAlign, 0.0f, 1.0f, "%.2f");
         ImGui::SliderFloat2("ButtonTextAlign", (float*)&style.ButtonTextAlign, 0.0f, 1.0f, "%.2f"); ImGui::SameLine(); ShowHelpMarker("Alignment applies when a button is larger than its text content.");

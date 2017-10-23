@@ -309,10 +309,6 @@ void    ImGui_ImplGlfwGL3_InvalidateDeviceObjects()
     }
 }
 
-void system_redraw( const char *function, const char* caller, int value)
-{
-}
-
 bool    ImGui_ImplGlfwGL3_Init(GLFWwindow* window, bool install_callbacks)
 {
     g_Window = window;

@@ -11,6 +11,9 @@ static void error_callback(int error, const char* description)
     fprintf(stderr, "Error %d: %s\n", error, description);
 }
 
+void hover_gate(ImGuiID id, bool isHovered ) {}
+float hover_envelope(ImGuiID id, const float def) { return def; }
+
 int main(int, char**)
 {
     // Setup window

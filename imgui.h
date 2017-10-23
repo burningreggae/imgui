@@ -1284,7 +1284,8 @@ struct ImDrawCmd
     void*           UserCallbackData;       // The draw callback code can access this.
 
     shaderparam *shader;
-    ImDrawCmd() { ElemCount = 0; ClipRect.x = ClipRect.y = -8192.0f; ClipRect.z = ClipRect.w = +8192.0f; TextureId = NULL; UserCallback = NULL; UserCallbackData = NULL; shader = NULL; }
+	float envelope;
+    ImDrawCmd() { ElemCount = 0; ClipRect.x = ClipRect.y = -8192.0f; ClipRect.z = ClipRect.w = +8192.0f; TextureId = NULL; UserCallback = NULL; UserCallbackData = NULL; shader = NULL; envelope = 1.f; }
 };
 
 // Vertex index (override with '#define ImDrawIdx unsigned int' inside in imconfig.h)
