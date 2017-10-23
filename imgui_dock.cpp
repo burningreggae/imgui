@@ -1349,8 +1349,6 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 		SetNextWindowSize(dock.size);
 		bool ret = Begin(label,
 			opened,
-			dock.size,
-			-1.0f,
 			//ImGuiWindowFlags_NoCollapse | 
 			//ImGuiWindowFlags_ShowBorders |
 			extra_flags);
