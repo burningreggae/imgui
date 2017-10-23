@@ -49,7 +49,7 @@ void setGUIShader(GLhandleARB shader)
 
 	glUseProgram(shader);
 	if (g_AttribLocationTex>=0) glUniform1i(g_AttribLocationTex, 0);
-	if (g_AttribLocationTime>=0) glUniform1fARB(g_AttribLocationTime, ImGui::GetTime()); 
+	if (g_AttribLocationTime>=0) glUniform1f(g_AttribLocationTime, ImGui::GetTime()); 
 	if (g_AttribLocationColorMode>=0) glUniform1i(g_AttribLocationColorMode, sceneFile_ColorMode()); 
 	glShadeModel(GL_SMOOTH);
 

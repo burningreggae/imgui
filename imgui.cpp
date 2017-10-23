@@ -2912,6 +2912,12 @@ void ImGui::EndFrame()
     IM_ASSERT(g.Windows.Size == g.WindowsSortBuffer.Size);  // we done something wrong
     g.Windows.swap(g.WindowsSortBuffer);
 
+    for (int i = 0; i != g.Windows.Size; ++i)
+    {
+        ImGuiWindow* window = g.Windows[i];
+		hover_gate(window->ID,window->Active && !window->Collapsed);
+    }
+
     // Clear Input data for next frame
     g.IO.MouseWheel = 0.0f;
     g.IO.MouseWheelH = 0.0f;
@@ -2940,7 +2946,7 @@ void ImGui::Render()
         for (int i = 0; i != g.Windows.Size; i++)
         {
             ImGuiWindow* window = g.Windows[i];
-            if (window->Active && window->HiddenFrames <= 0 && (window->Flags & (ImGuiWindowFlags_ChildWindow)) == 0)
+			if ((window->Active || hover_envelope(window->ID,0.f)>0.f) && window->HiddenFrames <= 0 && (window->Flags & (ImGuiWindowFlags_ChildWindow)) == 0)
                 AddWindowToRenderListSelectLayer(window);
         }
 
@@ -4515,8 +4521,10 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
             window->ScrollbarSizes = ImVec2(window->ScrollbarY ? style.ScrollbarSize : 0.0f, window->ScrollbarX ? style.ScrollbarSize : 0.0f);
             window->BorderSize = (flags & ImGuiWindowFlags_ShowBorders) ? 1.0f : 0.0f;
 
+			const float window_alpha = hover_envelope(window->ID,0.f);
+
             //shadow
-            if ( !(flags & ImGuiWindowFlags_NoShadows) )
+            if ( !(flags & (ImGuiWindowFlags_NoShadows|ImGuiWindowFlags_ChildWindow)) )
             {
                 float nudge = window_rounding * 0.5f;
                 ImVec2 shadowSize[2];
@@ -4525,12 +4533,10 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 ImRect shadow;
                 int shadowFlags;
 
-	            if ( !(flags & ImGuiWindowFlags_ChildWindow) ) {
-
                 //light shadow, the bigger one
                 shadowFlags = ~0 & ~16; //all on + center center off
-                col[0] = 0x22222222;
-                col[1] = 0x00222222;
+				col[0] = IM_COL32(0x22,0x22,0x22,(int)(window_alpha*34.f));
+				col[1] = IM_COL32(0x22,0x22,0x22,0);
                 if (is_focused)
                 {
                     shadowSize[0].x = 48+nudge;
@@ -4549,20 +4555,19 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                 }
                 if ( flags & ImGuiWindowFlags_Tooltip)
                 {
-                    //shadowSize[0].x *= 0.5f;
-                    //shadowSize[0].y *= 0.5f;
-                    //shadowSize[1].x *= 0.5f;
-                    //shadowSize[1].y *= 0.5f;
+                    shadowSize[0].x *= 0.5f;
+                    shadowSize[0].y *= 0.5f;
+                    shadowSize[1].x *= 0.5f;
+                    shadowSize[1].y *= 0.5f;
                 }
                 shadow.Min = window->Pos + ofs[0];
                 shadow.Max = window->Pos + window->Size - ofs[1];
                 window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,shadowFlags);
-				} // child
 
                 //darker shadow
                 shadowFlags = ~0 & ~16; //all on + center center off
-                col[0] = 0x22222222;
-                col[1] = 0x00222222;
+				col[0] = IM_COL32(0x20,0x20,0x20,(int)(window_alpha*34.f));
+				col[1] = IM_COL32(0x20,0x20,0x20,0);
                 if (is_focused)
                 {
                     shadowSize[0].x = 20+nudge;
@@ -4579,18 +4584,17 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
                     shadowSize[1].x = 14+nudge;
                     shadowSize[1].y = 20+nudge;
                 }
-                if ( flags & ImGuiWindowFlags_ChildWindow)
+                if ( flags & ImGuiWindowFlags_Tooltip)
                 {
-                    shadowSize[0].x *= 0.25f;
-                    shadowSize[0].y *= 0.25f;
-                    shadowSize[1].x *= 0.25f;
-                    shadowSize[1].y *= 0.25f;
+                    shadowSize[0].x *= 0.5f;
+                    shadowSize[0].y *= 0.5f;
+                    shadowSize[1].x *= 0.5f;
+                    shadowSize[1].y *= 0.5f;
                 }
 
                 shadow.Min = window->Pos + ofs[0];
                 shadow.Max = window->Pos + window->Size - ofs[1];
                 window->DrawList->AddShadowRect(shadow.Min, shadow.Max,shadowSize,col,shadowFlags);
-
             }
 
             // Window background, Default Alpha
@@ -4604,12 +4608,12 @@ bool ImGui::Begin(const char* name, bool* p_open, const ImVec2& size_on_first_us
             ImVec4 bg_color = style.Colors[bg_color_idx]; // We don't use GetColorU32() because bg_alpha is assigned (not multiplied) below
             if (bg_alpha >= 0.0f)
                 bg_color.w = bg_alpha;
-			//bg_color.w *= hover_envelope(window->ID,0.f);
+			bg_color.w *= window_alpha;
 			bg_color.w *= style.Alpha;
-            if (bg_color.w > 0.0f)
-                window->DrawList->AddRectFilled(window->Pos+ImVec2(0,window->TitleBarHeight()), window->Pos+window->Size, ColorConvertFloat4ToU32(bg_color), window_rounding, (flags & ImGuiWindowFlags_NoTitleBar) ? ImGuiCorner_All : ImGuiCorner_BotLeft|ImGuiCorner_BotRight);
+			if (bg_color.w > 0.0f)
+				window->DrawList->AddRectFilled(window->Pos+ImVec2(0,window->TitleBarHeight()), window->Pos+window->Size, ColorConvertFloat4ToU32(bg_color), window_rounding, (flags & ImGuiWindowFlags_NoTitleBar) ? ImGuiCorner_All : ImGuiCorner_BotLeft|ImGuiCorner_BotRight);
 
-            // Title bar
+			// Title bar
             //const bool is_focused = g.NavWindow && window->RootNonPopupWindow == g.NavWindow->RootNonPopupWindow;
             if (!(flags & ImGuiWindowFlags_NoTitleBar))
                 window->DrawList->AddRectFilled(title_bar_rect.GetTL(), title_bar_rect.GetBR(), GetColorU32(is_focused ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBg), window_rounding, ImGuiCorner_TopLeft|ImGuiCorner_TopRight);
@@ -6117,15 +6121,16 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos, float radius)
     bool pressed = ButtonBehavior(bb, id, &hovered, &held);
 
     // Render
-    const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_CloseButtonActive : hovered ? ImGuiCol_CloseButtonHovered : ImGuiCol_CloseButton);
+	float alpha = hover_envelope(id,0.f);
+	const ImU32 col = GetColorU32(held ? ImGuiCol_CloseButtonActive : ImGuiCol_CloseButton,ImGuiCol_CloseButtonHovered,alpha);
     const ImVec2 center = bb.GetCenter();
     window->DrawList->AddCircleFilled(center, ImMax(2.0f, radius), col, 12);
 
     const float cross_extent = (radius * 0.7071f) - 1.0f;
-    if (hovered)
+    if (alpha>0.f)
     {
-        window->DrawList->AddLine(center + ImVec2(+cross_extent,+cross_extent), center + ImVec2(-cross_extent,-cross_extent), GetColorU32(ImGuiCol_Text));
-        window->DrawList->AddLine(center + ImVec2(+cross_extent,-cross_extent), center + ImVec2(-cross_extent,+cross_extent), GetColorU32(ImGuiCol_Text));
+        window->DrawList->AddLine(center + ImVec2(+cross_extent,+cross_extent), center + ImVec2(-cross_extent,-cross_extent), GetColorU32(ImGuiCol_Text,alpha));
+        window->DrawList->AddLine(center + ImVec2(+cross_extent,-cross_extent), center + ImVec2(-cross_extent,+cross_extent), GetColorU32(ImGuiCol_Text,alpha));
     }
 
     return pressed;
@@ -8761,6 +8766,7 @@ bool ImGui::InputScalarEx(const char* label, ImGuiDataType data_type, void* data
     {
         PopItemWidth();
         SameLine(0, style.ItemInnerSpacing.x);
+        PushStyleColor(ImGuiCol_Text, GImGui->Style.Colors[ImGuiCol_CollapseTriangle]);
         if (ButtonEx("-", button_sz, ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups))
         {
             DataTypeApplyOp(data_type, '-', data_ptr, g.IO.KeyCtrl && step_fast_ptr ? step_fast_ptr : step_ptr);
@@ -8772,6 +8778,7 @@ bool ImGui::InputScalarEx(const char* label, ImGuiDataType data_type, void* data
             DataTypeApplyOp(data_type, '+', data_ptr, g.IO.KeyCtrl && step_fast_ptr ? step_fast_ptr : step_ptr);
             value_changed = true;
         }
+		PopStyleColor();
     }
     PopID();
 

@@ -11,6 +11,7 @@ const char* COM_Parse( const char* *data_p, bool allowLineBreaks = true );
 char* loadFile(const char* filename);
 int saveFile(const char* filename, const void* data, size_t size);
 
+extern float hover_envelope(ImGuiID id, const float def);
 
 namespace ImGui
 {
@@ -419,6 +420,7 @@ void DockContext::splits()
 
 		bool hovered = false;
 		bool held = false;
+
 		if (dock.isHorizontal())
 		{
 			cursor = ImGuiMouseCursor_ResizeEW;
@@ -498,8 +500,11 @@ void DockContext::splits()
 				b.x = a.x + dock.size.x;
 				b.y = a.y;
 			}
+			
 
-			draw_list->AddLine(a, b, isItemHovered ? color_hovered : color, 1.f, false);
+			//draw_list->AddLine(a, b, isItemHovered ? color_hovered : color, 1.f, false);
+			draw_list->AddLine(a, b, GetColorU32(ImGuiCol_Separator,ImGuiCol_SeparatorHovered,
+				hover_envelope(GetID("split"),0.f)), 1.f, false);
 		}
 		PopID();
 	}
@@ -898,20 +903,20 @@ void drawTabbarListButton(Dock& dock)
 		EndPopup();
 	}
 
-	bool hovered = IsItemHovered();
+	//bool hovered = IsItemHovered();
 	ImVec2 min = GetItemRectMin();
 	ImVec2 max = GetItemRectMax();
 	ImVec2 center = (min + max) * 0.5f;
-	ImU32 text_color = GetColorU32(ImGuiCol_Text);
-	ImU32 color_active = GetColorU32(ImGuiCol_FrameBgActive);
-
+	//ImU32 text_color = GetColorU32(ImGuiCol_Text);
+	//ImU32 color_active = GetColorU32(ImGuiCol_FrameBgActive);
+	ImU32 col = GetColorU32(ImGuiCol_Text,ImGuiCol_FrameBgActive,hover_envelope(GetID("list"),0.f));
 	draw_list->AddRectFilled(ImVec2(center.x - 4, min.y + 3),
 		ImVec2(center.x + 4, min.y + 5),
-		hovered ? color_active : text_color);
+		col );//hovered ? color_active : text_color);
 	draw_list->AddTriangleFilled(ImVec2(center.x - 4, min.y + 7),
 		ImVec2(center.x + 4, min.y + 7),
 		ImVec2(center.x, min.y + 12),
-		hovered ? color_active : text_color);
+		col );//hovered ? color_active : text_color);
 
 }
 
@@ -942,10 +947,10 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 	Dock* dock_tab = &dock;
 
 	ImDrawList* draw_list = GetWindowDrawList();
-	ImU32 color = GetColorU32(ImGuiCol_FrameBg);
-	ImU32 color_active = GetColorU32(ImGuiCol_FrameBgActive);
-	ImU32 color_hovered = GetColorU32(ImGuiCol_FrameBgHovered);
-	ImU32 text_color = GetColorU32(ImGuiCol_Text);
+	//ImU32 color = GetColorU32(ImGuiCol_FrameBg);
+	//ImU32 color_active = GetColorU32(ImGuiCol_FrameBgActive);
+	//ImU32 color_hovered = GetColorU32(ImGuiCol_FrameBgHovered);
+	//ImU32 text_color = GetColorU32(ImGuiCol_Text);
 	//float tab_base;
 
 	drawTabbarListButton(dock);
@@ -958,8 +963,9 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 		const char* label = dock_tab->label;
 		const char* text_end = FindRenderedTextEnd(label);
 					
-		ImVec2 size(CalcTextSize(label, text_end).x+ style.FramePadding.x * 2.0f, line_height);
-		if (InvisibleButton(label, size))
+		ImVec2 size(CalcTextSize(label, text_end).x + style.FramePadding.x * 2.0f, line_height);
+		bool hovered;
+		if (InvisibleButton(label, size,&hovered))
 		{
 			if (enabled)
 			{
@@ -979,7 +985,7 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 			}
 		}
 
-		const bool hovered = IsItemHovered();
+		//const bool hovered = IsItemHovered();
 		ImVec2 pos = GetItemRectMin();
 		if (dock_tab->active && close_button)
 		{
@@ -988,16 +994,18 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 			bool hovered,held;
 			tab_closed = InvisibleButton("#CLOSE", ImVec2(16, 16),&hovered ,&held);
 			ImVec2 center = (GetItemRectMin() + GetItemRectMax()) * 0.5f;
-			center.y += style.FramePadding.y;
-			const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_CloseButtonActive : hovered ? ImGuiCol_CloseButtonHovered : ImGuiCol_CloseButton);
+			//center.y += style.FramePadding.y;
+			center.y = pos.y + size.y*0.5f;
+
+			float alpha = hover_envelope(GetID("#CLOSE"),0.f);
+			const ImU32 col = GetColorU32(held ? ImGuiCol_CloseButtonActive : ImGuiCol_CloseButton,ImGuiCol_CloseButtonHovered,alpha);
 			float radius = 3.5f;
 			draw_list->AddCircleFilled(center, radius * 2.f, col, 12);
 
-
 			draw_list->AddLine(
-				center + ImVec2(-radius, -radius), center + ImVec2(radius, radius), text_color);
+				center + ImVec2(-radius, -radius), center + ImVec2(radius, radius), GetColorU32(ImGuiCol_Text,alpha));
 			draw_list->AddLine(
-				center + ImVec2(radius, -radius), center + ImVec2(-radius, radius), text_color);
+				center + ImVec2(radius, -radius), center + ImVec2(-radius, radius), GetColorU32(ImGuiCol_Text,alpha));
 
 			//if (CloseButton(window->GetID("#CLOSE"), window->Pos + ImVec2( window->Size.x - pad,title_bar_rect.GetHeight()*0.5f), style.CloseButtonSize))
 
@@ -1016,11 +1024,16 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 		draw_list->PathFill(
 			hovered ? color_hovered : (dock_tab->active ? color_active : color));
 */
+	//ImU32 color = GetColorU32(ImGuiCol_FrameBg);
+	//ImU32 color_active = GetColorU32(ImGuiCol_FrameBgActive);
+	//ImU32 color_hovered = GetColorU32(ImGuiCol_FrameBgHovered);
+
 		draw_list->AddRectFilled(pos,pos+size,
-			hovered ? color_hovered : (dock_tab->active ? color_active : color),
+			//hovered ? color_hovered : (dock_tab->active ? color_active : color),
+			GetColorU32(dock_tab->active ? ImGuiCol_FrameBgActive:ImGuiCol_FrameBg,ImGuiCol_FrameBgHovered,	hover_envelope(GetID(label),0.f)),
 			style.FrameRounding);
 		pos.x += style.FramePadding.x;
-		draw_list->AddText(pos, text_color, label, text_end);
+		draw_list->AddText(pos, GetColorU32(ImGuiCol_Text), label, text_end);
 		SameLine(0);
 		dock_tab = dock_tab->next_tab;
 	}
