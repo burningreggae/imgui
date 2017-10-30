@@ -11,8 +11,10 @@ static void error_callback(int error, const char* description)
     fprintf(stderr, "Error %d: %s\n", error, description);
 }
 
+void system_redraw( const char *function, const char* caller, int value) {}
 void hover_gate(ImGuiID id, bool isHovered ) {}
-float hover_envelope(ImGuiID id, const float def) { return def; }
+float hover_envelope(ImGuiID id) { return 0.f; }
+void hover_step() {}
 
 int main(int, char**)
 {

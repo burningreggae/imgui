@@ -11,7 +11,7 @@ const char* COM_Parse( const char* *data_p, bool allowLineBreaks = true );
 char* loadFile(const char* filename);
 int saveFile(const char* filename, const void* data, size_t size);
 
-extern float hover_envelope(ImGuiID id, const float def);
+extern float hover_envelope(ImGuiID id);
 
 namespace ImGui
 {
@@ -504,7 +504,7 @@ void DockContext::splits()
 
 			//draw_list->AddLine(a, b, isItemHovered ? color_hovered : color, 1.f, false);
 			draw_list->AddLine(a, b, GetColorU32(ImGuiCol_Separator,ImGuiCol_SeparatorHovered,
-				hover_envelope(GetID("split"),0.f)), 1.f, false);
+				hover_envelope(GetID("split"))), 1.f, false);
 		}
 		PopID();
 	}
@@ -909,7 +909,7 @@ void drawTabbarListButton(Dock& dock)
 	ImVec2 center = (min + max) * 0.5f;
 	//ImU32 text_color = GetColorU32(ImGuiCol_Text);
 	//ImU32 color_active = GetColorU32(ImGuiCol_FrameBgActive);
-	ImU32 col = GetColorU32(ImGuiCol_Text,ImGuiCol_FrameBgActive,hover_envelope(GetID("list"),0.f));
+	ImU32 col = GetColorU32(ImGuiCol_Text,ImGuiCol_FrameBgActive,hover_envelope(GetID("list")));
 	draw_list->AddRectFilled(ImVec2(center.x - 4, min.y + 3),
 		ImVec2(center.x + 4, min.y + 5),
 		col );//hovered ? color_active : text_color);
@@ -997,7 +997,7 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 			//center.y += style.FramePadding.y;
 			center.y = pos.y + size.y*0.5f;
 
-			float alpha = hover_envelope(GetID("#CLOSE"),0.f);
+			float alpha = hover_envelope(GetID("#CLOSE"));
 			const ImU32 col = GetColorU32(held ? ImGuiCol_CloseButtonActive : ImGuiCol_CloseButton,ImGuiCol_CloseButtonHovered,alpha);
 			float radius = 3.5f;
 			draw_list->AddCircleFilled(center, radius * 2.f, col, 12);
@@ -1030,7 +1030,7 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 
 		draw_list->AddRectFilled(pos,pos+size,
 			//hovered ? color_hovered : (dock_tab->active ? color_active : color),
-			GetColorU32(dock_tab->active ? ImGuiCol_FrameBgActive:ImGuiCol_FrameBg,ImGuiCol_FrameBgHovered,	hover_envelope(GetID(label),0.f)),
+			GetColorU32(dock_tab->active ? ImGuiCol_FrameBgActive:ImGuiCol_FrameBg,ImGuiCol_FrameBgHovered,	hover_envelope(GetID(label))),
 			style.FrameRounding);
 		pos.x += style.FramePadding.x;
 		draw_list->AddText(pos, GetColorU32(ImGuiCol_Text), label, text_end);
