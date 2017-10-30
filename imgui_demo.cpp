@@ -1,4 +1,4 @@
-// dear imgui, v1.52 WIP
+// dear imgui, v1.53 WIP
 // (demo code)
 
 // Message to the person tempted to delete this file when integrating ImGui into their code base:
@@ -2359,6 +2359,7 @@ struct ExampleAppConsole
 
     void    AddLog(const char* fmt, ...) IM_FMTARGS(2)
     {
+        // FIXME-OPT
         char buf[1024];
         va_list args;
         va_start(args, fmt);
