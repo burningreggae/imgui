@@ -933,16 +933,16 @@ struct ImGuiIO
     //------------------------------------------------------------------
 
     ImVec2      MousePosPrev;               // Previous mouse position temporary storage (nb: not for public use, set to MousePos in NewFrame())
-    ImVec2      MouseClickedPos[5];         // Position at time of clicking
-    float       MouseClickedTime[5];        // Time of last click (used to figure out double-click)
-    bool        MouseClicked[5];            // Mouse button went from !Down to Down
-    bool        MouseDoubleClicked[5];      // Has mouse button been double-clicked?
-    bool        MouseReleased[5];           // Mouse button went from Down to !Down
-    bool        MouseDownOwned[5];          // Track if button was clicked inside a window. We don't request mouse capture from the application if click started outside ImGui bounds.
-    float       MouseDownDuration[5];       // Duration the mouse button has been down (0.0f == just clicked)
-    float       MouseDownDurationPrev[5];   // Previous time the mouse button has been down
-    ImVec2      MouseDragMaxDistanceAbs[5]; // Maximum distance, absolute, on each axis, of how much mouse has traveled from the clicking point
-    float       MouseDragMaxDistanceSqr[5]; // Squared maximum distance of how much mouse has traveled from the clicking point
+    ImVec2      MouseClickedPos[8];         // Position at time of clicking
+    float       MouseClickedTime[8];        // Time of last click (used to figure out double-click)
+    bool        MouseClicked[8];            // Mouse button went from !Down to Down
+    bool        MouseDoubleClicked[8];      // Has mouse button been double-clicked?
+    bool        MouseReleased[8];           // Mouse button went from Down to !Down
+    bool        MouseDownOwned[8];          // Track if button was clicked inside a window. We don't request mouse capture from the application if click started outside ImGui bounds.
+    float       MouseDownDuration[8];       // Duration the mouse button has been down (0.0f == just clicked)
+    float       MouseDownDurationPrev[8];   // Previous time the mouse button has been down
+    ImVec2      MouseDragMaxDistanceAbs[8]; // Maximum distance, absolute, on each axis, of how much mouse has traveled from the clicking point
+    float       MouseDragMaxDistanceSqr[8]; // Squared maximum distance of how much mouse has traveled from the clicking point
     float       KeysDownDuration[512];      // Duration the keyboard key has been down (0.0f == just pressed)
     float       KeysDownDurationPrev[512];  // Previous duration the key has been down
 
