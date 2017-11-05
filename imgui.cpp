@@ -59,23 +59,21 @@
  END-USER GUIDE
  ==============
 
- - Double-click title bar to collapse window
- - Click upper right corner to close a window, available when 'bool* p_open' is passed to ImGui::Begin()
- - Click and drag on lower right corner to resize window
- - Click and drag on any empty space to move window
- - Double-click/double-tap on lower right corner grip to auto-fit to content
- - TAB/SHIFT+TAB to cycle through keyboard editable fields
- - Use mouse wheel to scroll
- - Use CTRL+mouse wheel to zoom window contents (if io.FontAllowScaling is true)
- - CTRL+Click on a slider or drag box to input value as text
+ - Double-click on title bar to collapse window.
+ - Click upper right corner to close a window, available when 'bool* p_open' is passed to ImGui::Begin().
+ - Click and drag on lower right corner to resize window (double-click to auto fit window to its contents).
+ - Click and drag on any empty space to move window.
+ - TAB/SHIFT+TAB to cycle through keyboard editable fields.
+ - CTRL+Click on a slider or drag box to input value as text.
+ - Use mouse wheel to scroll.
  - Text editor:
    - Hold SHIFT or use mouse to select text.
-   - CTRL+Left/Right to word jump
-   - CTRL+Shift+Left/Right to select words
-   - CTRL+A our Double-Click to select all
-   - CTRL+X,CTRL+C,CTRL+V to use OS clipboard
-   - CTRL+Z,CTRL+Y to undo/redo
-   - ESCAPE to revert text to its original value
+   - CTRL+Left/Right to word jump.
+   - CTRL+Shift+Left/Right to select words.
+   - CTRL+A our Double-Click to select all.
+   - CTRL+X,CTRL+C,CTRL+V to use OS clipboard/
+   - CTRL+Z,CTRL+Y to undo/redo.
+   - ESCAPE to revert text to its original value.
    - You can apply arithmetic operators +,*,/ on numerical values. Use +- to subtract (because - would set a negative value!)
    - Controls are automatically adjusted for OSX to match standard OSX text editing operations.
 
@@ -216,6 +214,7 @@
  Here is a change-log of API breaking changes, if you are using one of the functions listed, expect to have to fix some code.
  Also read releases logs https://github.com/ocornut/imgui/releases for more details.
 
+ - 2017/11/02 (1.53) - marked IsRootWindowOrAnyChildHovered() as obsolete is favor of using IsWindowHovered(ImGuiHoveredFlags_FlattenChilds);
  - 2017/10/24 (1.52) - renamed IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCS/IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCS to IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS/IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS for consistency.
  - 2017/10/20 (1.52) - changed IsWindowHovered() default parameters behavior to return false if an item is active in another window (e.g. click-dragging item from another window to this window). You can use the newly introduced IsWindowHovered() flags to requests this specific behavior if you need it.
  - 2017/10/20 (1.52) - marked IsItemHoveredRect()/IsMouseHoveringWindow() as obsolete, in favor of using the newly introduced flags for IsItemHovered() and IsWindowHovered(). See https://github.com/ocornut/imgui/issues/1382 for details.
@@ -2090,6 +2089,8 @@ bool ImGui::IsItemHovered(ImGuiHoveredFlags flags)
     ImGuiWindow* window = g.CurrentWindow;
     if (!window->DC.LastItemRectHoveredRect)
         return false;
+    IM_ASSERT((flags & ImGuiHoveredFlags_FlattenChilds) == 0);   // Flags not supported by this function
+
     // [2017/10/16] Reverted commit 344d48be3 and testing RootWindow instead. I believe it is correct to NOT test for RootWindow but this leaves us unable to use IsItemHovered() after EndChild() itself.
     // Until a solution is found I believe reverting to the test from 2017/09/27 is safe since this was the test that has been running for a long while.
     //if (g.HoveredWindow != window)
@@ -3259,6 +3260,7 @@ void ImGui::RenderTriangle(ImVec2 p_min, ImGuiDir dir, float scale)
     case ImGuiDir_Left:
         r = -r; // ...fall through, no break!
     case ImGuiDir_Right:
+        center.x -= r * 0.25f;
         a = ImVec2(1,0) * r;
         b = ImVec2(-0.500f,+0.866f) * r;
         c = ImVec2(-0.500f,-0.866f) * r;
@@ -5375,12 +5377,20 @@ bool ImGui::IsWindowHovered(ImGuiHoveredFlags flags)
 {
     IM_ASSERT((flags & ImGuiHoveredFlags_AllowWhenOverlapped) == 0);   // Flags not supported by this function
     ImGuiContext& g = *GImGui;
-    if (g.HoveredWindow != g.CurrentWindow)
-        return false;
+    if (flags & ImGuiHoveredFlags_FlattenChilds)
+    {
+        if (g.HoveredRootWindow != g.CurrentWindow->RootWindow)
+            return false;
+    }
+    else
+    {
+        if (g.HoveredWindow != g.CurrentWindow)
+            return false;
+    }
     if (!IsWindowContentHoverable(g.HoveredRootWindow, flags))
         return false;
     if (!(flags & ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
-        if (g.ActiveId != 0 && g.ActiveIdWindow != g.CurrentWindow)
+        if (g.ActiveId != 0 && !g.ActiveIdAllowOverlap && g.ActiveId != g.HoveredWindow->MoveId)
             return false;
     return true;
 }
@@ -5404,21 +5414,6 @@ bool ImGui::IsRootWindowOrAnyChildFocused()
     ImGuiContext& g = *GImGui;
     IM_ASSERT(g.CurrentWindow);     // Not inside a Begin()/End()
     return g.NavWindow && g.NavWindow->RootWindow == g.CurrentWindow->RootWindow;
-}
-
-bool ImGui::IsRootWindowOrAnyChildHovered(ImGuiHoveredFlags flags)
-{
-    ImGuiContext& g = *GImGui;
-    IM_ASSERT((flags & ImGuiHoveredFlags_AllowWhenOverlapped) == 0);   // Flags not supported by this function
-    IM_ASSERT(g.CurrentWindow);                                        // Not inside a Begin()/End()
-    if (!g.HoveredRootWindow || (g.HoveredRootWindow != g.CurrentWindow->RootWindow))
-        return false;
-    if (!IsWindowContentHoverable(g.HoveredRootWindow, flags))
-        return false;
-    if (!(flags & ImGuiHoveredFlags_AllowWhenBlockedByActiveItem))
-        if (g.ActiveId != 0 && g.ActiveIdWindow != g.CurrentWindow)
-            return false;
-    return true;
 }
 
 float ImGui::GetWindowWidth()
@@ -9701,7 +9696,7 @@ bool ImGui::MenuItem(const char* label, const char* shortcut, bool selected, boo
             PopStyleColor();
         }
         if (selected)
-            RenderCheckMark(pos + ImVec2(window->MenuColumns.Pos[2] + extra_w + g.FontSize * (0.20f+0.200f), g.FontSize * 0.134f * 0.5f), GetColorU32(enabled ? ImGuiCol_Text : ImGuiCol_TextDisabled), g.FontSize  * 0.866f);
+            RenderCheckMark(pos + ImVec2(window->MenuColumns.Pos[2] + extra_w + g.FontSize * 0.40f, g.FontSize * 0.134f * 0.5f), GetColorU32(enabled ? ImGuiCol_Text : ImGuiCol_TextDisabled), g.FontSize  * 0.866f);
     }
     return pressed;
 }
@@ -9820,7 +9815,7 @@ bool ImGui::BeginMenu(const char* label, bool enabled)
         float extra_w = ImMax(0.0f, GetContentRegionAvail().x - w);
         pressed = Selectable(label, menu_is_open, ImGuiSelectableFlags_Menu | ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_DrawFillAvailWidth | (!enabled ? ImGuiSelectableFlags_Disabled : 0), ImVec2(w, 0.0f));
         if (!enabled) PushStyleColor(ImGuiCol_Text, g.Style.Colors[ImGuiCol_TextDisabled]);
-        RenderTriangle(pos + ImVec2(window->MenuColumns.Pos[2] + extra_w + g.FontSize * 0.20f, label_size.y*0.5f), ImGuiDir_Right);
+        RenderTriangle(pos + ImVec2(window->MenuColumns.Pos[2] + extra_w + g.FontSize * 0.30f, label_size.y*0.5f), ImGuiDir_Right);
         if (!enabled) PopStyleColor();
     }
 
