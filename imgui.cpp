@@ -2130,7 +2130,6 @@ bool ImGui::_ItemHoverable(const ImRect& bb, ImGuiID id)
 }
 
 extern void hover_gate(ImGuiID id, bool isHovered );
-extern void window_gate(ImGuiID id, bool isActive );
 extern float hover_envelope(ImGuiID id);
 extern void hover_step();
 
@@ -2946,12 +2945,13 @@ void ImGui::EndFrame()
     g.Windows.swap(g.WindowsSortBuffer);
 
 	//Trigger Envelope for Window
+/*
     for (int i = 0; i != g.Windows.Size; ++i)
     {
         ImGuiWindow* window = g.Windows[i];
-		window_gate(window->ID,window->Active && !window->Collapsed);
+		hover_gate(window->ID,window->Active && !window->Collapsed);
     }
-
+*/
 	//Advance Envelope System
 	hover_step();
 
@@ -2983,12 +2983,14 @@ void ImGui::Render()
         for (int i = 0; i != g.Windows.Size; i++)
         {
             ImGuiWindow* window = g.Windows[i];
+			float e = 0.f;
+/*
 			float e = hover_envelope(window->ID);
 			for (int cmd_i = 0; cmd_i < window->DrawList->CmdBuffer.Size; cmd_i++)
 			{
 				window->DrawList->CmdBuffer[cmd_i].envelope = e;
 			}
-
+*/
 			if ((window->Active || e > 0.f) && window->HiddenFrames <= 0 && (window->Flags & (ImGuiWindowFlags_ChildWindow)) == 0)
                 AddWindowToRenderListSelectLayer(window);
         }
