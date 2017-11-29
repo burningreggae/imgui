@@ -32,7 +32,8 @@ void ImGradient::clear()
 {
 	draggingMark = 0;
 	selectedMark = 0;
-	for(ImGradientMark* mark : marks) delete mark;
+	for(ImGradientMarkList::const_iterator m = marks.begin(); m != marks.end(); ++m) delete *m;
+
 	marks.clear();
 }
 
@@ -48,7 +49,11 @@ void ImGradient::save()
 	if (!f) return;
 
 	refreshCache();
-	for(ImGradientMark* m : marks) fprintf(f,"%f %f %f %f %f\n",m->position,m->color[0],m->color[1],m->color[2],m->color[3] );
+	for(ImGradientMarkList::const_iterator markIt = marks.begin(); markIt != marks.end(); ++markIt)
+	{
+		const ImGradientMark* m = *markIt;
+		fprintf(f,"%f %f %f %f %f\n",m->position,m->color[0],m->color[1],m->color[2],m->color[3] );
+	}
 	fclose(f);
 }
 
