@@ -536,8 +536,7 @@ void createFonts()
 	//io.Fonts->AddFontFromFileTTF("HelveticaNeue.ttf", 15.f, &config,r0);
 	ImWchar r1[] = { 
 		0x0020, 0x007A,
-		0x00B0, 0x00B0,
-		0x00B5, 0x00B5,
+		0x00B0, 0x00B5,
 		0x00DF, 0x00DF,
 		0x00E4, 0x00E4,
 		0x00F6, 0x00F6,
@@ -559,6 +558,8 @@ void createFonts()
 	// a with Diaeresis		  ,	0x00E4,	\xc3\xa4
 	// o with Diaeresis		  ,	0x00F6,	\xc3\xb6
 	// u with Diaeresis		  ,	0x00FC,	\xc3\xbc
+	// superscript 2   ALT-253,	0x00B2,	\xc2\xb2
+	// superscript 3          ,	0x00B3,	\xc2\xb3
 
 /*
     ImWchar ranges[] = { 0xf000, 0xf3ff, 0 };
