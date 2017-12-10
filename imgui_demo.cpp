@@ -171,6 +171,7 @@ void ImGui::ShowTestWindow(bool* p_open)
     static bool no_move = false;
     static bool no_resize = false;
     static bool no_collapse = false;
+    static bool no_close = false;
 
     // Demonstrate the various window flags. Typically you would just use the default.
     ImGuiWindowFlags window_flags = 0;
@@ -180,6 +181,8 @@ void ImGui::ShowTestWindow(bool* p_open)
     if (no_move)      window_flags |= ImGuiWindowFlags_NoMove;
     if (no_resize)    window_flags |= ImGuiWindowFlags_NoResize;
     if (no_collapse)  window_flags |= ImGuiWindowFlags_NoCollapse;
+    if (no_close)     p_open = NULL; // Don't pass our bool* to Begin
+
     ImGui::SetNextWindowSize(ImVec2(550,680), ImGuiCond_FirstUseEver);
     if (!ImGui::Begin("ImGui Demo", p_open, window_flags))
     {
@@ -242,6 +245,7 @@ void ImGui::ShowTestWindow(bool* p_open)
         ImGui::Checkbox("No move", &no_move); ImGui::SameLine(150);
         ImGui::Checkbox("No resize", &no_resize); ImGui::SameLine(300);
         ImGui::Checkbox("No collapse", &no_collapse);
+        ImGui::Checkbox("No close", &no_close);
 
         if (ImGui::TreeNode("Style"))
         {
@@ -249,7 +253,7 @@ void ImGui::ShowTestWindow(bool* p_open)
             ImGui::TreePop();
         }
 
-        if (ImGui::TreeNode("Logging"))
+        if (ImGui::TreeNode("Capture/Logging"))
         {
             ImGui::TextWrapped("The logging API redirects all text output so you can easily capture the content of a window or a block. Tree nodes can be automatically expanded. You can also call ImGui::LogText() to output directly to the log without a visual output.");
             ImGui::LogButtons();
@@ -319,7 +323,7 @@ void ImGui::ShowTestWindow(bool* p_open)
             static int item = 1;
             ImGui::Combo("combo", &item, "aaaa\0bbbb\0cccc\0dddd\0eeee\0\0");   // Combo using values packed in a single constant string (for really quick combo)
 
-            const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK" };
+            const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO", "PPPP", "QQQQQQQQQQ", "RRR", "SSSS" };
             static int item2 = -1;
             ImGui::Combo("combo scroll", &item2, items, IM_ARRAYSIZE(items));   // Combo using proper array. You can also pass a callback to retrieve array value, no need to create/copy an array just for that.
 
@@ -1910,6 +1914,8 @@ void ImGui::ShowTestWindow(bool* p_open)
         if (ImGui::TreeNode("Dragging"))
         {
             ImGui::TextWrapped("You can use ImGui::GetMouseDragDelta(0) to query for the dragged amount on any widget.");
+            for (int button = 0; button < 3; button++)
+                ImGui::Text("IsMouseDragging(%d) = %d", button, ImGui::IsMouseDragging(button));
             ImGui::Button("Drag Me");
             if (ImGui::IsItemActive())
             {
@@ -1928,12 +1934,16 @@ void ImGui::ShowTestWindow(bool* p_open)
 
         if (ImGui::TreeNode("Mouse cursors"))
         {
+            const char* mouse_cursors_names[] = { "Arrow", "TextInput", "Move", "ResizeNS", "ResizeEW", "ResizeNESW", "ResizeNWSE" };
+            IM_ASSERT(IM_ARRAYSIZE(mouse_cursors_names) == ImGuiMouseCursor_Count_);
+
+            ImGui::Text("Current mouse cursor = %d: %s", ImGui::GetMouseCursor(), mouse_cursors_names[ImGui::GetMouseCursor()]);
             ImGui::Text("Hover to see mouse cursors:");
             ImGui::SameLine(); ShowHelpMarker("Your application can render a different mouse cursor based on what ImGui::GetMouseCursor() returns. If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, otherwise your backend needs to handle it.");
             for (int i = 0; i < ImGuiMouseCursor_Count_; i++)
             {
                 char label[32];
-                sprintf(label, "Mouse cursor %d", i);
+                sprintf(label, "Mouse cursor %d: %s", i, mouse_cursors_names[i]);
                 ImGui::Bullet(); ImGui::Selectable(label, false);
                 if (ImGui::IsItemHovered())
                     ImGui::SetMouseCursor(i);
@@ -2580,7 +2590,7 @@ struct ExampleAppConsole
         ImGui::PopStyleVar();
         ImGui::Separator();
 
-        ImGui::BeginChild("ScrollingRegion", ImVec2(0,-ImGui::GetItemsLineHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);
+        ImGui::BeginChild("ScrollingRegion", ImVec2(0, -ImGui::GetStyle().ItemSpacing.y - ImGui::GetItemsLineHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar); // Leave room for 1 separator + 1 InputText
         if (ImGui::BeginPopupContextWindow())
         {
             if (ImGui::Selectable("Clear")) ClearLog();
@@ -2807,7 +2817,7 @@ struct ExampleAppLog
         int old_size = Buf.size();
         va_list args;
         va_start(args, fmt);
-        Buf.appendv(fmt, args);
+        Buf.appendfv(fmt, args);
         va_end(args);
         for (int new_size = Buf.size(); old_size < new_size; old_size++)
             if (Buf[old_size] == '\n')
@@ -2907,11 +2917,9 @@ static void ShowExampleAppLayout(bool* p_open)
                 ImGui::Separator();
                 ImGui::TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ");
             ImGui::EndChild();
-            ImGui::BeginChild("buttons");
-                if (ImGui::Button("Revert")) {}
-                ImGui::SameLine();
-                if (ImGui::Button("Save")) {}
-            ImGui::EndChild();
+            if (ImGui::Button("Revert")) {}
+            ImGui::SameLine();
+            if (ImGui::Button("Save")) {}
         ImGui::EndGroup();
     }
     ImGui::End();
@@ -3011,7 +3019,7 @@ static void ShowExampleAppLongText(bool* p_open)
     if (ImGui::Button("Add 1000 lines"))
     {
         for (int i = 0; i < 1000; i++)
-            log.append("%i The quick brown fox jumps over the lazy dog\n", lines+i);
+            log.appendf("%i The quick brown fox jumps over the lazy dog\n", lines+i);
         lines += 1000;
     }
     ImGui::BeginChild("Log");

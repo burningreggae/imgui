@@ -1603,36 +1603,36 @@ void DockContext::dump()
 
 void DockContext::save(ImGuiTextBuffer &out)
 {
-	out.append("docks={\n");
-	out.append("label=\"%s\",\n",label);
+	out.appendf("docks={\n");
+	out.appendf("label=\"%s\",\n",label);
 	for (int i = 0; i < m_docks.size(); ++i)
 	{
 		Dock& dock = *m_docks[i];
 
-		out.append( "dock%d={\n",i);
+		out.appendf( "dock%d={\n",i);
 
-		out.append("index=%d,\n",i);
-		out.append("label=\"%s\",\n",dock.label );
-		out.append("pos_x=%.0f,\n",dock.pos.x);
-		out.append("pos_y=%.0f,\n",dock.pos.y);
-		out.append("size_x=%.0f,\n",dock.size.x);
-		out.append("size_y=%.0f,\n",dock.size.y);
-		out.append("location=\"%s\",\n",dock.location);
-		out.append("status=%d,\n",dock.status);
-		out.append("active=%d,\n",dock.active);
-		out.append("opened=%d,\n",dock.opened);
-		out.append("first=%d,\n",dock.first);
-		out.append("prev=%d,\n",getDockIndex(dock.prev_tab));
-		out.append("next=%d,\n",getDockIndex(dock.next_tab));
-		out.append("child0=%d,\n",getDockIndex(dock.children[0]));
-		out.append("child1=%d,\n",getDockIndex(dock.children[1]));
-		out.append("parent=%d\n",getDockIndex(dock.parent));
+		out.appendf("index=%d,\n",i);
+		out.appendf("label=\"%s\",\n",dock.label );
+		out.appendf("pos_x=%.0f,\n",dock.pos.x);
+		out.appendf("pos_y=%.0f,\n",dock.pos.y);
+		out.appendf("size_x=%.0f,\n",dock.size.x);
+		out.appendf("size_y=%.0f,\n",dock.size.y);
+		out.appendf("location=\"%s\",\n",dock.location);
+		out.appendf("status=%d,\n",dock.status);
+		out.appendf("active=%d,\n",dock.active);
+		out.appendf("opened=%d,\n",dock.opened);
+		out.appendf("first=%d,\n",dock.first);
+		out.appendf("prev=%d,\n",getDockIndex(dock.prev_tab));
+		out.appendf("next=%d,\n",getDockIndex(dock.next_tab));
+		out.appendf("child0=%d,\n",getDockIndex(dock.children[0]));
+		out.appendf("child1=%d,\n",getDockIndex(dock.children[1]));
+		out.appendf("parent=%d\n",getDockIndex(dock.parent));
 		if (i < m_docks.size() - 1)
-			out.append ("},\n");
+			out.appendf ("},\n");
 		else
-			out.append ("}\n");
+			out.appendf ("}\n");
 	}
-	out.append("}\n");
+	out.appendf("}\n");
 #if 0
 	file << "docks = {\n";
 	for (int i = 0; i < m_docks.size(); ++i)

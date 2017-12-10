@@ -38,16 +38,18 @@ struct ImGuiGroupData;
 struct ImGuiSimpleColumns;
 struct ImGuiDrawContext;
 struct ImGuiTextEditState;
-struct ImGuiIniData;
 struct ImGuiMouseCursorData;
 struct ImGuiPopupRef;
 struct ImGuiWindow;
+struct ImGuiWindowSettings;
 
 typedef int ImGuiLayoutType;        // enum: horizontal or vertical             // enum ImGuiLayoutType_
 typedef int ImGuiButtonFlags;       // flags: for ButtonEx(), ButtonBehavior()  // enum ImGuiButtonFlags_
 typedef int ImGuiItemFlags;         // flags: for PushItemFlag()                // enum ImGuiItemFlags_
 typedef int ImGuiSeparatorFlags;    // flags: for Separator() - internal        // enum ImGuiSeparatorFlags_
 typedef int ImGuiSliderFlags;       // flags: for SliderBehavior()              // enum ImGuiSliderFlags_
+typedef int ImGuiComboFlags;        // flags: for BeginCombo()                  // enum ImGuiComboFlags_
+
 typedef int ImGuiLayoutType;      // enum ImGuiLayoutType_
 
 //-------------------------------------------------------------------------
@@ -107,6 +109,7 @@ IMGUI_API int           ImStricmp(const char* str1, const char* str2);
 IMGUI_API int           ImStrnicmp(const char* str1, const char* str2, int count);
 IMGUI_API void          ImStrncpy(char* dst, const char* src, int count);
 IMGUI_API char*         ImStrdup(const char* str);
+IMGUI_API char*         ImStrchrRange(const char* str_begin, const char* str_end, char c);
 IMGUI_API int           ImStrlenW(const ImWchar* str);
 IMGUI_API const ImWchar*ImStrbolW(const ImWchar* buf_mid_line, const ImWchar* buf_begin); // Find beginning-of-line
 IMGUI_API const char*   ImStristr(const char* haystack, const char* haystack_end, const char* needle, const char* needle_end);
@@ -209,6 +212,18 @@ enum ImGuiSelectableFlagsPrivate_
     ImGuiSelectableFlags_DrawFillAvailWidth = 1 << 6
 };
 
+enum ImGuiComboFlags_
+{
+    ImGuiComboFlags_PopupAlignLeft      = 1 << 0,   // Align the popup toward the left by default
+
+    // If you want your combo popup to be a specific size you can use SetNextWindowSizeConstraints() prior to calling BeginCombo()
+    ImGuiComboFlags_HeightSmall         = 1 << 1,   // Max ~4 items visible
+    ImGuiComboFlags_HeightRegular       = 1 << 2,   // Max ~8 items visible (default)
+    ImGuiComboFlags_HeightLarge         = 1 << 3,   // Max ~20 items visible
+    ImGuiComboFlags_HeightLargest       = 1 << 4,   // As many fitting items as possible
+    ImGuiComboFlags_HeightMask_         = ImGuiComboFlags_HeightSmall | ImGuiComboFlags_HeightRegular | ImGuiComboFlags_HeightLarge | ImGuiComboFlags_HeightLargest
+};
+
 enum ImGuiSeparatorFlags_
 {
     ImGuiSeparatorFlags_Horizontal          = 1 << 0,   // Axis default to current layout type, so generally Horizontal unless e.g. in a menu bar
@@ -242,7 +257,8 @@ enum ImGuiDir
     ImGuiDir_Left    = 0,
     ImGuiDir_Right   = 1,
     ImGuiDir_Up      = 2,
-    ImGuiDir_Down    = 3
+    ImGuiDir_Down    = 3,
+    ImGuiDir_Count_
 };
 
 // 2D axis aligned bounding-box
@@ -275,6 +291,8 @@ struct IMGUI_API ImRect
     void        Translate(const ImVec2& v)      { Min.x += v.x; Min.y += v.y; Max.x += v.x; Max.y += v.y; }
     void        ClipWith(const ImRect& clip)    { if (Min.x < clip.Min.x) Min.x = clip.Min.x; if (Min.y < clip.Min.y) Min.y = clip.Min.y; if (Max.x > clip.Max.x) Max.x = clip.Max.x; if (Max.y > clip.Max.y) Max.y = clip.Max.y; }
     void        Floor()                         { Min.x = (float)(int)Min.x; Min.y = (float)(int)Min.y; Max.x = (float)(int)Max.x; Max.y = (float)(int)Max.y; }
+    void        FixInverted()                   { if (Min.x > Max.x) ImSwap(Min.x, Max.x); if (Min.y > Max.y) ImSwap(Min.y, Max.y); }
+    bool        IsFinite() const                { return Min.x != FLT_MAX; }
     ImVec2      GetClosestPoint(ImVec2 p, bool on_edge) const
     {
         if (!on_edge && Contains(p))
@@ -364,13 +382,24 @@ struct IMGUI_API ImGuiTextEditState
 };
 
 // Data saved in imgui.ini file
-struct ImGuiIniData
+struct ImGuiWindowSettings
 {
     char*       Name;
     ImGuiID     Id;
     ImVec2      Pos;
     ImVec2      Size;
     bool        Collapsed;
+
+    ImGuiWindowSettings() { Name = NULL; Id = 0; Pos = Size = ImVec2(0,0); Collapsed = false; }
+};
+
+struct ImGuiSettingsHandler
+{
+    const char* TypeName;   // Short description stored in .ini file. Disallowed characters: '[' ']'  
+    ImGuiID     TypeHash;   // == ImHash(TypeName, 0, 0)
+    void*       (*ReadOpenFn)(ImGuiContext& ctx, const char* name);
+    void        (*ReadLineFn)(ImGuiContext& ctx, void* entry, const char* line);
+    void        (*WriteAllFn)(ImGuiContext& ctx, ImGuiTextBuffer* out_buf);
 };
 
 // Mouse cursor data (used when io.MouseDrawCursor is set)
@@ -497,8 +526,6 @@ struct ImGuiContext
     ImGuiWindow*            ActiveIdWindow;
     ImGuiWindow*            MovingWindow;                       // Track the child window we clicked on to move a window.
     ImGuiID                 MovingWindowMoveId;                 // == MovingWindow->MoveId
-    ImVector<ImGuiIniData>  Settings;                           // .ini Settings
-    float                   SettingsDirtyTimer;                 // Save .ini Settings on disk when time reaches zero
     ImVector<ImGuiColMod>   ColorModifiers;                     // Stack for PushStyleColor()/PopStyleColor()
     ImVector<ImGuiStyleMod> StyleModifiers;                     // Stack for PushStyleVar()/PopStyleVar()
     ImVector<ImFont*>       FontStack;                          // Stack for PushFont()/PopFont()
@@ -547,6 +574,11 @@ struct ImGuiContext
     ImVector<char>          PrivateClipboard;                   // If no custom clipboard handler is defined
     ImVec2                  OsImePosRequest, OsImePosSet;       // Cursor position request & last passed to the OS Input Method Editor
 
+    // Settings
+    float                          SettingsDirtyTimer;          // Save .ini Settings on disk when time reaches zero
+    ImVector<ImGuiWindowSettings>  SettingsWindows;             // .ini settings for ImGuiWindow
+    ImVector<ImGuiSettingsHandler> SettingsHandlers;            // List of .ini settings handlers
+
     // Logging
     bool                    LogEnabled;
     FILE*                   LogFile;                            // If != NULL log to stdout/ file
@@ -591,7 +623,6 @@ struct ImGuiContext
         ActiveIdWindow = NULL;
         MovingWindow = NULL;
         MovingWindowMoveId = 0;
-        SettingsDirtyTimer = 0.0f;
 
         SetNextWindowPosVal = ImVec2(0.0f, 0.0f);
         SetNextWindowSizeVal = ImVec2(0.0f, 0.0f);
@@ -623,6 +654,8 @@ struct ImGuiContext
         OverlayDrawList._OwnerName = "##Overlay"; // Give it a name for debugging
         MouseCursor = ImGuiMouseCursor_Arrow;
         memset(MouseCursorData, 0, sizeof(MouseCursorData));
+
+        SettingsDirtyTimer = 0.0f;
 
         LogEnabled = false;
         LogFile = NULL;
@@ -657,7 +690,7 @@ struct IMGUI_API ImGuiDrawContext
     ImVec2                  CursorPos;
     ImVec2                  CursorPosPrevLine;
     ImVec2                  CursorStartPos;         // Initial position in client area with padding
-    ImVec2                  CursorMaxPos;           // Implicitly calculate the size of our contents, always extending. Saved into window->SizeContents at the end of the frame
+    ImVec2                  CursorMaxPos;           // Used to implicitly calculate the size of our contents, always growing during the frame. Turned into window->SizeContents at the beginning of next frame
     ImVec2                  CurrentLineSize;
     float                   CurrentLineTextBaseOffset;
     ImVec2                  PrevLineSize;
@@ -748,7 +781,8 @@ struct IMGUI_API ImGuiWindow
     ImVec2                  Pos;                                // Position rounded-up to nearest pixel
     ImVec2                  Size;                               // Current size (==SizeFull or collapsed title bar size)
     ImVec2                  SizeFull;                           // Size when non collapsed
-    ImVec2                  SizeContents;                       // Size of contents (== extents reach of the drawing cursor) from previous frame
+    ImVec2                  SizeFullAtLastBegin;                // Copy of SizeFull at the end of Begin. This is the reference value we'll use on the next frame to decide if we need scrollbars.
+    ImVec2                  SizeContents;                       // Size of contents (== extents reach of the drawing cursor) from previous frame. Include decoration, window title, border, menu, etc.
     ImVec2                  SizeContentsExplicit;               // Size of contents explicitly set by the user via SetNextWindowContentSize()
     ImRect                  ContentsRegionRect;                 // Maximum visible content position in window coordinates. ~~ (SizeContentsExplicit ? SizeContentsExplicit : Size - ScrollbarSizes) - CursorStartPos, per axis
     ImVec2                  WindowPadding;                      // Window padding at the time of begin.
@@ -772,7 +806,7 @@ struct IMGUI_API ImGuiWindow
     int                     AutoFitFramesX, AutoFitFramesY;
     bool                    AutoFitOnlyGrows;
     int                     AutoFitChildAxises;
-    int                     AutoPosLastDirection;
+    ImGuiDir                AutoPosLastDirection;
     int                     HiddenFrames;
     ImGuiCond               SetWindowPosAllowFlags;             // store condition flags for next SetWindowPos() call.
     ImGuiCond               SetWindowSizeAllowFlags;            // store condition flags for next SetWindowSize() call.
@@ -811,6 +845,7 @@ public:
     ImGuiID     GetID(const void* ptr);
     ImGuiID     GetIDNoKeepAlive(const char* str, const char* str_end = NULL);
 
+    // We don't use g.FontSize because the window may be != g.CurrentWidow.
     ImRect      Rect() const                            { return ImRect(Pos.x, Pos.y, Pos.x+Size.x, Pos.y+Size.y); }
     float       CalcFontSize() const                    { return GImGui->FontBaseSize * FontWindowScale; }
     float       TitleBarHeight() const                  { return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0.0f : CalcFontSize() + GImGui->Style.TitleBarHeight; } //GImGui->Style.FramePadding.y * 2.0f; }
@@ -851,6 +886,10 @@ namespace ImGui
 
     IMGUI_API void          Initialize();
 
+    IMGUI_API void                  MarkIniSettingsDirty();
+    IMGUI_API ImGuiSettingsHandler* FindSettingsHandler(ImGuiID type_id);
+    IMGUI_API ImGuiWindowSettings*  FindWindowSettings(ImGuiID id);
+
     IMGUI_API void          SetActiveID(ImGuiID id, ImGuiWindow* window);
     IMGUI_API void          ClearActiveID();
     IMGUI_API void          SetHoveredID(ImGuiID id);
@@ -888,7 +927,7 @@ namespace ImGui
     //IMGUI_API void          PushColumnClipRect(int column_index = -1);
 
     // FIXME-WIP: New Combo API
-    IMGUI_API bool          BeginCombo(const char* label, const char* preview_value, ImVec2 popup_size = ImVec2(0.0f,0.0f));
+    IMGUI_API bool          BeginCombo(const char* label, const char* preview_value, ImGuiComboFlags flags = 0);
     IMGUI_API void          EndCombo();
 
     // NB: All position are in absolute pixels coordinates (never using window coordinates internally)
