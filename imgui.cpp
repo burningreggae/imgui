@@ -1946,6 +1946,15 @@ ImGuiWindow::~ImGuiWindow()
         ImGui::MemFree(layout);
     }
 
+	//TA: memleak ColumnsStorage
+	if (ColumnsStorage.Size)
+	{
+		for (int i = 0; i < ColumnsStorage.Size; ++i)
+		{
+			ColumnsStorage[i].Clear();
+		}
+		ColumnsStorage.clear();
+	}
     DrawList->~ImDrawList();
     ImGui::MemFree(DrawList);
     DrawList = NULL;
@@ -12221,6 +12230,11 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiColumnsFlag
             columns->Columns.push_back(column);
         }
     }
+	//TA: problems..
+	if ( columns->Columns.Size != columns_count + 1 )
+	{
+		columns->Columns.Size = columns_count + 1;
+	}
     IM_ASSERT(columns->Columns.Size == columns_count + 1);
 
     for (int n = 0; n < columns_count + 1; n++)
@@ -12326,7 +12340,7 @@ void ImGui::Columns(int columns_count, const char* id, bool border,ImGuiItemGett
         EndColumns();
     
     ImGuiColumnsFlags flags = (border ? 0 : ImGuiColumnsFlags_NoBorder);
-    flags |= ImGuiColumnsFlags_NoForceWithinWindow;
+    //flags |= ImGuiColumnsFlags_NoForceWithinWindow; // allowed to move column outside window (can't bring back)
     //flags |= ImGuiColumnsFlags_NoPreserveWidths; // NB: Legacy behavior
     if (columns_count != 1)
         BeginColumns(id, columns_count, flags,items_getter,data);
