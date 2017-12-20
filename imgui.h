@@ -1187,7 +1187,7 @@ struct ImGuiTextBuffer
 {
     ImVector<char>      Buf;
 
-    ImGuiTextBuffer()   { Buf.push_back(0); }
+    ImGuiTextBuffer()   { Buf.push_back(0);json_object_nr=0; }
     inline char         operator[](int i) { return Buf.Data[i]; }
     const char*         begin() const { return &Buf.front(); }
     const char*         end() const { return &Buf.back(); }      // Buf is zero-terminated, so end() will point on the zero-terminator
@@ -1198,6 +1198,13 @@ struct ImGuiTextBuffer
     const char*         c_str() const { return Buf.Data; }
     IMGUI_API void      appendf(const char* fmt, ...) IM_FMTARGS(2);
     IMGUI_API void      appendfv(const char* fmt, va_list args) IM_FMTLIST(2);
+
+	int json_object_nr;
+	int json_element_count[4];
+	void json_object(const char* classname,int open = 1);
+	void json(const char* var, const char* value, int need_quote=1);
+	void json(const char* var, const float value, const int decimal_precision=-1);
+	void json(const char* var, const int value);
 };
 
 // Helper: Simple Key->value storage

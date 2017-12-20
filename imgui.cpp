@@ -1753,6 +1753,63 @@ void ImGuiTextBuffer::appendf(const char* fmt, ...)
     va_end(args);
 }
 
+void ImGuiTextBuffer::json_object(const char* classname,int open)
+{
+	if ( open )
+	{
+		if ( json_object_nr < 1 ) appendf("{ /*%s*/\n",classname);
+		else json(classname,"{\n",0);
+
+		json_object_nr += 1;
+		if ( json_object_nr < 0 || json_object_nr > 3 ) json_object_nr = 0;
+		json_element_count[json_object_nr] = 0;
+		//json("classname",classname);
+	}
+	else
+	{
+		appendf("%s}",
+			json_element_count[json_object_nr]>0 ? "\n" : ""
+			);
+		json_object_nr -= 1;
+		if ( json_object_nr < 0 || json_object_nr > 3 ) json_object_nr = 0;
+	}
+}
+
+//http://jsoneditoronline.org/
+void ImGuiTextBuffer::json(const char* var, const char* value,int need_quote)
+{
+/*
+	if ( value)
+	switch ( value[0] )
+	{
+		case '{': case '}': case '0': case '1': case '2': case '3':	case '4': case '5':
+		case '6': case '7': case '8': case '9': case '-': need_quote = 0;
+	}
+*/
+	appendf("%s\"%s\":%s%s%s",
+		json_element_count[json_object_nr]>0 ? ",\n" : "",
+		var ? var : "",
+		need_quote ? "\"" : "",
+		value ? value : "",
+		need_quote ? "\"" : ""
+		);
+	json_element_count[json_object_nr] += 1;
+}
+
+void ImGuiTextBuffer::json(const char* var, const float value,const int decimal_precision)
+{
+	char buf[64];
+    if (decimal_precision < 0) ImFormatString(buf, 64, "%f",value);
+    else ImFormatString(buf, 64, "%.*f", decimal_precision,value);
+	json(var,buf,0);
+}
+void ImGuiTextBuffer::json(const char* var, const int value)
+{
+	char buf[64];
+    ImFormatString(buf, 64, "%d",value);
+	json(var,buf,0);
+}
+
 //-----------------------------------------------------------------------------
 // ImGuiSimpleColumns (internal use only)
 //-----------------------------------------------------------------------------

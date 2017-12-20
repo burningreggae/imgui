@@ -1030,6 +1030,7 @@ void SetStyle(int style,bool styleInvert, float alpha,float saturate,int fontNr,
 	{
 		releaseFonts();
 		g_FontWishSize = fontSize;
+		if ( g_FontWishSize < 13.f ) g_FontWishSize = 13.f;
 		g_StyleWish = style;
 		g_FontWishRasterizerMultiply = fontRasterMultiply;
 	}

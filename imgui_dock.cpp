@@ -1503,6 +1503,11 @@ void DockContext::designer(bool *v_open)
 				dock.status == Status_Float?"Float": "?");
 */
 		Text("active = %d,\n",dock.active);
+		SameLine();
+		if (Button("Set Active"))
+		{
+			dock.setActive();
+		}
 		Text("opened = %d,\n",dock.opened);
 		Text("prev = %d,\n",getDockIndex(dock.prev_tab));
 		Text("next = %d,\n",getDockIndex(dock.next_tab));
@@ -1605,6 +1610,36 @@ void DockContext::dump()
 
 void DockContext::save(ImGuiTextBuffer &out)
 {
+	out.json_object("docks",1);
+	out.json("label",label);
+	for (int i = 0; i < m_docks.size(); ++i)
+	{
+		Dock& dock = *m_docks[i];
+		char name[64];
+		sprintf(name,"dock%d",i);
+		out.json_object(name,1);
+		out.json("index",(float)i,0);
+		out.json("label",dock.label );
+		out.json("pos_x",dock.pos.x,0);
+		out.json("pos_y",dock.pos.y,0);
+		out.json("size_x",dock.size.x,0);
+		out.json("size_y",dock.size.y,0);
+		out.json("location",dock.location);
+		out.json("status",dock.status);
+		out.json("active",dock.active);
+		out.json("opened",dock.opened);
+		out.json("first",dock.first);
+		out.json("prev",getDockIndex(dock.prev_tab));
+		out.json("next",getDockIndex(dock.next_tab));
+		out.json("child0",getDockIndex(dock.children[0]));
+		out.json("child1",getDockIndex(dock.children[1]));
+		out.json("parent",getDockIndex(dock.parent));
+
+		out.json_object(name,0);
+	}
+	out.json_object("docks",0);
+	return;
+	//
 	out.appendf("docks={\n");
 	out.appendf("label=\"%s\",\n",label);
 	for (int i = 0; i < m_docks.size(); ++i)
@@ -1635,34 +1670,6 @@ void DockContext::save(ImGuiTextBuffer &out)
 			out.appendf ("}\n");
 	}
 	out.appendf("}\n");
-#if 0
-	file << "docks = {\n";
-	for (int i = 0; i < m_docks.size(); ++i)
-	{
-		Dock& dock = *m_docks[i];
-		file << "dock" << (Lumix::uint64)&dock << " = {\n";
-		file << "index = " << i << ",\n";
-		file << "label = \"" << dock.label << "\",\n";
-		file << "x = " << (int)dock.pos.x << ",\n";
-		file << "y = " << (int)dock.pos.y << ",\n";
-		file << "location = \"" << dock.location << "\",\n";
-		file << "size_x = " << (int)dock.size.x << ",\n";
-		file << "size_y = " << (int)dock.size.y << ",\n";
-		file << "status = " << (int)dock.status << ",\n";
-		file << "active = " << (int)dock.active << ",\n";
-		file << "opened = " << (int)dock.opened << ",\n";
-		file << "prev = " << (int)getDockIndex(dock.prev_tab) << ",\n";
-		file << "next = " << (int)getDockIndex(dock.next_tab) << ",\n";
-		file << "child0 = " << (int)getDockIndex(dock.children[0]) << ",\n";
-		file << "child1 = " << (int)getDockIndex(dock.children[1]) << ",\n";
-		file << "parent = " << (int)getDockIndex(dock.parent) << "\n";
-		if (i < m_docks.size() - 1)
-			file << "},\n";
-		else
-			file << "}\n";
-	}
-	file << "}\n";
-#endif
 }
 
 
@@ -1703,6 +1710,7 @@ void DockContext::load(const char *filename)
 
 	ip = filename;
 	depth = 0;
+	//json
 	do
 	{
 		token = COM_Parse(&ip);
@@ -1711,6 +1719,7 @@ void DockContext::load(const char *filename)
 			case '{': depth += 1; state = 0; break;
 			case '}': depth -= 1; state = 0; break;
 			case ',': state = 0; break;
+			case ':':
 			case '=': state = 2; break;
 			default:
 			{
@@ -1996,9 +2005,16 @@ void EndDock()
 	g_dock[dock_current].end();
 }
 
-void SaveDock(int slot,ImGuiTextBuffer &out)
+void SaveDock(int slot,ImGuiTextBuffer *out)
 {
-	g_dock[slot].save(out);
+	ImGuiTextBuffer temp;
+	g_dock[slot].save(out ? *out: temp);
+	if ( 0 == out )
+	{
+		char filename[256];
+		sprintf(filename,"dock%d.json",slot);
+		saveFile(filename,temp.c_str(),temp.size());
+	}
 }
 
 

@@ -33,7 +33,7 @@ namespace ImGui
 	IMGUI_API const char* GetDockActive(int slot);
 	IMGUI_API void SetDockWindowPos(int slot, const char* name, const ImVec2& pos,const ImVec2& size, DockState newDockState );
 
-	IMGUI_API void SaveDock(int slot, ImGuiTextBuffer &out);
+	IMGUI_API void SaveDock(int slot, ImGuiTextBuffer *out=0);
 	IMGUI_API void LoadDock(int slot, const char *filename);
 	IMGUI_API void Print();
 
