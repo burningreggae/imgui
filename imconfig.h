@@ -73,7 +73,7 @@ namespace ImGui
 	ImVec4(const ImVec2& f):x(f.x),y(f.y),z(f.x),w(f.y) {}
 
 
-#define raw_density 1
+#define shader_raw_density 1
 #define maximumIntensityProjection 4
 #define blendAlpha 8
 #define blendAlphaPremul 16
@@ -83,6 +83,7 @@ namespace ImGui
 #define tex_gen			256
 #define tex_mipmapgen	512
 #define tex_filter2		1024
+#define shader_autobrightnesscontrast 2048
 
 struct shaderparamlayer
 {

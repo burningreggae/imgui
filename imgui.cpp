@@ -2200,7 +2200,7 @@ bool ImGui::_ItemHoverable(const ImRect& bb, ImGuiID id)
     return true;
 }
 
-extern void envelope_gate(ImGuiID id, bool isHovered, int group );
+extern void envelope_gate(ImGuiID id, bool isActive, int group );
 extern float envelope_get(ImGuiID id, int group = 0);
 extern void envelope_step();
 
@@ -3158,6 +3158,10 @@ void ImGui::Render()
             float e = 0.f;
 			//Envelop decide if window is visible GUI_ENVELOPE_WINDOW
             e = envelope_get(window->ID,1);
+			if (window->Collapsed )
+			{
+				if ( e < 0.5f ) e = 0.5f; // don't let collapes window disappear
+			}
             for (int cmd_i = 0; cmd_i < window->DrawList->CmdBuffer.Size; cmd_i++)
             {
                 window->DrawList->CmdBuffer[cmd_i].envelope = e;

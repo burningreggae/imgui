@@ -38,8 +38,8 @@ namespace ImGui
 	IMGUI_API void Print();
 
 	IMGUI_API bool DockBeginWorkspace(const char *name, int slot);
-	IMGUI_API void DockEndWorkspace();
-
+	IMGUI_API void DockEndWorkspace(int toslot);
+	IMGUI_API int  DockGetActiveWorkspace();
 	IMGUI_API bool DockWorkspaceClosed();
 	IMGUI_API void DockDesign(bool *v_open = 0);
 }

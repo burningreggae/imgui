@@ -1526,15 +1526,17 @@ void DockContext::designer(bool *v_open)
 
 	char filename[256];
 
-	if ( Button("SaveDock"))
+	sprintf(filename,"SaveDock %d",index);
+	if ( Button(filename))
 	{
 		ImGuiTextBuffer out;
 		save(out);
 		sprintf(filename,"dock%d.json",index);
 		saveFile(filename,out.c_str(),out.size());
 	}
-
-	if ( Button("LoadDock"))
+	SameLine();
+	sprintf(filename,"LoadDock %d",index);
+	if (Button(filename))
 	{
 		sprintf(filename,"dock%d.json",index);
 		load(loadFile(filename));
@@ -1939,16 +1941,21 @@ bool DockBeginWorkspace(const char* name, int slot)
 	return true;
 }
 
-void DockEndWorkspace()
+void DockEndWorkspace(int toslot)
 {
 	g_dock[dock_current].asChild ? EndChild() : End();
 	g_dock[dock_current].checkNonexistent();
-	dock_current -= 1;
+	dock_current = toslot;
+}
+
+int DockGetActiveWorkspace()
+{
+	return dock_current;
 }
 
 void DockDesign(bool *v_open)
 {
-	for ( int g = 0; g < 3; ++g ) g_dock[g].designer(v_open);
+	for ( int g = 0; g < 4; ++g ) g_dock[g].designer(v_open);
 }
 
 DockContext& GetDockContext(int index)
