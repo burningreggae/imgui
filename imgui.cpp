@@ -1757,7 +1757,7 @@ void ImGuiTextBuffer::json_object(const char* classname,int open)
 {
 	if ( open )
 	{
-		if ( json_object_nr < 1 ) appendf("{ /*%s*/\n",classname);
+		if ( json_object_nr < 1 ) appendf("{\n"); // /*%s*/\n",classname);
 		else json(classname,"{\n",0);
 
 		json_object_nr += 1;

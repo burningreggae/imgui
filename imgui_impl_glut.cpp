@@ -18,6 +18,7 @@
 //static float        g_MouseWheel = 0.0f;
 static GLuint       g_FontTexture = 0;
 float g_FontWishSize = 15.f;
+int g_OversampleHWish = 3;
 float g_FontWishRasterizerMultiply = 1.f;
 int g_StyleWish = 0;
 int g_FontWish = 0;
@@ -521,7 +522,7 @@ void createFonts()
 	config.MergeMode = false;
 	atlas.AddFontDefault(&config);
 
-	config.OversampleH = 3;
+	config.OversampleH = g_OversampleHWish;
 	config.OversampleV = 1;
 	config.PixelSnapH = false;
 	config.GlyphExtraSpacing.x = 0.f;
@@ -1022,17 +1023,20 @@ void StyleAdjust(bool invert, float alpha,float saturate )
 	}
 }
 
-void SetStyle(int style,bool styleInvert, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply)
+void SetStyle(int style,bool styleInvert, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply, int fontoversample)
 {
 	float d = g_FontWishSize-fontSize;
 	float d1 = g_FontWishRasterizerMultiply-fontRasterMultiply;
-	if ( d*d >= 0.999f && fontSize>=1.f || g_StyleWish != style || d1*d1 >= 0.01f )
+	float d2 = g_OversampleHWish-fontoversample;
+	if ( d*d >= 0.999f && fontSize>=1.f || g_StyleWish != style || d1*d1 >= 0.01f || d2*d2 >= 0.01f )
 	{
 		releaseFonts();
 		g_FontWishSize = fontSize;
-		if ( g_FontWishSize < 13.f ) g_FontWishSize = 13.f;
+		if ( g_FontWishSize < 4.f ) g_FontWishSize = 4.f;
 		g_StyleWish = style;
 		g_FontWishRasterizerMultiply = fontRasterMultiply;
+		g_OversampleHWish = fontoversample;
+		if(g_OversampleHWish<1) g_OversampleHWish = 1;
 	}
 
 	g_FontWish = fontNr;

@@ -278,6 +278,7 @@ void DockContext::verify()
 		Dock* d = m_docks[i];
 
 		d->id = ImHash(d->label,0);
+		//disable self referencing
 		if ( d->children[0] == d ) d->children[0] = 0;
 		if ( d->children[1] == d ) d->children[1] = 0;
 		if ( d->next_tab == d )
@@ -292,7 +293,7 @@ void DockContext::verify()
 		}
 */
 	}
-
+	//order
 }
 
 void DockContext::reset()
@@ -1762,95 +1763,6 @@ void DockContext::load(const char *filename)
 	} while (ip);
 	verify();
 
-#if 0
-	for (int i = 0; i < m_docks.size(); ++i)
-	{
-		m_docks[i]->~Dock();
-		MemFree(m_docks[i]);
-	}
-	m_docks.clear();
-
-	if (lua_getglobal(L, "docks") == LUA_TTABLE)
-	{
-		lua_pushnil(L);
-		while (lua_next(L, -2) != 0)
-		{
-			Dock* new_dock = (Dock*)MemAlloc(sizeof(Dock));
-			m_docks.push_back(IM_PLACEMENT_NEW(new_dock) Dock());
-			lua_pop(L, 1);
-		}
-	}
-	lua_pop(L, 1);
-
-	if (lua_getglobal(L, "docks") == LUA_TTABLE)
-	{
-		lua_pushnil(L);
-		while (lua_next(L, -2) != 0)
-		{
-			if (lua_istable(L, -1))
-			{
-				int idx = 0;
-				if (lua_getfield(L, -1, "index") == LUA_TNUMBER)
-					idx = (int)lua_tointeger(L, -1);
-				Dock& dock = *m_docks[idx];
-				dock.last_frame = 0;
-				dock.invalid_frames = 0;
-				lua_pop(L, 1);
-
-				if (lua_getfield(L, -1, "label") == LUA_TSTRING)
-				{
-					dock.label = ImStrdup(lua_tostring(L, -1));
-					dock.id = ImHash(dock.label, 0);
-				}
-				lua_pop(L, 1);
-
-				if (lua_getfield(L, -1, "x") == LUA_TNUMBER)
-					dock.pos.x = (float)lua_tonumber(L, -1);
-				if (lua_getfield(L, -2, "y") == LUA_TNUMBER)
-					dock.pos.y = (float)lua_tonumber(L, -1);
-				if (lua_getfield(L, -3, "size_x") == LUA_TNUMBER)
-					dock.size.x = (float)lua_tonumber(L, -1);
-				if (lua_getfield(L, -4, "size_y") == LUA_TNUMBER)
-					dock.size.y = (float)lua_tonumber(L, -1);
-				if (lua_getfield(L, -5, "active") == LUA_TNUMBER)
-					dock.active = lua_tointeger(L, -1) != 0;
-				if (lua_getfield(L, -6, "opened") == LUA_TNUMBER)
-					dock.opened = lua_tointeger(L, -1) != 0;
-				if (lua_getfield(L, -7, "location") == LUA_TSTRING)
-					strcpy(dock.location, lua_tostring(L, -1));
-				if (lua_getfield(L, -8, "status") == LUA_TNUMBER)
-				{
-					dock.status = (DockStatus)lua_tointeger(L, -1);
-				}
-				lua_pop(L, 8);
-
-				if (lua_getfield(L, -1, "prev") == LUA_TNUMBER)
-				{
-					dock.prev_tab = getDockByIndex(lua_tointeger(L, -1));
-				}
-				if (lua_getfield(L, -2, "next") == LUA_TNUMBER)
-				{
-					dock.next_tab = getDockByIndex(lua_tointeger(L, -1));
-				}
-				if (lua_getfield(L, -3, "child0") == LUA_TNUMBER)
-				{
-					dock.children[0] = getDockByIndex(lua_tointeger(L, -1));
-				}
-				if (lua_getfield(L, -4, "child1") == LUA_TNUMBER)
-				{
-					dock.children[1] = getDockByIndex(lua_tointeger(L, -1));
-				}
-				if (lua_getfield(L, -5, "parent") == LUA_TNUMBER)
-				{
-					dock.parent = getDockByIndex(lua_tointeger(L, -1));
-				}
-				lua_pop(L, 5);
-			}
-			lua_pop(L, 1);
-		}
-	}
-	lua_pop(L, 1);
-#endif
 }
 
 
