@@ -9906,7 +9906,7 @@ bool ImGui::Combo2(const char* label, int* current_item, ImGuiItemGetter items_g
                 );
 
             if ( doSetContentWidth ) SetNextWindowContentWidth(content_width);
-            ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox;
+            ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
             if ( content_width > popup_width ) flags |= ImGuiWindowFlags_HorizontalScrollbar;
 
             PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
@@ -12291,6 +12291,7 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiColumnsFlag
         {
             ImGuiColumnData column;
             column.OffsetNorm = n / (float)columns_count;
+			if(items_getter) items_getter(data,n,(const char**)&column.OffsetNorm,ImGuiItemGetterCommand_get_visible_column_width_norm);
             columns->Columns.push_back(column);
         }
     }

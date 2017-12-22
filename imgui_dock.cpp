@@ -100,23 +100,21 @@ struct Dock
 	Dock* getFirstTab()
 	{
 		Dock* tmp = this;
-		while (tmp->prev_tab) tmp = tmp->prev_tab;
+		int run = 0;
+		while (tmp->prev_tab && ++run < 1000) tmp = tmp->prev_tab;
 		return tmp;
 	}
 
 
 	void setActive()
 	{
+		msg ("setActive: %s\n",label);
 		active = true;
 		system_redraw(__FUNCTION__,label);
 		int run = 0;
 		Dock* tmp;
 		for (tmp = prev_tab; tmp && ++run < 1000; tmp = tmp->prev_tab) tmp->active = false;
 		for (tmp = next_tab; tmp && ++run < 1000; tmp = tmp->next_tab) tmp->active = false;
-		if ( run >= 1000 )
-		{
-			int g = 1;
-		}
 	}
 
 
@@ -174,12 +172,14 @@ struct Dock
 	{
 		size = _size;
 		pos = _pos;
-		for (Dock* tmp = prev_tab; tmp; tmp = tmp->prev_tab)
+
+		int run = 0;
+		for (Dock* tmp = prev_tab; tmp && ++run < 1000; tmp = tmp->prev_tab)
 		{
 			tmp->size = _size;
 			tmp->pos = _pos;
 		}
-		for (Dock* tmp = next_tab; tmp; tmp = tmp->next_tab)
+		for (Dock* tmp = next_tab; tmp && ++run < 1000; tmp = tmp->next_tab)
 		{
 			tmp->size = _size;
 			tmp->pos = _pos;
@@ -256,7 +256,7 @@ struct DockContext
 	int getDockIndex(Dock* dock);
 	Dock* getDockByIndex(const char *name);
 	void save(ImGuiTextBuffer &out);
-	void load(const char *filename);
+	void load(int slot, const char *filename, int reload=0);
 	void dump();
 };
 
@@ -270,31 +270,6 @@ DockContext::~DockContext()
 	reset();
 }
 
-void DockContext::verify()
-{
-	int lastActive = -1;
-	for (int i = 0; i < m_docks.size(); ++i)
-	{
-		Dock* d = m_docks[i];
-
-		d->id = ImHash(d->label,0);
-		//disable self referencing
-		if ( d->children[0] == d ) d->children[0] = 0;
-		if ( d->children[1] == d ) d->children[1] = 0;
-		if ( d->next_tab == d )
-			d->next_tab = 0;
-		if ( d->prev_tab == d )
-			d->prev_tab = 0;
-/*
-		if ( d->active )
-		{
-			if (lastActive<0) lastActive = d->active;
-			else d->active = 0;
-		}
-*/
-	}
-	//order
-}
 
 void DockContext::reset()
 {
@@ -312,7 +287,7 @@ void DockContext::reset()
 	m_current = 0;
 	m_last_frame = 0;
 	m_next_parent = 0;
-	m_next_dock_slot = Slot_Tab;
+	m_next_dock_slot = Slot_Right;
 	dock_open = true;
 	asChild = true;
 	//label.clear();
@@ -349,7 +324,7 @@ Dock& DockContext::getDock(const char* label, bool opened, const ImVec2& default
 	new_dock->size.y = default_size.y < 0 ? GetIO().DisplaySize.y : default_size.y;
 	new_dock->opened = opened;
 	new_dock->first = true;
-	new_dock->last_frame = 0;
+	new_dock->last_frame = 0; //ImGui::GetFrameCount();
 	new_dock->invalid_frames = 0;
 	new_dock->location[0] = 0;
 	return *new_dock;
@@ -789,18 +764,48 @@ void fillLocation(Dock& dock)
 	dock.location[count] = 0;
 }
 
+void DockContext::verify()
+{
+	int lastActive = -1;
+	for (int i = 0; i < m_docks.size(); ++i)
+	{
+		Dock* d = m_docks[i];
+		if ( !d->location[0]) fillLocation(*d);
+
+		d->id = ImHash(d->label,0);
+		//disable self referencing
+		if ( d->children[0] == d ) d->children[0] = 0;
+		if ( d->children[1] == d ) d->children[1] = 0;
+		if ( d->next_tab == d )
+			d->next_tab = 0;
+		if ( d->prev_tab == d )
+			d->prev_tab = 0;
+/*
+		if ( d->active )
+		{
+			if (lastActive<0) lastActive = d->active;
+			else d->active = 0;
+		}
+*/
+	}
+	//order
+}
 
 void DockContext::doUndock(Dock& dock)
 {
 	system_redraw(__FUNCTION__,dock.label);
 
-	if (dock.prev_tab)
-		dock.prev_tab->setActive();
-	else if (dock.next_tab)
-		dock.next_tab->setActive();
-	else
-		dock.active = false;
-
+	setDockActive(dock.next_tab?dock.next_tab->label:dock.prev_tab?dock.prev_tab->label:0);
+/*
+	dock.active = false;
+	if (dock.next_tab) dock.next_tab->setActive();
+	else if (dock.prev_tab) dock.prev_tab->setActive();
+*/
+/*
+	if (dock.prev_tab) dock.prev_tab->setActive();
+	else if (dock.next_tab) dock.next_tab->setActive();
+	else dock.active = false;
+*/
 	Dock* container = dock.parent;
 	if (container)
 	{
@@ -892,7 +897,8 @@ void drawTabbarListButton(Dock& dock)
 	if (BeginPopup("tab_list_popup"))
 	{
 		Dock* tmp = &dock;
-		while (tmp)
+		int run = 0;
+		while (tmp && ++run < 1000)
 		{
 			bool dummy = false;
 			if (Selectable(tmp->label, &dummy))
@@ -1104,7 +1110,8 @@ void DockContext::doDock(Dock& dock, Dock* dest, Slot_ dock_slot)
 	{
 		//insert at current
 		Dock* tmp = dest;
-		while (!tmp->active && tmp->next_tab && tmp->next_tab != tmp)
+		int run = 0;
+		while (++run<1000 && !tmp->active && tmp->next_tab && tmp->next_tab != tmp)
 		{
 			tmp = tmp->next_tab;
 		}
@@ -1201,19 +1208,32 @@ const char* DockContext::getDockActive()
 
 void DockContext::setDockActive(const char* name)
 {
+/*
 	if (0==name && m_current)
 	{
 		m_current->setActive();
 	}
-	else if (name)
+	else
+*/
+	if ( 0 == name && m_docks.size())
 	{
+		name = m_docks[0]->label;
+	}
+	if (name)
+	{
+		const char* active = getDockActive();
+		msg ( "setDockActive %d from %s to %s\n",index,active,name);
+
 		ImU32 id = ImHash(name, 0);
 		for (int i = 0; i < m_docks.size(); ++i)
 		{
 			if (m_docks[i]->id == id)
 			{
 				m_docks[i]->setActive();
-				break;
+			}
+			else
+			{
+				m_docks[i]->active = false;
 			}
 		}
 	}
@@ -1296,7 +1316,8 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 	m_next_dock_slot = Slot_Tab;
 
 	Dock& dock = getDock(label, !opened || *opened, default_size);
-	if (!dock.opened && (!opened || *opened)) tryDockToStoredLocation(dock);
+	if (!dock.opened && (!opened || *opened))
+		tryDockToStoredLocation(dock);
 	dock.last_frame = ImGui::GetFrameCount();
 	if (strcmp(dock.label, label) != 0)
 	{
@@ -1374,7 +1395,8 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 		return ret;
 	}
 
-	if (!dock.active && dock.status != Status_Dragged) return false;
+	if (!dock.active && dock.status != Status_Dragged)
+		return false;
 
 	m_end_action = EndAction_EndChild;
 	splits();
@@ -1545,7 +1567,7 @@ void DockContext::designer(bool *v_open)
 	if (Button(filename))
 	{
 		sprintf(filename,"dock%d.json",index);
-		load(loadFile(filename));
+		load(index,loadFile(filename));
 	}
 	PopID();
 	End();
@@ -1611,11 +1633,14 @@ void DockContext::dump()
 
 void DockContext::save(ImGuiTextBuffer &out)
 {
+	out.reserve(4096);
 	out.json_object("docks",1);
 	out.json("label",label);
 	for (int i = 0; i < m_docks.size(); ++i)
 	{
 		Dock& dock = *m_docks[i];
+		if ( !dock.location[0] ) fillLocation(dock);
+
 		char name[64];
 		sprintf(name,"dock%d",i);
 		out.json_object(name,1);
@@ -1639,42 +1664,10 @@ void DockContext::save(ImGuiTextBuffer &out)
 		out.json_object(name,0);
 	}
 	out.json_object("docks",0);
-	return;
-	//
-	out.appendf("docks={\n");
-	out.appendf("label=\"%s\",\n",label);
-	for (int i = 0; i < m_docks.size(); ++i)
-	{
-		Dock& dock = *m_docks[i];
-
-		out.appendf( "dock%d={\n",i);
-
-		out.appendf("index=%d,\n",i);
-		out.appendf("label=\"%s\",\n",dock.label );
-		out.appendf("pos_x=%.0f,\n",dock.pos.x);
-		out.appendf("pos_y=%.0f,\n",dock.pos.y);
-		out.appendf("size_x=%.0f,\n",dock.size.x);
-		out.appendf("size_y=%.0f,\n",dock.size.y);
-		out.appendf("location=\"%s\",\n",dock.location);
-		out.appendf("status=%d,\n",dock.status);
-		out.appendf("active=%d,\n",dock.active);
-		out.appendf("opened=%d,\n",dock.opened);
-		out.appendf("first=%d,\n",dock.first);
-		out.appendf("prev=%d,\n",getDockIndex(dock.prev_tab));
-		out.appendf("next=%d,\n",getDockIndex(dock.next_tab));
-		out.appendf("child0=%d,\n",getDockIndex(dock.children[0]));
-		out.appendf("child1=%d,\n",getDockIndex(dock.children[1]));
-		out.appendf("parent=%d\n",getDockIndex(dock.parent));
-		if (i < m_docks.size() - 1)
-			out.appendf ("},\n");
-		else
-			out.appendf ("}\n");
-	}
-	out.appendf("}\n");
 }
 
 
-void DockContext::load(const char *filename)
+void DockContext::load(int slot,const char *filename, int reload)
 {
 	const char* ip;
 	const char* token;
@@ -1684,6 +1677,7 @@ void DockContext::load(const char *filename)
 	Dock* current = 0;
 
 	reset();
+	index = slot;
 
 	//must allocate all before..
 	ip = filename;
@@ -1703,7 +1697,7 @@ void DockContext::load(const char *filename)
 	{
 		current = (Dock*)MemAlloc(sizeof(Dock));
 		IM_PLACEMENT_NEW(current) Dock();
-		//current->last_frame = 0;
+		current->last_frame = 0;//ImGui::GetFrameCount();
 		//current->invalid_frames = 0;
 		//current->location[0] = 0;
 		m_docks.push_back(current);
@@ -1739,7 +1733,13 @@ void DockContext::load(const char *filename)
 				}
 				else if ( depth == 2 )
 				{
-					if ( !strcmp(var,"index")) current = getDockByIndex(token), current->first = false;
+					if ( !strcmp(var,"index"))
+					{
+						current = getDockByIndex(token);
+						//current->active = true;
+						//current->first = false;
+						//current->first = reload ? false : true;
+					}
 					else if ( !strcmp(var,"label")) strncpy(current->label,token,sizeof(current->label)),current->label[sizeof(current->label)-1]=0;// current->label.ImStrdup(token);
 					else if ( !strcmp(var,"pos_x")) current->pos.x=(float)atof(token);
 					else if ( !strcmp(var,"pos_y")) current->pos.y=(float)atof(token);
@@ -1747,9 +1747,20 @@ void DockContext::load(const char *filename)
 					else if ( !strcmp(var,"size_y")) current->size.y=(float)atof(token);
 					else if ( !strcmp(var,"location")) strncpy(current->location,token,sizeof(current->location)),current->location[sizeof(current->location)-1]=0;
 					else if ( !strcmp(var,"status")) current->status=(DockState)atoi(token);
-					else if ( !strcmp(var,"active")) current->active=atoi(token) != 0;
-					else if ( !strcmp(var,"opened")) current->opened=atoi(token) != 0;
-					else if ( !strcmp(var,"first")) current->first=atoi(token) != 0;
+					else if ( !strcmp(var,"opened"))
+					{
+						//current->opened=true;
+						current->opened=atoi(token) != 0;
+					}
+					else if ( !strcmp(var,"active"))
+					{
+						//current->active=true;
+						current->active=atoi(token) != 0;
+					}
+					else if ( !strcmp(var,"first"))
+					{
+						current->first = atoi(token) != 0;
+					}
 					else if ( !strcmp(var,"prev")) current->prev_tab = getDockByIndex(token);
 					else if ( !strcmp(var,"next")) current->next_tab = getDockByIndex(token);
 					else if ( !strcmp(var,"child0")) current->children[0] = getDockByIndex(token);
@@ -1766,12 +1777,12 @@ void DockContext::load(const char *filename)
 }
 
 
-static DockContext g_dock[4];
+static DockContext g_dock[MAX_WORKSPACE];
 int dock_current = 0;
 
 void Print()
 {
-	for ( int g = 0; g < 4; ++g)
+	for ( int g = 0; g < MAX_WORKSPACE; ++g)
 	for (int i = 0; i < g_dock[g].m_docks.size(); ++i)
 	{
 		const Dock *d = g_dock[g].m_docks[i];
@@ -1794,9 +1805,13 @@ void Print()
 	}
 }
 
-void ShutdownDock()
+void ShutdownDock(int slot)
 {
-	for ( int g = 0; g < 4; ++g) g_dock[g].reset();
+	for ( int g = 0; g < MAX_WORKSPACE; ++g)
+	{
+		if ( slot < 0 || slot == g )
+			g_dock[g].reset();
+	}
 	dock_current = 0;
 }
 
@@ -1876,7 +1891,7 @@ int DockGetActiveWorkspace()
 
 void DockDesign(bool *v_open)
 {
-	for ( int g = 0; g < 4; ++g ) g_dock[g].designer(v_open);
+	for ( int g = 0; g < MAX_WORKSPACE; ++g ) g_dock[g].designer(v_open);
 }
 
 DockContext& GetDockContext(int index)
@@ -1930,10 +1945,9 @@ void SaveDock(int slot,ImGuiTextBuffer *out)
 }
 
 
-void LoadDock(int slot, const char *filename)
+void LoadDock(int slot, const char *filename, int reload)
 {
-	g_dock[slot].load(filename);
-	g_dock[slot].index = slot;
+	g_dock[slot].load(slot,filename,reload);
 }
 
 
