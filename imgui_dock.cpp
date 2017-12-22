@@ -770,7 +770,8 @@ void DockContext::verify()
 	for (int i = 0; i < m_docks.size(); ++i)
 	{
 		Dock* d = m_docks[i];
-		if ( !d->location[0]) fillLocation(*d);
+		if ( !d->location[0])
+			fillLocation(*d);
 
 		d->id = ImHash(d->label,0);
 		//disable self referencing
@@ -795,17 +796,17 @@ void DockContext::doUndock(Dock& dock)
 {
 	system_redraw(__FUNCTION__,dock.label);
 
-	setDockActive(dock.next_tab?dock.next_tab->label:dock.prev_tab?dock.prev_tab->label:0);
+	//setDockActive(dock.next_tab?dock.next_tab->label:dock.prev_tab?dock.prev_tab->label:0);
 /*
 	dock.active = false;
 	if (dock.next_tab) dock.next_tab->setActive();
 	else if (dock.prev_tab) dock.prev_tab->setActive();
 */
-/*
+
 	if (dock.prev_tab) dock.prev_tab->setActive();
 	else if (dock.next_tab) dock.next_tab->setActive();
 	else dock.active = false;
-*/
+
 	Dock* container = dock.parent;
 	if (container)
 	{
@@ -882,6 +883,7 @@ void DockContext::doUndock(Dock& dock)
 		dock.next_tab->prev_tab = dock.prev_tab;
 	dock.parent = 0;
 	dock.prev_tab = dock.next_tab = 0;
+	verify();
 }
 
 
