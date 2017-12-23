@@ -501,7 +501,7 @@ void DockContext::checkNonexistent()
 		if (dock.last_frame < frame_limit)
 		{
 			dock.invalid_frames += 1;
-			if (dock.invalid_frames > 1)
+			if (dock.invalid_frames > 5)
 			{
 				//Call as closed dock
 				bool open = false;
