@@ -802,10 +802,15 @@ void DockContext::doUndock(Dock& dock)
 	if (dock.next_tab) dock.next_tab->setActive();
 	else if (dock.prev_tab) dock.prev_tab->setActive();
 */
+	//char isactive[1024];
+	//sprintf(isactive,"%s",getDockActive() );
 
-	if (dock.prev_tab) dock.prev_tab->setActive();
-	else if (dock.next_tab) dock.next_tab->setActive();
-	else dock.active = false;
+	if ( dock.active )
+	{
+		if (dock.prev_tab) dock.prev_tab->setActive();
+		else if (dock.next_tab) dock.next_tab->setActive();
+		else dock.active = false;
+	}
 
 	Dock* container = dock.parent;
 	if (container)
@@ -1493,6 +1498,7 @@ void DockContext::designer(bool *v_open)
 	if (v_open && !*v_open) return;
 
 	//SetNextWindowSize(ImVec2(300, 300));
+	SetNextWindowSize(ImVec2(600,GetIO().DisplaySize.y*0.9f),ImGuiCond_FirstUseEver);
 	if (!Begin("Dock Designer",v_open))
 	{
 		End();

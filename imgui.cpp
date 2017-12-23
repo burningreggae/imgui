@@ -3180,11 +3180,13 @@ void ImGui::EndFrame()
     g.Windows.swap(g.WindowsSortBuffer);
 
     //Trigger Envelope for Window GUI_ENVELOPE_WINDOW
+#ifdef GUI_ENVELOPE_WINDOW
     for (int i = 0; i != g.Windows.Size; ++i)
     {
         ImGuiWindow* window = g.Windows[i];
         envelope_gate(window->ID,window->Active && !window->Collapsed,1);
     }
+#endif
     //Advance Envelope System
     envelope_step();
 
@@ -3216,18 +3218,23 @@ void ImGui::Render()
         for (int i = 0; i != g.Windows.Size; i++)
         {
             ImGuiWindow* window = g.Windows[i];
-            float e = 0.f;
+            float e = 1.f;
+			bool take = false;
+#ifdef GUI_ENVELOPE_WINDOW
 			//Envelop decide if window is visible GUI_ENVELOPE_WINDOW
             e = envelope_get(window->ID,1);
 			if (window->Collapsed )
 			{
 				if ( e < 0.5f ) e = 0.5f; // don't let collapes window disappear
 			}
-            for (int cmd_i = 0; cmd_i < window->DrawList->CmdBuffer.Size; cmd_i++)
+			take = e > 0.f;
+#endif
+			for (int cmd_i = 0; cmd_i < window->DrawList->CmdBuffer.Size; cmd_i++)
             {
                 window->DrawList->CmdBuffer[cmd_i].envelope = e;
             }
-            if ((window->Active || e > 0.f) && window->HiddenFrames <= 0 && (window->Flags & (ImGuiWindowFlags_ChildWindow)) == 0)
+
+            if ((window->Active || take) && window->HiddenFrames <= 0 && (window->Flags & (ImGuiWindowFlags_ChildWindow)) == 0)
                 AddWindowToRenderListSelectLayer(window);
         }
 
