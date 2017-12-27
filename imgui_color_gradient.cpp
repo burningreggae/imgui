@@ -390,7 +390,7 @@ namespace ImGui
 			}
 			else
 			{
-				draw_list->AddTriangle(a,b,c,black,1.f,false );
+				draw_list->AddTriangle(a,b,c,black,1.f );
 			}
 
 			draw_list->AddRectFilledMultiColor(ImVec2(to - 3.5f, bar_pos.y + (height + 3)),

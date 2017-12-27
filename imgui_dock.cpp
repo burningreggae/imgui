@@ -480,7 +480,7 @@ void DockContext::splits()
 
 			//draw_list->AddLine(a, b, isItemHovered ? color_hovered : color, 1.f, false);
 			draw_list->AddLine(a, b, GetColorU32(ImGuiCol_Separator,ImGuiCol_SeparatorHovered,
-				envelope_get(GetID("split"))), 1.f, false);
+				envelope_get(GetID("split"))), 1.f);
 		}
 		PopID();
 	}
