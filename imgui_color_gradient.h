@@ -49,9 +49,9 @@
 
 #include "imgui.h"
 
-#include <list>
+//#include <list>
 
-static const float GRADIENT_BAR_WIDGET_HEIGHT = 25;
+static const float GRADIENT_BAR_WIDGET_HEIGHT = 5;
 //static const float GRADIENT_BAR_EDITOR_HEIGHT = 40;
 static const float GRADIENT_MARK_DELETE_DIFFY = 40;
 static const float GRADIENT_BAR_EDITOR_INDENT_X = 10;
@@ -61,7 +61,9 @@ struct ImGradientMark
     float color[4];
     float position; //0 to 1
 };
-typedef std::list<ImGradientMark*> ImGradientMarkList;
+//typedef std::list<ImGradientMark*> ImGradientMarkList;
+//typedef std::list<ImGradientMark> ImGradientMarkList;
+typedef ImVector<ImGradientMark> ImGradientMarkList;
 
 class ImGradient
 {
@@ -98,6 +100,6 @@ private:
 namespace ImGui
 {
     bool GradientButton(ImGradient* gradient);
-    bool GradientEditor(ImGradient* gradient,float gradient_bar_editor_height = 40.f);
+    bool GradientEditor(ImGradient* gradient,const ImVec2& gradient_bar_editor_height);
 
 }

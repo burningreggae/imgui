@@ -22,7 +22,7 @@ int g_OversampleHWish = 3;
 float g_FontWishRasterizerMultiply = 1.f;
 int g_StyleWish = 0;
 int g_FontWish = 0;
-int fontUseBit = 8;
+int fontUseBit = 32;
 
 
 // Data
@@ -189,7 +189,7 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 
 					if (pcmd->shader->layer[0].octTexType == GL_TEXTURE_2D )
 					{
-						currentTexture2D = t;
+						//currentTexture2D = t;
 					}
 
 				}

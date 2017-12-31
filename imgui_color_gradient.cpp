@@ -32,7 +32,7 @@ void ImGradient::clear()
 {
 	draggingMark = 0;
 	selectedMark = 0;
-	for(ImGradientMarkList::const_iterator m = marks.begin(); m != marks.end(); ++m) delete *m;
+	//for(ImGradientMarkList::const_iterator m = marks.begin(); m != marks.end(); ++m) delete *m;
 
 	marks.clear();
 }
@@ -51,8 +51,8 @@ void ImGradient::save()
 	refreshCache();
 	for(ImGradientMarkList::const_iterator markIt = marks.begin(); markIt != marks.end(); ++markIt)
 	{
-		const ImGradientMark* m = *markIt;
-		fprintf(f,"%f %f %f %f %f\n",m->position,m->color[0],m->color[1],m->color[2],m->color[3] );
+		const ImGradientMark& m = *markIt;
+		fprintf(f,"%f %f %f %f %f\n",m.position,m.color[0],m.color[1],m.color[2],m.color[3] );
 	}
 	fclose(f);
 }
@@ -72,37 +72,82 @@ bool ImGradient::load()
 
 void ImGradient::addMark(const ImGradientMark& mark)
 {
-	ImGradientMark* newMark = new ImGradientMark();
-	newMark->position = ImClamp(mark.position, 0.f, 1.f);
-	newMark->color[0] = ImClamp(mark.color[0], 0.f, 1.f);
-	newMark->color[1] = ImClamp(mark.color[1], 0.f, 1.f);
-	newMark->color[2] = ImClamp(mark.color[2], 0.f, 1.f);
-	newMark->color[3] = ImClamp(mark.color[3], 0.f, 1.f);
+	ImGradientMark newMark; // = new ImGradientMark();
+	newMark.position = ImClamp(mark.position, 0.f, 1.f);
+	newMark.color[0] = ImClamp(mark.color[0], 0.f, 1.f);
+	newMark.color[1] = ImClamp(mark.color[1], 0.f, 1.f);
+	newMark.color[2] = ImClamp(mark.color[2], 0.f, 1.f);
+	newMark.color[3] = ImClamp(mark.color[3], 0.f, 1.f);
 
 	marks.push_back(newMark);
 }
 
 void ImGradient::addMark(float position, const ImColor& color)
 {
-	ImGradientMark* newMark = new ImGradientMark();
-	newMark->position = ImClamp(position,0.f,1.f);
-	newMark->color[0] = color.Value.x;
-	newMark->color[1] = color.Value.y;
-	newMark->color[2] = color.Value.z;
-	newMark->color[3] = color.Value.w;
+	ImGradientMark newMark; // = new ImGradientMark();
+	newMark.position = ImClamp(position,0.f,1.f);
+	newMark.color[0] = color.Value.x;
+	newMark.color[1] = color.Value.y;
+	newMark.color[2] = color.Value.z;
+	newMark.color[3] = color.Value.w;
 
 	marks.push_back(newMark);
 }
 
 void ImGradient::removeMark(ImGradientMark* mark)
 {
+	ImGradientMarkList::iterator markIt;
+	for(markIt = marks.begin(); markIt != marks.end(); ++markIt)
+	{
+		if ( &(*markIt) == mark )
+		{
+			marks.erase(markIt);
+			markIt = marks.begin();
+		}
+	}
+/*
 	if (mark)
 	{
-		marks.remove(mark);
+		marks.remove(*mark);
 		delete mark;
 	}
+*/
 	draggingMark = 0;
 	selectedMark = 0;
+}
+
+void ImGradient::refreshCache()
+{
+	ImGradientMarkList::iterator markIt;
+	for(markIt = marks.begin(); markIt != marks.end(); ++markIt)
+	{
+		ImGradientMark* mark = &(*markIt);
+		if ( mark->position< 0.f ) mark->position = 0.f;
+		else if ( mark->position > 1.f ) mark->position = 1.f;
+	}
+	//marks.sort([](const ImGradientMark * a, const ImGradientMark * b) { return a->position < b->position; });
+	//marks.sort([](const ImGradientMark& a, const ImGradientMark& b) { return a.position < b.position; });
+
+
+    struct StaticFunc 
+    { 
+        static int position(const void* lhs, const void* rhs) 
+        {
+			const ImGradientMark*a = (const ImGradientMark*)lhs;
+			const ImGradientMark*b = (const ImGradientMark*)rhs;
+			float diff = a->position - b->position;
+			return diff < 0.0001f ? -1: diff > 0.0001f ? 1 : 0;
+        }
+    };
+	//if (marks.size() > 1) qsort(&marks.front(), marks.size(), sizeof(ImGradientMark), StaticFunc::position);
+
+	for(markIt = marks.begin(); markIt != marks.end(); ++markIt)
+	{
+		ImGradientMark* mark = &(*markIt);
+		if ( draggingMark && !StaticFunc::position(mark,draggingMark) ) draggingMark = mark;
+		if ( selectedMark && !StaticFunc::position(mark,selectedMark) ) selectedMark = mark;
+	}
+
 }
 
 /*
@@ -123,11 +168,12 @@ void ImGradient::computeColorAt(float position, float color[4]) const
 {
 	position = ImClamp(position, 0.0f, 1.0f);
 
-	ImGradientMark* lower = 0;
-	ImGradientMark* upper = 0;
+	const ImGradientMark* lower = 0;
+	const ImGradientMark* upper = 0;
 
-	for(ImGradientMark* mark : marks)
+	for(ImGradientMarkList::const_iterator markIt = marks.begin(); markIt != marks.end(); ++markIt)
 	{
+		const ImGradientMark* mark = &(*markIt);
 		if(mark->position < position)
 		{
 			if(!lower || lower->position < mark->position)
@@ -179,17 +225,6 @@ void ImGradient::computeColorAt(float position, float color[4]) const
 	}
 }
 
-void ImGradient::refreshCache()
-{
-	for(ImGradientMarkList::const_iterator markIt = marks.begin(); markIt != marks.end(); ++markIt)
-	{
-		ImGradientMark* mark = *markIt;
-		if ( mark->position< 0.f ) mark->position = 0.f;
-		else if ( mark->position > 1.f ) mark->position = 1.f;
-	}
-
-	marks.sort([](const ImGradientMark * a, const ImGradientMark * b) { return a->position < b->position; });
-}
 
 void ImGradient::sample1D (unsigned int*dest, int size)
 {
@@ -201,7 +236,7 @@ void ImGradient::sample1D (unsigned int*dest, int size)
 	const ImGradientMark *prevMark = 0;
 	for(ImGradientMarkList::const_iterator markIt = marks.begin(); markIt != marks.end(); ++markIt)
 	{
-		const ImGradientMark* mark = *markIt;
+		const ImGradientMark* mark = &(*markIt);
 		int dsx = prevMark ? (int) floorf(prevMark->position * size) : 0;
 		if (!prevMark) prevMark = mark;
 		int dex = (int) floorf(mark->position * size);
@@ -271,7 +306,7 @@ namespace ImGui
 		ImVec4 colorB(1, 1, 1, 1);
 		float prevX = bar_pos.x;
 		float barBottom = bar_pos.y + height;
-		ImGradientMark* prevMark = 0;
+		const ImGradientMark* prevMark = 0;
 		ImDrawList* draw_list = ImGui::GetWindowDrawList();
 		const ImGuiStyle& style = ImGui::GetStyle();
 
@@ -293,7 +328,7 @@ namespace ImGui
 
 		for(ImGradientMarkList::const_iterator markIt = gradient->getMarks().begin(); markIt != gradient->getMarks().end(); ++markIt)
 		{
-			ImGradientMark* mark = *markIt;
+			const ImGradientMark* mark = &(*markIt);
 
 			float from = prevX;
 			float to = prevX = bar_pos.x + mark->position * maxWidth;
@@ -337,17 +372,16 @@ namespace ImGui
 		ImVec4 colorA(1, 1, 1, 1);
 		ImVec4 colorB(1, 1, 1, 1);
 		float barBottom = bar_pos.y + height;
-		ImGradientMark* prevMark = 0;
+		const ImGradientMark* prevMark = 0;
 		ImDrawList* draw_list = ImGui::GetWindowDrawList();
 		ImU32 colorAU32 = 0;
 		ImU32 colorBU32 = 0;
 		const ImGuiStyle& style = ImGui::GetStyle();
 		const ImU32 black = IM_COL32(0, 0, 0, (int)floorf(style.Alpha * 255.f));
 
-		for(ImGradientMarkList::const_iterator markIt = gradient->getMarks().begin(); markIt != gradient->getMarks().end(); ++markIt)
+		for(ImGradientMarkList::iterator markIt = gradient->getMarks().begin(); markIt != gradient->getMarks().end(); ++markIt)
 		{
-			ImGradientMark* mark = *markIt;
-
+			ImGradientMark* mark = &(*markIt);
 			if(!gradient->selectedMark) gradient->selectedMark = mark;
 
 			float to = bar_pos.x + mark->position * maxWidth;
@@ -431,11 +465,12 @@ namespace ImGui
 		return clicked;
 	}
 
-	bool GradientEditor(ImGradient* gradient, float gradient_bar_editor_height)
+	bool GradientEditor(ImGradient* gradient, const ImVec2& font_dim)
 	{
 		if(!gradient) return false;
 
 		bool modified = false;
+		float gradient_bar_editor_height = font_dim.y;
 
 		ImVec2 bar_pos = ImGui::GetCursorScreenPos();
 		bar_pos.x += GRADIENT_BAR_EDITOR_INDENT_X;
@@ -487,7 +522,7 @@ namespace ImGui
 
 		if(!gradient->selectedMark && gradient->getMarks().size() > 0)
 		{
-			gradient->selectedMark = gradient->getMarks().front();
+			gradient->selectedMark = &gradient->getMarks().front();
 		}
 
 #if 0
@@ -503,11 +538,11 @@ namespace ImGui
 #if 1
 		char id[64];
 		int i = 0;
-		for(ImGradientMarkList::const_iterator markIt = gradient->getMarks().begin(); markIt != gradient->getMarks().end(); ++markIt)
+		for(ImGradientMarkList::iterator markIt = gradient->getMarks().begin(); markIt != gradient->getMarks().end(); ++markIt)
 		{
-			ImGradientMark* mark = *markIt;
+			ImGradientMark* mark = &(*markIt);
 			sprintf(id,"##p%d",i);
-			PushItemWidth(30);
+			PushItemWidth(font_dim.x*3.f);
 			int show = (int) floorf(mark->position * 255.f);
 			if ( DragInt(id, &show,1.f,0,255 ) )
 			{
