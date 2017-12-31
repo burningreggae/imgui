@@ -38,7 +38,7 @@ namespace ImGui
 	IMGUI_API void LoadDock(int slot, const char *filename, int reload = 0);
 	IMGUI_API void Print();
 
-	IMGUI_API bool DockBeginWorkspace(const char *name, int slot);
+	IMGUI_API bool DockBeginWorkspace(const char *name, int slot,int draw_tabbar=1,int draw_tabbar_list=0);
 	IMGUI_API void DockEndWorkspace(int toslot);
 	IMGUI_API int  DockGetActiveWorkspace();
 	IMGUI_API bool DockWorkspaceClosed();

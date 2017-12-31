@@ -1337,6 +1337,9 @@ ImU32 ImGui::GetColorU32(const ImVec4& col)
 { 
     ImGuiStyle& style = GImGui->Style;
     ImVec4 c = col; 
+	c.x *= style.Brightness;
+	c.y *= style.Brightness;
+	c.z *= style.Brightness;
     c.w *= style.Alpha; 
     return ColorConvertFloat4ToU32(c); 
 }
@@ -3230,7 +3233,7 @@ void ImGui::Render()
             e = envelope_get(window->ID,1);
             if (window->Collapsed )
             {
-                if ( e < 0.5f ) e = 0.5f; // don't let collapes window disappear
+                if ( e < 0.5f ) e = 0.5f; // don't let collapses window disappear
             }
             take = e > 0.f;
 #endif
@@ -13023,7 +13026,7 @@ void ImGui::ShowMetricsWindow(bool* p_open)
     ImGui::End();
 }
 
-bool ImGui::Image4(ImTextureID user_texture_id, const ImVec2& size, const ImVec4 uv[4], unsigned tint_col, shaderparam *shaderparam, const char *str_id)
+bool ImGui::Image4(ImTextureID user_texture_id, const ImVec2& size, const ImVec4 uv[4], unsigned tint_col, shaderparam *shader, const char *str_id)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems) return false;
@@ -13052,7 +13055,7 @@ bool ImGui::Image4(ImTextureID user_texture_id, const ImVec2& size, const ImVec4
     window->DrawList->PushTextureID(user_texture_id);
     window->DrawList->PrimReserve(6, 4);
     window->DrawList->PrimRectUV4(bb.Min, bb.Max, uv,tint_col);
-    window->DrawList->PokeDrawCmd(shaderparam);
+    window->DrawList->PokeDrawCmd(shader);
     window->DrawList->PopTextureID();
     return pressed;
 }

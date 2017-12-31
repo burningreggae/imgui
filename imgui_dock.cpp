@@ -211,6 +211,9 @@ struct Dock
 
 struct DockContext
 {
+	DockContext();
+	virtual ~DockContext();
+
 	ImVector<Dock*> m_docks;
 	ImVec2 m_drag_offset;
 	Dock* m_current;
@@ -225,9 +228,8 @@ struct DockContext
 	//ImVector<char> label;
 	char label[1024];
 	int index;
-
-	DockContext();
-	virtual ~DockContext();
+	int draw_tabbar;
+	int draw_tabbar_list;
 
 	void reset();
 	void verify();
@@ -293,6 +295,8 @@ void DockContext::reset()
 	//label.clear();
 	label[0] = 0;
 	index = 0;
+	draw_tabbar = 1;
+	draw_tabbar_list = 1;
 }
 
 Dock& DockContext::getDock(const char* label, bool opened, const ImVec2& default_size)
@@ -967,7 +971,10 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 	//ImU32 text_color = GetColorU32(ImGuiCol_Text);
 	//float tab_base;
 
-	drawTabbarListButton(dock);
+	if (draw_tabbar_list)
+	{
+		drawTabbarListButton(dock);
+	}
 	SameLine();
 
 	const ImGuiStyle& style = GetStyle();
@@ -1424,20 +1431,22 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 		dock_tab = dock_tab->next_tab;
 	}
 	bool need_HorizontalScrollbar = full_size.x > dock.size.x;
-
-	if (tabbar(dock.getFirstTab(),
-		opened != 0,
-		extra_flags & ImGuiWindowFlags_NoInputs ? false : true,
-		need_HorizontalScrollbar)
-		)
+	if ( draw_tabbar )
 	{
-		fillLocation(dock);
-		*opened = false;
+		if (tabbar(dock.getFirstTab(),
+			opened != 0,
+			extra_flags & ImGuiWindowFlags_NoInputs ? false : true,
+			need_HorizontalScrollbar)
+			)
+		{
+			fillLocation(dock);
+			*opened = false;
+		}
 	}
 	ImVec2 pos = dock.pos;
 	ImVec2 size = dock.size;
 	//window under dock distance to scrollbar
-	float tabbar_height = GetTextLineHeightWithSpacing() * (need_HorizontalScrollbar?1.8f:1.1f); // + GetStyle().WindowPadding.y;
+	float tabbar_height = draw_tabbar ? GetTextLineHeightWithSpacing() * (need_HorizontalScrollbar?1.8f:1.1f):0.f; // + GetStyle().WindowPadding.y;
 	pos.y += tabbar_height;
 	size.y -= tabbar_height;
 
@@ -1834,12 +1843,14 @@ bool DockWorkspaceClosed()
 	return g_dock[dock_current].dock_open == false;
 }
 
-bool DockBeginWorkspace(const char* name, int slot)
+bool DockBeginWorkspace(const char* name, int slot,int draw_tabbar,int draw_tabbar_list)
 {
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoFocusOnAppearing; // | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
 	dock_current = slot;
 	g_dock[dock_current].index = slot;
+	g_dock[dock_current].draw_tabbar = draw_tabbar;
+	g_dock[dock_current].draw_tabbar_list = draw_tabbar_list;
 
 	if ( !strcmp("HUD", name) )
 	{

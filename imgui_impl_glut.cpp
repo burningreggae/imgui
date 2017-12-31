@@ -553,7 +553,7 @@ void createFonts()
 	// Degree Sign     ALT-248, 0x00B0, \xc2\xb0
 	// Uppercase Sigma ALT-228, 0x03A3, \xce\xa3
 	// lowercase sigma ALT-229, 0x03C3, \xcf\x83
-	// Micro Sign Mu   ALT-230, 0x00B5, \xc2\xb5
+	// Micro Sign Mu   ALT-230, 0x00B5, \xc2\xb5m
 	// pi              ALT-227, 0x03C0, \xcf\x80
 	// sharp s				  ,	0x00DF,	\xc3\x9f
 	// a with Diaeresis		  ,	0x00E4,	\xc3\xa4
