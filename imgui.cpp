@@ -2262,7 +2262,7 @@ bool ImGui::_ItemHoverable(const ImRect& bb, ImGuiID id)
 
 extern void envelope_gate(ImGuiID id, bool isActive, int group );
 extern float envelope_get(ImGuiID id, int group = 0);
-extern void envelope_step();
+extern void envelope_step(float dt);
 
 bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id)
 {
@@ -2693,7 +2693,8 @@ void ImGui::NewFrame()
             // Horizonal Scrolling
             if (g.IO.MouseWheelH != 0.f)
             {
-                window->ScrollTarget.x = window->Scroll.x + g.IO.MouseWheelH * window->DC.CursorMaxPos.x / 20.f;
+                //window->ScrollTarget.x = window->Scroll.x + g.IO.MouseWheelH * window->DC.CursorMaxPos.x / 20.f;
+				window->ScrollTarget.x = window->Scroll.x + g.IO.MouseWheelH * window->ContentsRegionRect.GetWidth() * 0.05f;;
                 window->ScrollTargetCenterRatio.x = 0.0f;
             }
         }
@@ -3197,7 +3198,7 @@ void ImGui::EndFrame()
     }
 #endif
     //Advance Envelope System
-    envelope_step();
+	envelope_step(g.IO.DeltaTime);
 
     // Clear Input data for next frame
     g.IO.MouseWheel = 0.0f;
@@ -9920,7 +9921,7 @@ bool ImGui::Combo2(const char* label, int* current_item, ImGuiItemGetter items_g
                        g.IO.DisplaySize.y - style.DisplaySafeAreaPadding.y - popup_y1)
                 );
 
-            if ( doSetContentWidth ) SetNextWindowContentWidth(content_width);
+            if ( doSetContentWidth ) SetNextWindowContentSize(ImVec2(content_width, 0.0f));
             ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
             if ( content_width > popup_width ) flags |= ImGuiWindowFlags_HorizontalScrollbar;
 

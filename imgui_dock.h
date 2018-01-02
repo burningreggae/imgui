@@ -42,7 +42,7 @@ namespace ImGui
 	IMGUI_API void DockEndWorkspace(int toslot);
 	IMGUI_API int  DockGetActiveWorkspace();
 	IMGUI_API bool DockWorkspaceClosed();
-	IMGUI_API void DockDesign(bool *v_open = 0);
+	IMGUI_API void DockDesigner(bool *v_open = 0);
 }
 
 #endif

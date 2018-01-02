@@ -49,8 +49,6 @@ typedef int ImGuiItemFlags;         // flags: for PushItemFlag()                
 typedef int ImGuiSeparatorFlags;    // flags: for Separator() - internal        // enum ImGuiSeparatorFlags_
 typedef int ImGuiSliderFlags;       // flags: for SliderBehavior()              // enum ImGuiSliderFlags_
 
-typedef int ImGuiLayoutType;      // enum ImGuiLayoutType_
-
 //-------------------------------------------------------------------------
 // STB libraries
 //-------------------------------------------------------------------------

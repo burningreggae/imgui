@@ -297,6 +297,7 @@ void DockContext::reset()
 	index = 0;
 	draw_tabbar = 1;
 	draw_tabbar_list = 1;
+	m_end_action = EndAction_None;
 }
 
 Dock& DockContext::getDock(const char* label, bool opened, const ImVec2& default_size)
@@ -1903,12 +1904,25 @@ void DockEndWorkspace(int toslot)
 	dock_current = toslot;
 }
 
+bool BeginDock(const char* name, bool* opened,ImGuiWindowFlags extra_flags, const ImVec2& default_size, bool border)
+{
+	//return Begin(name,opened,extra_flags);
+	return g_dock[dock_current].begin(name, opened, border ,extra_flags, default_size);
+}
+
+
+void EndDock()
+{
+	//End();
+	g_dock[dock_current].end();
+}
+
 int DockGetActiveWorkspace()
 {
 	return dock_current;
 }
 
-void DockDesign(bool *v_open)
+void DockDesigner(bool *v_open)
 {
 	for ( int g = 0; g < MAX_WORKSPACE; ++g ) g_dock[g].designer(v_open);
 }
@@ -1938,18 +1952,6 @@ void SetDockWindowPos(int slot, const char* name, const ImVec2& pos,const ImVec2
 	g_dock[slot].setDockWindowPos(name,pos,size,dockState);
 }
 
-bool BeginDock(const char* name, bool* opened,ImGuiWindowFlags extra_flags, const ImVec2& default_size, bool border)
-{
-	//return Begin(name,opened,extra_flags);
-	return g_dock[dock_current].begin(name, opened, border ,extra_flags, default_size);
-}
-
-
-void EndDock()
-{
-	//End();
-	g_dock[dock_current].end();
-}
 
 void SaveDock(int slot,ImGuiTextBuffer *out)
 {
