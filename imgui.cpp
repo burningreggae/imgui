@@ -2260,9 +2260,6 @@ bool ImGui::_ItemHoverable(const ImRect& bb, ImGuiID id)
     return true;
 }
 
-extern void envelope_gate(ImGuiID id, bool isActive, int group );
-extern float envelope_get(ImGuiID id, int group = 0);
-extern void envelope_step(float dt);
 
 bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id)
 {

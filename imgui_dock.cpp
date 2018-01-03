@@ -11,7 +11,6 @@ const char* COM_Parse( const char* *data_p, bool allowLineBreaks = true );
 char* loadFile(const char* filename);
 int saveFile(const char* filename, const void* data, size_t size);
 
-extern float envelope_get(ImGuiID id, int group = 0);
 
 namespace ImGui
 {
