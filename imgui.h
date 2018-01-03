@@ -555,8 +555,6 @@ namespace ImGui
     IMGUI_API ImGuiContext* GetCurrentContext();
     IMGUI_API void          SetCurrentContext(ImGuiContext* ctx);
 
-    IMGUI_API void          SetParentFlag(unsigned flag ,int val);
-
 } // namespace ImGui
 
 // Flags for ImGui::Begin()

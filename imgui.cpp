@@ -5031,7 +5031,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
                 //light shadow, the bigger one
                 shadowFlags = ~0 & ~16; //all on + center center off
-                col[0] = IM_COL32(0x22,0x22,0x22,0x22);
+                col[0] = IM_COL32(0x22,0x22,0x22,0x44);
                 col[1] = IM_COL32(0x22,0x22,0x22,0);
                 if (is_focused)
                 {
@@ -5062,8 +5062,8 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
                 //darker shadow
                 shadowFlags = ~0 & ~16; //all on + center center off
-                col[0] = IM_COL32(0x20,0x20,0x20,0x20);
-                col[1] = IM_COL32(0x20,0x20,0x20,0);
+                col[0] = IM_COL32(0x20,0x20,0x20,0x40);
+                col[1] = IM_COL32(0x20,0x20,0x20,0x00);
                 if (is_focused)
                 {
                     shadowSize[0].x = 20+nudge;
@@ -8125,14 +8125,6 @@ bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_cu
     return value_changed;
 }
 
-void ImGui::SetParentFlag(unsigned flag ,int val)
-{
-    ImGuiWindow* window = GetCurrentWindowRead();
-    if ( window && window->ParentWindow )
-    {
-        val ? window->Flags |= flag : window->Flags &=~flag;
-    }
-}
 
 // NB: v_speed is float to allow adjusting the drag speed with more precision
 bool ImGui::DragInt(const char* label, int* v, float v_speed, int v_min, int v_max, const char* display_format)
