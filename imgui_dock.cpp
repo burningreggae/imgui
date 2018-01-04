@@ -390,7 +390,6 @@ void DockContext::splits()
 		ImVec2 size0 = dock.children[0]->size;
 		ImVec2 size1 = dock.children[1]->size;
             
-		ImGuiMouseCursor cursor;
 
 		ImVec2 size = dock.children[0]->size;
 		ImVec2 dsize(0, 0);
@@ -401,6 +400,7 @@ void DockContext::splits()
 		bool hovered = false;
 		bool held = false;
 
+		ImGuiMouseCursor cursor = ImGuiMouseCursor_Arrow;
 		if (dock.isHorizontal())
 		{
 			cursor = ImGuiMouseCursor_ResizeEW;

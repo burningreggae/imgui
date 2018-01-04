@@ -11,8 +11,6 @@
 #include <GL/glew.h>
 #include <GL/glut.h>
 
-
-
 // Data
 //static bool         g_MousePressed[3] = { false, false, false };
 //static float        g_MouseWheel = 0.0f;
@@ -603,9 +601,9 @@ void createFonts()
 
 }
 
-extern void shaderManager_log(GLhandleARB object, const char* filename, int type);
-extern void shaderManager_build(GLhandleARB& program,const char *shadername);
-extern int& shaderManager_reload();
+void shaderManager_log(GLhandleARB object, const char* filename, int type);
+void shaderManager_build(GLhandleARB& program,const char *shadername);
+int& shaderManager_reload();
 
 void releaseShader()
 {
