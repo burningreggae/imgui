@@ -128,8 +128,15 @@ void msg(const char* fmt, ...);
 void system_redraw( const char *function, const char* caller = 0, int value=1);
 
 #define GUI_ENVELOPE_WINDOW
+enum eEnvelopeGroup
+{
+	envelope_hover = 0,	 // widget hover
+	envelope_window,	// window active
+	envelope_scroll,
+};
+
 void envelope_gate(unsigned int id, bool isActive, int group );
-float envelope_get(unsigned int id, int group=0);
+float envelope_get(unsigned int id, int group=envelope_hover);
 void envelope_step(float dt);
 void envelope_load(int type);
 void envelope_reset();

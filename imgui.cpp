@@ -2264,7 +2264,7 @@ bool ImGui::_ItemHoverable(const ImRect& bb, ImGuiID id)
 bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id)
 {
     bool isHovered = _ItemHoverable(bb,id);
-    envelope_gate(id,isHovered,0);
+    envelope_gate(id,isHovered,envelope_hover);
     return isHovered;
 }
 
@@ -3191,7 +3191,7 @@ void ImGui::EndFrame()
     for (int i = 0; i != g.Windows.Size; ++i)
     {
         ImGuiWindow* window = g.Windows[i];
-        envelope_gate(window->ID,window->Active && !window->Collapsed,1);
+        envelope_gate(window->ID,window->Active && !window->Collapsed,envelope_window);
     }
 #endif
     //Advance Envelope System
@@ -3199,6 +3199,7 @@ void ImGui::EndFrame()
 
     // Clear Input data for next frame
     g.IO.MouseWheel = 0.0f;
+	g.IO.MouseWheelRaw = 0.0f;
     g.IO.MouseWheelH = 0.0f;
     memset(g.IO.InputCharacters, 0, sizeof(g.IO.InputCharacters));
 
@@ -5028,8 +5029,8 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
                 //light shadow, the bigger one
                 shadowFlags = ~0 & ~16; //all on + center center off
-                col[0] = IM_COL32(0x22,0x22,0x22,0x44);
-                col[1] = IM_COL32(0x22,0x22,0x22,0);
+                col[0] = IM_COL32(0x11,0x11,0x11,0x44);
+                col[1] = IM_COL32(0x11,0x11,0x11,0);
                 if (is_focused)
                 {
                     shadowSize[0].x = 48+nudge;
@@ -5059,8 +5060,8 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
                 //darker shadow
                 shadowFlags = ~0 & ~16; //all on + center center off
-                col[0] = IM_COL32(0x20,0x20,0x20,0x40);
-                col[1] = IM_COL32(0x20,0x20,0x20,0x00);
+                col[0] = IM_COL32(0x10,0x10,0x10,0x33);
+                col[1] = IM_COL32(0x10,0x10,0x10,0x00);
                 if (is_focused)
                 {
                     shadowSize[0].x = 20+nudge;
@@ -6551,7 +6552,7 @@ bool ImGui::ButtonBehavior(const ImRect& bb, ImGuiID id, bool* out_hovered, bool
         if (out_hovered) *out_hovered = false;
         if (out_held) *out_held = false;
         if (g.ActiveId == id) ClearActiveID();
-        envelope_gate(id,false,0);
+        envelope_gate(id,false,envelope_hover);
         return false;
     }
 
@@ -7969,6 +7970,7 @@ bool ImGui::DragBehavior(const ImRect& frame_bb, ImGuiID id, float* v, float v_s
     return value_changed;
 }
 
+//#define label_left_align	//align label left (default right)
 bool ImGui::DragFloat(const char* label, float* v, float v_speed, float v_min, float v_max, const char* display_format, float power)
 {
     ImGuiWindow* window = GetCurrentWindow();
@@ -7981,9 +7983,17 @@ bool ImGui::DragFloat(const char* label, float* v, float v_speed, float v_min, f
     const float w = CalcItemWidth();
 
     const ImVec2 label_size = CalcTextSize(label, NULL, true);
+#ifndef label_left_align
     const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y*2.0f));
     const ImRect inner_bb(frame_bb.Min + style.FramePadding, frame_bb.Max - style.FramePadding);
     const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
+#else
+	const ImVec2 label_ofs(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f);
+    ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y*2.0f));
+    const ImRect inner_bb(frame_bb.Min + style.FramePadding, frame_bb.Max - style.FramePadding);
+    const ImRect total_bb(frame_bb.Min, frame_bb.Max + label_ofs);
+	frame_bb.Translate(label_ofs);
+#endif
 
     // NB- we don't call ItemSize() yet because we may turn into a text edit box below
     if (!ItemAdd(total_bb, id))
@@ -8023,7 +8033,11 @@ bool ImGui::DragFloat(const char* label, float* v, float v_speed, float v_min, f
     RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.5f,0.5f));
 
     if (label_size.x > 0.0f)
+#ifndef label_left_align
         RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, inner_bb.Min.y), label);
+#else
+		RenderText(ImVec2(total_bb.Min.x, inner_bb.Min.y), label);
+#endif
 
     return value_changed;
 }
@@ -9567,13 +9581,17 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     bool hovered, held;
     bool pressed = ButtonBehavior(frame_bb, id, &hovered, &held);
     bool popup_open = IsPopupOpen(id);
+	
+    //const float arrow_size = GetFrameHeight();
+    const float arrow_size = g.FontSize + g.Style.FramePadding.x * 2.0f; //SmallSquareSize();
 
-    const float arrow_size = GetFrameHeight();
-    //const float arrow_size = g.FontSize + g.Style.FramePadding.x * 2.0f; //SmallSquareSize();
+	//const ImU32 col = GetColorU32(popup_open || hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+	envelope_gate(id,popup_open || hovered,envelope_hover);
+	const ImU32 col = GetColorU32(ImGuiCol_Button,ImGuiCol_ButtonHovered,envelope_get(id));
 
     const ImRect value_bb(frame_bb.Min, frame_bb.Max - ImVec2(arrow_size, 0.0f));
     RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
-    RenderFrame(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y), frame_bb.Max, GetColorU32(popup_open || hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button), true, style.FrameRounding); // FIXME-ROUNDING
+    RenderFrame(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y), frame_bb.Max, col, true, style.FrameRounding); // FIXME-ROUNDING
     RenderTriangle(ImVec2(frame_bb.Max.x - arrow_size + style.FramePadding.x, frame_bb.Min.y + frame_bb.GetHeight()*0.5f), ImGuiDir_Down);
     if (preview_value != NULL)
         RenderTextClipped(frame_bb.Min + style.FramePadding, value_bb.Max, preview_value, NULL, NULL, ImVec2(0.0f,0.0f));
@@ -9767,10 +9785,12 @@ bool ImGui::Combo2(const char* label, int* current_item, ImGuiItemGetter items_g
     bool pressed = ButtonBehavior(frame_bb, id, &hovered, &held);
 
     bool popup_open = IsPopupOpen(id);
+	envelope_gate(id,popup_open || hovered,envelope_hover);
+	const ImU32 col = GetColorU32(ImGuiCol_Button,ImGuiCol_ButtonHovered,envelope_get(id));
 
     const ImRect value_bb(frame_bb.Min, frame_bb.Max - ImVec2(arrow_size, 0.0f));
     RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
-    RenderFrame(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y), frame_bb.Max, GetColorU32(popup_open || hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button), true, style.FrameRounding); // FIXME-ROUNDING
+    RenderFrame(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y), frame_bb.Max, col, true, style.FrameRounding); // FIXME-ROUNDING
     RenderTriangle(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y) + ImVec2( style.FramePadding.x,frame_bb.GetHeight()*0.5f), ImGuiDir_Down);
 
     if (*current_item >= 0 && *current_item < items_count)
@@ -11331,7 +11351,8 @@ bool ImGui::SplitterBehavior(ImGuiID id, const ImRect& bb, ImGuiAxis axis, float
     }
 
     // Render
-    const ImU32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : hovered ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
+    const ImU32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : ImGuiCol_Separator,ImGuiCol_SeparatorHovered,envelope_get(id));
+
     window->DrawList->AddRectFilled(bb_render.Min, bb_render.Max, col, g.Style.FrameRounding);
 
     return held;
@@ -12378,7 +12399,8 @@ void ImGui::EndColumns()
             }
 
             // Draw column (we clip the Y boundaries CPU side because very long triangles are mishandled by some GPU drivers.)
-            const ImU32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : hovered ? ImGuiCol_SeparatorHovered : ImGuiCol_Separator);
+		    const ImU32 col = GetColorU32(held ? ImGuiCol_SeparatorActive : ImGuiCol_Separator,ImGuiCol_SeparatorHovered,envelope_get(column_id));
+
             const float xi = (float)(int)x;
             window->DrawList->AddLine(ImVec2(xi, ImMax(y1 + 1.0f, window->ClipRect.Min.y)), ImVec2(xi, ImMin(y2, window->ClipRect.Max.y)), col);
         }
