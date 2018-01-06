@@ -10,6 +10,7 @@
 const char* COM_Parse( const char* *data_p, bool allowLineBreaks = true );
 char* loadFile(const char* filename);
 int saveFile(const char* filename, const void* data, size_t size);
+bool canDock();
 
 
 namespace ImGui
@@ -1269,7 +1270,7 @@ void DockContext::setDockWindowPos(const char* name, const ImVec2& pos,const ImV
 			if ( !m_docks[i] ) continue;
 			Dock &dock = *m_docks[i];
 
-			if (dock.id == id)
+			if (dock.id == id && dock.opened == false)
 			{
 				dock.pos = pos;
 				dock.size = size;
@@ -1851,7 +1852,14 @@ bool DockBeginWorkspace(const char* name, int slot,int draw_tabbar,int draw_tabb
 	g_dock[dock_current].index = slot;
 	g_dock[dock_current].draw_tabbar = draw_tabbar;
 	g_dock[dock_current].draw_tabbar_list = draw_tabbar_list;
+	SetNextDockSlot(Slot_Tab);
 
+	if (!canDock())
+	{
+		g_dock[dock_current].asChild = false;
+		flags = 0;
+	}
+	else
 	if ( !strcmp("HUD", name) )
 	{
 		flags = ImGuiWindowFlags_NoTitleBar |

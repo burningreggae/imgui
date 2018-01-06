@@ -1060,7 +1060,7 @@ bool ImGui_ImplGLUT_Init()
 	ImGuiIO& io = ImGui::GetIO();
 	//io.DisplaySize.x = 1920.0f;
 	//io.DisplaySize.y = 1280.0f;
-	io.IniFilename = 0; //"imgui.ini";
+	io.IniFilename = "dock_window.json"; //"imgui.ini";
 
 
 	io.RenderDrawListsFn = ImGui_ImplGLUT_RenderDrawLists;   // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.

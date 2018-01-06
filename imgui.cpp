@@ -3229,8 +3229,8 @@ void ImGui::Render()
             float e = 1.f;
             bool take = false;
 #ifdef GUI_ENVELOPE_WINDOW
-            //Envelop decide if window is visible GUI_ENVELOPE_WINDOW
-            e = envelope_get(window->ID,1);
+            //Envelope decides if window is visible GUI_ENVELOPE_WINDOW
+            e = envelope_get(window->ID,envelope_window);
             if (window->Collapsed )
             {
                 if ( e < 0.5f ) e = 0.5f; // don't let collapses window disappear
@@ -4598,7 +4598,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         flags |= ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
 
     //TA
-    flags |= ImGuiWindowFlags_NoSavedSettings;
+    //flags |= ImGuiWindowFlags_NoSavedSettings;
 
     // Find or create
     ImGuiWindow* window = FindWindowByName(name);
@@ -5029,8 +5029,8 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
                 //light shadow, the bigger one
                 shadowFlags = ~0 & ~16; //all on + center center off
-                col[0] = IM_COL32(0x11,0x11,0x11,0x44);
-                col[1] = IM_COL32(0x11,0x11,0x11,0);
+                col[0] = IM_COL32(0x22,0x22,0x22,0x44);
+                col[1] = IM_COL32(0x22,0x22,0x22,0x00);
                 if (is_focused)
                 {
                     shadowSize[0].x = 48+nudge;
@@ -5060,8 +5060,8 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
 
                 //darker shadow
                 shadowFlags = ~0 & ~16; //all on + center center off
-                col[0] = IM_COL32(0x10,0x10,0x10,0x33);
-                col[1] = IM_COL32(0x10,0x10,0x10,0x00);
+                col[0] = IM_COL32(0x20,0x20,0x20,0x40);
+                col[1] = IM_COL32(0x20,0x20,0x20,0x00);
                 if (is_focused)
                 {
                     shadowSize[0].x = 20+nudge;
