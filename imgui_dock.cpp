@@ -1363,7 +1363,7 @@ bool DockContext::begin(const char* label, bool* opened, bool border, ImGuiWindo
 	dock.opened = true;
 
 	ImGuiContext& g = *GImGui;
-	ImVec2 nextWindowContentSizeVal = g.SetNextWindowContentSizeVal;
+	ImVec2 nextWindowContentSizeVal = g.NextWindowData.ContentSizeVal;
 	//m_end_action = EndAction_Panel;
 	//beginPanel();
 
