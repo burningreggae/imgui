@@ -56,7 +56,7 @@ struct Dock
 		//label.clear();
 		//label[0] = 0;
 		invalid_frames += 1;
-		printf("Free for %p %s\n",this,label);
+		//printf("Free for %p %s\n",this,label);
 	}
 
 
@@ -108,7 +108,7 @@ struct Dock
 
 	void setActive()
 	{
-		msg ("setActive: %s\n",label);
+		//msg ("setActive: %s\n",label);
 		active = true;
 		system_redraw(__FUNCTION__,label);
 		int run = 0;
@@ -130,6 +130,7 @@ struct Dock
 			s.y = _size.y;
 			divisor = (children[0]->size.x + children[1]->size.x);
 			s.x = (float) (divisor ? int( _size.x * children[0]->size.x / divisor ) : 0);
+
 			if (s.x < children[0]->getMinSize().x)
 			{
 				s.x = children[0]->getMinSize().x;
@@ -170,23 +171,28 @@ struct Dock
 
 	void setPosSize(const ImVec2& _pos, const ImVec2& _size)
 	{
-		size = _size;
+		//don't destroy dock layout completly..
+		ImVec2 _size2(_size);
+		if (_size2.x < 32 ) _size2.x = 32;
+		if (_size2.y < 32 ) _size2.y = 32;
+
+		size = _size2;
 		pos = _pos;
 
 		int run = 0;
 		for (Dock* tmp = prev_tab; tmp && ++run < 1000; tmp = tmp->prev_tab)
 		{
-			tmp->size = _size;
+			tmp->size = _size2;
 			tmp->pos = _pos;
 		}
 		for (Dock* tmp = next_tab; tmp && ++run < 1000; tmp = tmp->next_tab)
 		{
-			tmp->size = _size;
+			tmp->size = _size2;
 			tmp->pos = _pos;
 		}
 
 		if (!isContainer()) return;
-		setChildrenPosSize(_pos, _size);
+		setChildrenPosSize(_pos, _size2);
 	}
 
 	ImU32 id;
