@@ -1816,6 +1816,13 @@ void ImGuiTextBuffer::json(const char* var, const int value)
     json(var,buf,0);
 }
 
+void ImGuiTextBuffer::json_hex(const char* var, const unsigned value)
+{
+    char buf[64];
+    ImFormatString(buf, 64, "0x%08x",value);
+    json(var,buf,0);
+}
+
 //-----------------------------------------------------------------------------
 // ImGuiSimpleColumns (internal use only)
 //-----------------------------------------------------------------------------
@@ -2747,7 +2754,7 @@ static void SettingsHandlerWindow_WriteAll(ImGuiContext* imgui_ctx, ImGuiSetting
     for (int i = 0; i != g.Windows.Size; i++)
     {
         ImGuiWindow* window = g.Windows[i];
-        if (window->Flags & ImGuiWindowFlags_NoSavedSettings)
+        if ((window->Flags & ImGuiWindowFlags_NoSavedSettings) && !window->ColumnsStorage.size())
             continue;
         ImGuiWindowSettings* settings = ImGui::FindWindowSettings(window->ID);
         if (!settings)
@@ -2755,6 +2762,17 @@ static void SettingsHandlerWindow_WriteAll(ImGuiContext* imgui_ctx, ImGuiSetting
         settings->Pos = window->Pos;
         settings->Size = window->SizeFull;
         settings->Collapsed = window->Collapsed;
+		settings->ColumnsStorage_count = ImClamp(window->ColumnsStorage.size(),0,IM_ARRAYSIZE(settings->ColumnsStorage)-1);
+
+		for ( int c = 0; c < settings->ColumnsStorage_count; ++c )
+		{
+			settings->ColumnsStorage[c].ID = window->ColumnsStorage[c].ID;
+			settings->ColumnsStorage[c].Columns_count = ImClamp(window->ColumnsStorage[c].Columns.size(),0,IM_ARRAYSIZE(settings->ColumnsStorage[c].Columns)-1);
+			for ( int c2 = 0; c2 < settings->ColumnsStorage[c].Columns_count; ++c2 )
+			{
+				settings->ColumnsStorage[c].Columns[c2].OffsetNorm = window->ColumnsStorage[c].Columns[c2].OffsetNorm;
+			}
+		}
     }
 
     // Write a buffer
@@ -2772,6 +2790,21 @@ static void SettingsHandlerWindow_WriteAll(ImGuiContext* imgui_ctx, ImGuiSetting
         buf->appendf("Pos=%d,%d\n", (int)settings->Pos.x, (int)settings->Pos.y);
         buf->appendf("Size=%d,%d\n", (int)settings->Size.x, (int)settings->Size.y);
         buf->appendf("Collapsed=%d\n", settings->Collapsed);
+
+		if (settings->ColumnsStorage_count)
+		{
+			buf->appendf("ColumnsStorage_count=%d\n", settings->ColumnsStorage_count);
+			for ( int c = 0; c < settings->ColumnsStorage_count; ++c )
+			{
+				buf->appendf("ID=%u\n", settings->ColumnsStorage[c].ID);
+				buf->appendf("Columns_count=%d\n", settings->ColumnsStorage[c].Columns_count);
+				for ( int c2 = 0; c2 < settings->ColumnsStorage[c].Columns_count; ++c2 )
+				{
+					buf->appendf("OffsetNorm=%f\n", settings->ColumnsStorage[c].Columns[c2].OffsetNorm);
+				}
+			}
+		}
+
         buf->appendf("\n");
     }
 }
@@ -3050,7 +3083,9 @@ static void AddDrawListToRenderList(ImVector<ImDrawList*>& out_render_list, ImDr
     //    Your own engine or render API may use different parameters or function calls to specify index sizes. 2 and 4 bytes indices are generally supported by most API.
     // C) If for some reason you cannot use 4 bytes indices or don't want to, a workaround is to call BeginChild()/EndChild() before reaching the 64K limit to split your draw commands in multiple draw lists.
     if (sizeof(ImDrawIdx) == 2)
+	{
         IM_ASSERT(draw_list->_VtxCurrentIdx < (1 << 16) && "Too many vertices in ImDrawList using 16-bit indices. Read comment above");
+	}
 
     out_render_list.push_back(draw_list);
     GImGui->IO.MetricsRenderVertices += draw_list->VtxBuffer.Size;
@@ -3183,7 +3218,7 @@ void ImGui::EndFrame()
     IM_ASSERT(g.Windows.Size == g.WindowsSortBuffer.Size);  // we done something wrong
     g.Windows.swap(g.WindowsSortBuffer);
 
-    //Trigger Envelope for Window GUI_ENVELOPE_WINDOW
+    //Trigger Envelope for Window
 #ifdef GUI_ENVELOPE_WINDOW
     for (int i = 0; i != g.Windows.Size; ++i)
     {
@@ -3230,7 +3265,7 @@ void ImGui::Render()
             e = envelope_get(window->ID,envelope_window);
             if (window->Collapsed )
             {
-                if ( e < 0.5f ) e = 0.5f; // don't let collapses window disappear
+                if ( e < 0.5f ) e = 0.5f; // don't let collapsed window disappear
             }
             take = e > 0.f;
 #endif
@@ -13048,11 +13083,14 @@ bool ImGui::Image4(ImTextureID user_texture_id, const ImVec2& size, const ImVec4
         window->DrawList->AddImage(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col));
     }
 */
-    window->DrawList->PushTextureID(user_texture_id);
-    window->DrawList->PrimReserve(6, 4);
-    window->DrawList->PrimRectUV4(bb.Min, bb.Max, uv,tint_col);
-    window->DrawList->PokeDrawCmd(shader);
-    window->DrawList->PopTextureID();
+    if (tint_col & IM_COL32_A_MASK)
+	{
+		window->DrawList->PushTextureID(user_texture_id);
+		window->DrawList->PrimReserve(6, 4);
+		window->DrawList->PrimRectUV4(bb.Min, bb.Max, uv,tint_col);
+		window->DrawList->PokeDrawCmd(shader);
+		window->DrawList->PopTextureID();
+	}
     return pressed;
 }
 

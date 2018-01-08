@@ -6,11 +6,14 @@
 
 #pragma once
 
+#ifdef _DEBUG
 #include <assert.h>
 //---- Define assertion handler. Defaults to calling assert().
 //#define IM_ASSERT(_EXPR)  MyAssert(_EXPR)
 #define IM_ASSERT(_EXPR) assert(_EXPR)
-//#define IM_ASSERT(_EXPR)
+#else
+#define IM_ASSERT(_EXPR)
+#endif
 
 //---- Define attributes of all API symbols declarations, e.g. for DLL under Windows.
 //#define IMGUI_API __declspec( dllexport )
@@ -28,7 +31,10 @@
 
 //---- Don't implement demo windows functionality (ShowDemoWindow()/ShowStyleEditor()/ShowUserGuide() methods will be empty)
 //---- It is very strongly recommended to NOT disable the demo windows. Please read the comment at the top of imgui_demo.cpp to learn why.
-//#define IMGUI_DISABLE_DEMO_WINDOWS
+#ifdef _DEBUG
+#define IMGUI_DISABLE_DEMO_WINDOWS
+#else
+#endif
 
 //---- Don't implement ImFormatString(), ImFormatStringV() so you can reimplement them yourself.
 //#define IMGUI_DISABLE_FORMAT_STRING_FUNCTIONS

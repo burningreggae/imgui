@@ -353,6 +353,18 @@ struct IMGUI_API ImGuiTextEditState
     void                OnKeyPressed(int key);
 };
 
+struct ImGuiColumnData_WindowSettings
+{
+    float               OffsetNorm;         // Column start offset, normalized 0.0 (far left) -> 1.0 (far right)
+};
+
+struct ImGuiColumnsSet_WindowSettings
+{
+    ImGuiID             ID;
+    int                 Columns_count;
+    ImGuiColumnData_WindowSettings Columns[8];
+};
+
 // Data saved in imgui.ini file
 struct ImGuiWindowSettings
 {
@@ -361,8 +373,10 @@ struct ImGuiWindowSettings
     ImVec2      Pos;
     ImVec2      Size;
     bool        Collapsed;
+	int ColumnsStorage_count;
+	ImGuiColumnsSet_WindowSettings ColumnsStorage[8];
 
-    ImGuiWindowSettings() { Name = NULL; Id = 0; Pos = Size = ImVec2(0,0); Collapsed = false; }
+    ImGuiWindowSettings() { Name = NULL; Id = 0; Pos = Size = ImVec2(0,0); Collapsed = false;ColumnsStorage_count=0; }
 };
 
 struct ImGuiSettingsHandler

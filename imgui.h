@@ -1216,6 +1216,7 @@ struct ImGuiTextBuffer
     void json(const char* var, const char* value, int need_quote=1);
     void json(const char* var, const float value, const int decimal_precision=-1);
     void json(const char* var, const int value);
+	void json_hex(const char* var, const unsigned value);
 };
 
 // Helper: Simple Key->value storage

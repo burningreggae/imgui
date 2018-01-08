@@ -1074,7 +1074,8 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 
 static void setDockPosSize(Dock& dest, Dock& dock, Slot_ dock_slot, Dock& container)
 {
-	IM_ASSERT(!dock.prev_tab && !dock.next_tab && !dock.children[0] && !dock.children[1]);
+	//IM_ASSERT(!dock.prev_tab && !dock.next_tab && !dock.children[0] && !dock.children[1]);
+	msg("setDockPosSize assert\n");
 
 	dest.pos = container.pos;
 	dest.size = container.size;
@@ -1121,7 +1122,8 @@ static void setDockPosSize(Dock& dest, Dock& dock, Slot_ dock_slot, Dock& contai
 
 void DockContext::doDock(Dock& dock, Dock* dest, Slot_ dock_slot)
 {
-	IM_ASSERT(!dock.parent);
+	//IM_ASSERT(!dock.parent);
+	msg ("doDock assert dock.parent\n");
 	if (!dest)
 	{
 		dock.status = Status_Docked;
@@ -1522,6 +1524,25 @@ void DockContext::designer(bool *v_open)
 	}
 	PushID((void*)this);
 	Text("%s",label);
+	static char filename[8][256] = { {0},{0},{0},{0},{0},{0},{0},{0} };
+	if ( filename[index][0] == 0 )
+	{
+		sprintf(filename[index],"dock%d.json",index);
+	}
+	if ( Button("SaveDock"))
+	{
+		ImGuiTextBuffer out;
+		save(out);
+		saveFile(filename[index],out.c_str(),out.size());
+	}
+	SameLine();
+	if (Button("LoadDock"))
+	{
+		load(index,loadFile(filename[index]));
+	}
+	SameLine();
+	InputText("File", filename[index], sizeof(filename[index]) );
+
 	for (int i = 0; i < m_docks.size(); ++i)
 	{
 		if (!TreeNode((void*)(i), "Dock %d %s", i, m_docks[i]->label))
@@ -1576,23 +1597,6 @@ void DockContext::designer(bool *v_open)
 		TreePop();
 	}
 
-	char filename[256];
-
-	sprintf(filename,"SaveDock %d",index);
-	if ( Button(filename))
-	{
-		ImGuiTextBuffer out;
-		save(out);
-		sprintf(filename,"dock%d.json",index);
-		saveFile(filename,out.c_str(),out.size());
-	}
-	SameLine();
-	sprintf(filename,"LoadDock %d",index);
-	if (Button(filename))
-	{
-		sprintf(filename,"dock%d.json",index);
-		load(index,loadFile(filename));
-	}
 	PopID();
 	End();
 }
