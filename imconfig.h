@@ -32,8 +32,8 @@
 //---- Don't implement demo windows functionality (ShowDemoWindow()/ShowStyleEditor()/ShowUserGuide() methods will be empty)
 //---- It is very strongly recommended to NOT disable the demo windows. Please read the comment at the top of imgui_demo.cpp to learn why.
 #ifdef _DEBUG
-#define IMGUI_DISABLE_DEMO_WINDOWS
 #else
+#define IMGUI_DISABLE_DEMO_WINDOWS
 #endif
 
 //---- Don't implement ImFormatString(), ImFormatStringV() so you can reimplement them yourself.
@@ -78,7 +78,7 @@ namespace ImGui
 #define IM_VEC4_CLASS_EXTRA                                           \
 	ImVec4(const ImVec2& f):x(f.x),y(f.y),z(f.x),w(f.y) {}
 
-
+//shader
 #define shader_raw_density 1
 #define maximumIntensityProjection 4
 #define blendAlpha 8
@@ -102,7 +102,8 @@ struct shaderparamlayer
 	int _alpha_scale;
 	int _alpha_from_color;
 	int _raw_density;
-	int _colorshift;
+	int _level_brightness;
+	int _level_contrast;
 	int _tex_gen;
 	int _alpha_premul;
 	int _colorMode;
@@ -116,7 +117,8 @@ struct shaderparamlayer
 	unsigned int transferTex;			//volume colormap
 	unsigned int transferTexPrivate;	//private colormap
 	unsigned int transferTexLink;		//linked colormap
-	float colorshift;
+	float level_brightness;
+	float level_contrast;
 	int colorMode;
 	float envelope;
 };
