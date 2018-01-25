@@ -38,7 +38,6 @@ struct ImGuiGroupData;
 struct ImGuiMenuColumns;
 struct ImGuiDrawContext;
 struct ImGuiTextEditState;
-struct ImGuiMouseCursorData;
 struct ImGuiPopupRef;
 struct ImGuiWindow;
 struct ImGuiWindowSettings;
@@ -134,8 +133,8 @@ static inline int    ImMin(int lhs, int rhs)                                    
 static inline int    ImMax(int lhs, int rhs)                                    { return lhs >= rhs ? lhs : rhs; }
 static inline float  ImMin(float lhs, float rhs)                                { return lhs < rhs ? lhs : rhs; }
 static inline float  ImMax(float lhs, float rhs)                                { return lhs >= rhs ? lhs : rhs; }
-static inline ImVec2 ImMin(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(ImMin(lhs.x,rhs.x), ImMin(lhs.y,rhs.y)); }
-static inline ImVec2 ImMax(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(ImMax(lhs.x,rhs.x), ImMax(lhs.y,rhs.y)); }
+static inline ImVec2 ImMin(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x < rhs.x ? lhs.x : rhs.x, lhs.y < rhs.y ? lhs.y : rhs.y); }
+static inline ImVec2 ImMax(const ImVec2& lhs, const ImVec2& rhs)                { return ImVec2(lhs.x >= rhs.x ? lhs.x : rhs.x, lhs.y >= rhs.y ? lhs.y : rhs.y); }
 static inline int    ImClamp(int v, int mn, int mx)                             { return (v < mn) ? mn : (v > mx) ? mx : v; }
 static inline float  ImClamp(float v, float mn, float mx)                       { return (v < mn) ? mn : (v > mx) ? mx : v; }
 static inline ImVec2 ImClamp(const ImVec2& f, const ImVec2& mn, ImVec2 mx)      { return ImVec2(ImClamp(f.x,mn.x,mx.x), ImClamp(f.y,mn.y,mx.y)); }
@@ -169,9 +168,6 @@ template <typename T> void IM_DELETE(T*& p) { if (p) { p->~T(); ImGui::MemFree(p
 //-----------------------------------------------------------------------------
 // Types
 //-----------------------------------------------------------------------------
-
-// Internal Drag and Drop payload types. String starting with '_' are reserved for Dear ImGui.
-#define IMGUI_PAYLOAD_TYPE_DOCKABLE         "_IMDOCK"   // ImGuiWindow* // [Internal] Docking/tabs
 
 enum ImGuiButtonFlags_
 {
@@ -279,7 +275,8 @@ struct IMGUI_API ImRect
     void        Expand(const float amount)          { Min.x -= amount;   Min.y -= amount;   Max.x += amount;   Max.y += amount; }
     void        Expand(const ImVec2& amount)        { Min.x -= amount.x; Min.y -= amount.y; Max.x += amount.x; Max.y += amount.y; }
     void        Translate(const ImVec2& v)          { Min.x += v.x; Min.y += v.y; Max.x += v.x; Max.y += v.y; }
-    void        ClipWith(const ImRect& r)           { if (Min.x < r.Min.x) Min.x = r.Min.x; if (Min.y < r.Min.y) Min.y = r.Min.y; if (Max.x > r.Max.x) Max.x = r.Max.x; if (Max.y > r.Max.y) Max.y = r.Max.y; }
+    void        ClipWith(const ImRect& r)           { Min = ImMax(Min, r.Min); Max = ImMin(Max, r.Max); }                   // Simple version, may lead to an inverted rectangle, which is fine for Contains/Overlaps test but not for display.
+    void        ClipWithFull(const ImRect& r)       { Min = ImClamp(Min, r.Min, r.Max); Max = ImClamp(Max, r.Min, r.Max); } // Full version, ensure both points are fully clipped.
     void        Floor()                             { Min.x = (float)(int)Min.x; Min.y = (float)(int)Min.y; Max.x = (float)(int)Max.x; Max.y = (float)(int)Max.y; }
     void        FixInverted()                       { if (Min.x > Max.x) ImSwap(Min.x, Max.x); if (Min.y > Max.y) ImSwap(Min.y, Max.y); }
     bool        IsFinite() const                    { return Min.x != FLT_MAX; }
@@ -349,7 +346,7 @@ struct IMGUI_API ImGuiTextEditState
     void                CursorClamp()               { StbState.cursor = ImMin(StbState.cursor, CurLenW); StbState.select_start = ImMin(StbState.select_start, CurLenW); StbState.select_end = ImMin(StbState.select_end, CurLenW); }
     bool                HasSelection() const        { return StbState.select_start != StbState.select_end; }
     void                ClearSelection()            { StbState.select_start = StbState.select_end = StbState.cursor; }
-    void                SelectAll()                 { StbState.select_start = 0; StbState.select_end = CurLenW; StbState.cursor = StbState.select_end; StbState.has_preferred_x = false; }
+    void                SelectAll()                 { StbState.select_start = 0; StbState.cursor = StbState.select_end = CurLenW; StbState.has_preferred_x = false; }
     void                OnKeyPressed(int key);
 };
 
@@ -391,26 +388,16 @@ struct ImGuiSettingsHandler
     ImGuiSettingsHandler() { memset(this, 0, sizeof(*this)); }
 };
 
-// Mouse cursor data (used when io.MouseDrawCursor is set)
-struct ImGuiMouseCursorData
-{
-    ImGuiMouseCursor    Type;
-    ImVec2              HotOffset;
-    ImVec2              Size;
-    ImVec2              TexUvMin[2];
-    ImVec2              TexUvMax[2];
-};
-
 // Storage for current popup stack
 struct ImGuiPopupRef
 {
     ImGuiID             PopupId;        // Set on OpenPopup()
     ImGuiWindow*        Window;         // Resolved on BeginPopup() - may stay unresolved if user never calls OpenPopup()
     ImGuiWindow*        ParentWindow;   // Set on OpenPopup()
-    ImGuiID             ParentMenuSet;  // Set on OpenPopup()
-    ImVec2              MousePosOnOpen; // Copy of mouse position at the time of opening popup
-
-    ImGuiPopupRef(ImGuiID id, ImGuiWindow* parent_window, ImGuiID parent_menu_set, const ImVec2& mouse_pos) { PopupId = id; Window = NULL; ParentWindow = parent_window; ParentMenuSet = parent_menu_set; MousePosOnOpen = mouse_pos; }
+    int                 OpenFrameCount; // Set on OpenPopup()
+    ImGuiID             OpenParentId;   // Set on OpenPopup(), we need this to differenciate multiple menu sets from each others (e.g. inside menu bar vs loose menu items)
+    ImVec2              OpenPopupPos;   // Set on OpenPopup(), preferred popup position (typically == OpenMousePos when using mouse)
+    ImVec2              OpenMousePos;   // Set on OpenPopup(), copy of mouse position at the time of opening popup
 };
 
 struct ImGuiColumnData
@@ -454,7 +441,7 @@ struct ImGuiColumnsSet
     }
 };
 
-struct ImDrawListSharedData
+struct IMGUI_API ImDrawListSharedData
 {
     ImVec2          TexUvWhitePixel;            // UV of white pixel in the atlas
     ImFont*         Font;                       // Current/default font (optional, for simplified AddText overload)
@@ -469,6 +456,15 @@ struct ImDrawListSharedData
     ImDrawListSharedData();
 };
 
+struct ImDrawDataBuilder
+{
+    ImVector<ImDrawList*>   Layers[2];           // Global layers for: regular, tooltip
+
+    void Clear()            { for (int n = 0; n < IM_ARRAYSIZE(Layers); n++) Layers[n].resize(0); }
+    void ClearFreeMemory()  { for (int n = 0; n < IM_ARRAYSIZE(Layers); n++) Layers[n].clear(); }
+    IMGUI_API void FlattenIntoSingleLayer();
+};
+
 // Storage for SetNexWindow** functions
 struct ImGuiNextWindowData
 {
@@ -478,6 +474,7 @@ struct ImGuiNextWindowData
     ImGuiCond               CollapsedCond;
     ImGuiCond               SizeConstraintCond;
     ImGuiCond               FocusCond;
+    ImGuiCond               BgAlphaCond;
     ImVec2                  PosVal;
     ImVec2                  PosPivotVal;
     ImVec2                  SizeVal;
@@ -486,21 +483,23 @@ struct ImGuiNextWindowData
     ImRect                  SizeConstraintRect;                 // Valid if 'SetNextWindowSizeConstraint' is true
     ImGuiSizeCallback       SizeCallback;
     void*                   SizeCallbackUserData;
+    float                   BgAlphaVal;
 
     ImGuiNextWindowData()
     {
-        PosCond = SizeCond = ContentSizeCond = CollapsedCond = SizeConstraintCond = FocusCond = 0;
+        PosCond = SizeCond = ContentSizeCond = CollapsedCond = SizeConstraintCond = FocusCond = BgAlphaCond = 0;
         PosVal = PosPivotVal = SizeVal = ImVec2(0.0f, 0.0f);
         ContentSizeVal = ImVec2(0.0f, 0.0f);
         CollapsedVal = false;
         SizeConstraintRect = ImRect();
         SizeCallback = NULL;
         SizeCallbackUserData = NULL;
+        BgAlphaVal = FLT_MAX;
     }
 
     void    Clear()
     {
-        PosCond = SizeCond = ContentSizeCond = CollapsedCond = SizeConstraintCond = FocusCond = 0;
+        PosCond = SizeCond = ContentSizeCond = CollapsedCond = SizeConstraintCond = FocusCond = BgAlphaCond = 0;
     }
 };
 
@@ -605,8 +604,7 @@ struct ImGuiContext
     bool                    ActiveIdAllowOverlap;               // Active widget allows another widget to steal active id (generally for overlapping widgets, but not always)
     ImVec2                  ActiveIdClickOffset;                // Clicked offset from upper-left corner, if applicable (currently only set by ButtonBehavior)
     ImGuiWindow*            ActiveIdWindow;
-    ImGuiWindow*            MovingWindow;                       // Track the child window we clicked on to move a window.
-    ImGuiID                 MovingWindowMoveId;                 // == MovingWindow->MoveId
+    ImGuiWindow*            MovingWindow;                       // Track the window we clicked on (in order to preserve focus). The actually window that is moved is generally MovingWindow->RootWindow.
     ImVector<ImGuiColMod>   ColorModifiers;                     // Stack for PushStyleColor()/PopStyleColor()
     ImVector<ImGuiStyleMod> StyleModifiers;                     // Stack for PushStyleVar()/PopStyleVar()
     ImVector<ImFont*>       FontStack;                          // Stack for PushFont()/PopFont()
@@ -617,12 +615,11 @@ struct ImGuiContext
     ImGuiCond               NextTreeNodeOpenCond;
 
     // Render
-    ImDrawData              RenderDrawData;                     // Main ImDrawData instance to pass render information to the user
-    ImVector<ImDrawList*>   RenderDrawLists[3];
+    ImDrawData              DrawData;                           // Main ImDrawData instance to pass render information to the user
+    ImDrawDataBuilder       DrawDataBuilder;
     float                   ModalWindowDarkeningRatio;
     ImDrawList              OverlayDrawList;                    // Optional software render of mouse cursors, if io.MouseDrawCursor is set + a few debug overlays
     ImGuiMouseCursor        MouseCursor;
-    ImGuiMouseCursorData    MouseCursorData[ImGuiMouseCursor_Count_];
 
     // Drag and Drop
     bool                    DragDropActive;
@@ -702,15 +699,19 @@ struct ImGuiContext
         ActiveIdClickOffset = ImVec2(-1,-1);
         ActiveIdWindow = NULL;
         MovingWindow = NULL;
-        MovingWindowMoveId = 0;
-
         NextTreeNodeOpenVal = false;
         NextTreeNodeOpenCond = 0;
+
+        ModalWindowDarkeningRatio = 0.0f;
+        OverlayDrawList._Data = &DrawListSharedData;
+        OverlayDrawList._OwnerName = "##Overlay"; // Give it a name for debugging
+        MouseCursor = ImGuiMouseCursor_Arrow;
 
         DragDropActive = false;
         DragDropSourceFlags = 0;
         DragDropMouseButton = -1;
         DragDropTargetId = 0;
+        DragDropAcceptIdCurrRectSurface = 0.0f;
         DragDropAcceptIdPrev = DragDropAcceptIdCurr = 0;
         DragDropAcceptFrameCount = -1;
         memset(DragDropPayloadBufLocal, 0, sizeof(DragDropPayloadBufLocal));
@@ -725,12 +726,6 @@ struct ImGuiContext
         ScrollbarClickDeltaToGrabCenter = ImVec2(0.0f, 0.0f);
         TooltipOverrideCount = 0;
         OsImePosRequest = OsImePosSet = ImVec2(-1.0f, -1.0f);
-
-        ModalWindowDarkeningRatio = 0.0f;
-        OverlayDrawList._Data = &DrawListSharedData;
-        OverlayDrawList._OwnerName = "##Overlay"; // Give it a name for debugging
-        MouseCursor = ImGuiMouseCursor_Arrow;
-        memset(MouseCursorData, 0, sizeof(MouseCursorData));
 
         SettingsDirtyTimer = 0.0f;
 
@@ -957,6 +952,7 @@ namespace ImGui
     IMGUI_API void          SetActiveID(ImGuiID id, ImGuiWindow* window);
     IMGUI_API void          ClearActiveID();
     IMGUI_API void          SetHoveredID(ImGuiID id);
+    IMGUI_API ImGuiID       GetHoveredID();
     IMGUI_API void          KeepAliveID(ImGuiID id);
 
     IMGUI_API void          ItemSize(const ImVec2& size, float text_offset_y = 0.0f);
@@ -973,7 +969,9 @@ namespace ImGui
     IMGUI_API void          PushItemFlag(ImGuiItemFlags option, bool enabled);
     IMGUI_API void          PopItemFlag();
 
-    IMGUI_API void          OpenPopupEx(ImGuiID id, bool reopen_existing);
+    IMGUI_API void          SetCurrentFont(ImFont* font);
+
+    IMGUI_API void          OpenPopupEx(ImGuiID id);
     IMGUI_API void          ClosePopup(ImGuiID id);
     IMGUI_API bool          IsPopupOpen(ImGuiID id);
     IMGUI_API bool          BeginPopupEx(ImGuiID id, ImGuiWindowFlags extra_flags);

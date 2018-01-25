@@ -282,6 +282,9 @@ IMGUI_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wPa
     case WM_MOUSEWHEEL:
         io.MouseWheel += GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f;
         return 0;
+    case WM_MOUSEHWHEEL:
+        io.MouseWheelH += GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? +1.0f : -1.0f;
+        return 0;
     case WM_MOUSEMOVE:
         io.MousePos.x = (signed short)(lParam);
         io.MousePos.y = (signed short)(lParam >> 16);
@@ -552,6 +555,7 @@ bool    ImGui_ImplDX11_Init(void* hwnd, ID3D11Device* device, ID3D11DeviceContex
     io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
     io.KeyMap[ImGuiKey_Home] = VK_HOME;
     io.KeyMap[ImGuiKey_End] = VK_END;
+    io.KeyMap[ImGuiKey_Insert] = VK_INSERT;
     io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
     io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
     io.KeyMap[ImGuiKey_Enter] = VK_RETURN;

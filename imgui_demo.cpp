@@ -1063,33 +1063,39 @@ void ImGui::ShowDemoWindow(bool* p_open)
             goto_line |= ImGui::InputInt("##Line", &line, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue);
             ImGui::PopItemWidth();
 
-            ImGui::BeginChild("Sub1", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f,300), false, ImGuiWindowFlags_HorizontalScrollbar | (disable_mouse_wheel ? ImGuiWindowFlags_NoScrollWithMouse : 0));
-            for (int i = 0; i < 100; i++)
+            // Child 1: no border, enable horizontal scrollbar
             {
-                ImGui::Text("%04d: scrollable region", i);
-                if (goto_line && line == i)
+                ImGui::BeginChild("Child1", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 300), false, ImGuiWindowFlags_HorizontalScrollbar | (disable_mouse_wheel ? ImGuiWindowFlags_NoScrollWithMouse : 0));
+                for (int i = 0; i < 100; i++)
+                {
+                    ImGui::Text("%04d: scrollable region", i);
+                    if (goto_line && line == i)
+                        ImGui::SetScrollHere();
+                }
+                if (goto_line && line >= 100)
                     ImGui::SetScrollHere();
+                ImGui::EndChild();
             }
-            if (goto_line && line >= 100)
-                ImGui::SetScrollHere();
-            ImGui::EndChild();
 
             ImGui::SameLine();
 
-            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-            ImGui::BeginChild("Sub2", ImVec2(0,300), true, (disable_mouse_wheel ? ImGuiWindowFlags_NoScrollWithMouse : 0));
-            ImGui::Text("With border");
-            ImGui::Columns(2);
-            for (int i = 0; i < 100; i++)
+            // Child 2: rounded border
             {
-                if (i == 50)
-                    ImGui::NextColumn();
-                char buf[32];
-                sprintf(buf, "%08x", i*5731);
-                ImGui::Button(buf, ImVec2(-1.0f, 0.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+                ImGui::BeginChild("Child2", ImVec2(0,300), true, (disable_mouse_wheel ? ImGuiWindowFlags_NoScrollWithMouse : 0));
+                ImGui::Text("With border");
+                ImGui::Columns(2);
+                for (int i = 0; i < 100; i++)
+                {
+                    if (i == 50)
+                        ImGui::NextColumn();
+                    char buf[32];
+                    sprintf(buf, "%08x", i*5731);
+                    ImGui::Button(buf, ImVec2(-1.0f, 0.0f));
+                }
+                ImGui::EndChild();
+                ImGui::PopStyleVar();
             }
-            ImGui::EndChild();
-            ImGui::PopStyleVar();
 
             ImGui::TreePop();
         }
@@ -1397,8 +1403,8 @@ void ImGui::ShowDemoWindow(bool* p_open)
             ImVec4 clip_rect(pos.x, pos.y, pos.x+size.x, pos.y+size.y);
             ImGui::InvisibleButton("##dummy", size);
             if (ImGui::IsItemActive() && ImGui::IsMouseDragging()) { offset.x += ImGui::GetIO().MouseDelta.x; offset.y += ImGui::GetIO().MouseDelta.y; }
-            ImGui::GetWindowDrawList()->AddRectFilled(pos, ImVec2(pos.x+size.x,pos.y+size.y), ImColor(90,90,120,255));
-            ImGui::GetWindowDrawList()->AddText(ImGui::GetFont(), ImGui::GetFontSize()*2.0f, ImVec2(pos.x+offset.x,pos.y+offset.y), ImColor(255,255,255,255), "Line 1 hello\nLine 2 clip me!", NULL, 0.0f, &clip_rect);
+            ImGui::GetWindowDrawList()->AddRectFilled(pos, ImVec2(pos.x+size.x,pos.y+size.y), IM_COL32(90,90,120,255));
+            ImGui::GetWindowDrawList()->AddText(ImGui::GetFont(), ImGui::GetFontSize()*2.0f, ImVec2(pos.x+offset.x,pos.y+offset.y), IM_COL32(255,255,255,255), "Line 1 hello\nLine 2 clip me!", NULL, 0.0f, &clip_rect);
             ImGui::TreePop();
         }
     }
@@ -1646,7 +1652,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
                     ImGui::OpenPopup("Stacked 2");
                 if (ImGui::BeginPopupModal("Stacked 2"))
                 {
-                    ImGui::Text("Hello from Stacked The Second");
+                    ImGui::Text("Hello from Stacked The Second!");
                     if (ImGui::Button("Close"))
                         ImGui::CloseCurrentPopup();
                     ImGui::EndPopup();
@@ -1951,6 +1957,7 @@ void ImGui::ShowDemoWindow(bool* p_open)
             ImGui::InputText("3 (tab skip)", buf, IM_ARRAYSIZE(buf));
             if (ImGui::IsItemActive()) has_focus = 3;
             ImGui::PopAllowKeyboardFocus();
+
             if (has_focus)
                 ImGui::Text("Item with focus: %d", has_focus);
             else
@@ -1971,11 +1978,13 @@ void ImGui::ShowDemoWindow(bool* p_open)
                 "IsWindowFocused() = %d\n"
                 "IsWindowFocused(_ChildWindows) = %d\n"
                 "IsWindowFocused(_ChildWindows|_RootWindow) = %d\n"
-                "IsWindowFocused(_RootWindow) = %d\n",
+                "IsWindowFocused(_RootWindow) = %d\n"
+                "IsWindowFocused(_AnyWindow) = %d\n",
                 ImGui::IsWindowFocused(),
-                ImGui::IsWindowFocused(ImGuiHoveredFlags_ChildWindows),
-                ImGui::IsWindowFocused(ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_RootWindow),
-                ImGui::IsWindowFocused(ImGuiHoveredFlags_RootWindow));
+                ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows),
+                ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_RootWindow),
+                ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow),
+                ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow));
 
             // Testing IsWindowHovered() function with its various flags (note that the flags can be combined)
             ImGui::BulletText(
@@ -1984,13 +1993,15 @@ void ImGui::ShowDemoWindow(bool* p_open)
                 "IsWindowHovered(_AllowWhenBlockedByActiveItem) = %d\n"
                 "IsWindowHovered(_ChildWindows) = %d\n"
                 "IsWindowHovered(_ChildWindows|_RootWindow) = %d\n"
-                "IsWindowHovered(_RootWindow) = %d\n",
+                "IsWindowHovered(_RootWindow) = %d\n"
+                "IsWindowHovered(_AnyWindow) = %d\n",
                 ImGui::IsWindowHovered(),
                 ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup),
                 ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem),
                 ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows),
                 ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_RootWindow),
-                ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow));
+                ImGui::IsWindowHovered(ImGuiHoveredFlags_RootWindow),
+                ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow));
 
             // Testing IsItemHovered() function (because BulletText is an item itself and that would affect the output of IsItemHovered, we pass all lines in a single items to shorten the code)
             ImGui::Button("ITEM");
@@ -2487,7 +2498,7 @@ static void ShowExampleAppFixedOverlay(bool* p_open)
     ImVec2 window_pos = ImVec2((corner & 1) ? ImGui::GetIO().DisplaySize.x - DISTANCE : DISTANCE, (corner & 2) ? ImGui::GetIO().DisplaySize.y - DISTANCE : DISTANCE);
     ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
     ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.3f)); // Transparent background
+    ImGui::SetNextWindowBgAlpha(0.3f); // Transparent background
     if (ImGui::Begin("Example: Fixed Overlay", p_open, ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings))
     {
         ImGui::Text("Simple overlay\nin the corner of the screen.\n(right-click to change position)");
@@ -2504,7 +2515,6 @@ static void ShowExampleAppFixedOverlay(bool* p_open)
         }
         ImGui::End();
     }
-    ImGui::PopStyleColor();
 }
 
 // Demonstrate using "##" and "###" in identifiers to manipulate ID generation.
@@ -2580,7 +2590,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
         draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x+sz, y+sz), col32, 10.0f); x += sz+spacing;
         draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x+sz, y+sz), col32, 10.0f, ImDrawCornerFlags_TopLeft|ImDrawCornerFlags_BotRight); x += sz+spacing;
         draw_list->AddTriangleFilled(ImVec2(x+sz*0.5f, y), ImVec2(x+sz,y+sz-0.5f), ImVec2(x,y+sz-0.5f), col32); x += sz+spacing;
-        draw_list->AddRectFilledMultiColor(ImVec2(x, y), ImVec2(x+sz, y+sz), ImColor(0,0,0), ImColor(255,0,0), ImColor(255,255,0), ImColor(0,255,0));
+        draw_list->AddRectFilledMultiColor(ImVec2(x, y), ImVec2(x+sz, y+sz), IM_COL32(0,0,0,255), IM_COL32(255,0,0,255), IM_COL32(255,255,0,255), IM_COL32(0,255,0,255));
         ImGui::Dummy(ImVec2((sz+spacing)*8, (sz+spacing)*3));
     }
     ImGui::Separator();
@@ -2599,8 +2609,8 @@ static void ShowExampleAppCustomRendering(bool* p_open)
         ImVec2 canvas_size = ImGui::GetContentRegionAvail();        // Resize canvas to what's available
         if (canvas_size.x < 50.0f) canvas_size.x = 50.0f;
         if (canvas_size.y < 50.0f) canvas_size.y = 50.0f;
-        draw_list->AddRectFilledMultiColor(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), ImColor(50,50,50), ImColor(50,50,60), ImColor(60,60,70), ImColor(50,50,60));
-        draw_list->AddRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), ImColor(255,255,255));
+        draw_list->AddRectFilledMultiColor(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), IM_COL32(50,50,50,255), IM_COL32(50,50,60,255), IM_COL32(60,60,70,255), IM_COL32(50,50,60,255));
+        draw_list->AddRect(canvas_pos, ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + canvas_size.y), IM_COL32(255,255,255,255));
 
         bool adding_preview = false;
         ImGui::InvisibleButton("canvas", canvas_size);
@@ -2609,7 +2619,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
         {
             adding_preview = true;
             points.push_back(mouse_pos_in_canvas);
-            if (!ImGui::GetIO().MouseDown[0])
+            if (!ImGui::IsMouseDown(0))
                 adding_line = adding_preview = false;
         }
         if (ImGui::IsItemHovered())

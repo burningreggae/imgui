@@ -64,6 +64,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - input text: add discard flag (e.g. ImGuiInputTextFlags_DiscardActiveBuffer) or make it easier to clear active focus for text replacement during edition (#725)
  - input text: display bug when clicking a drag/slider after an input text in a different window has all-selected text (order dependant). actually a very old bug but no one appears to have noticed it.
  - input text multi-line: don't directly call AddText() which does an unnecessary vertex reserve for character count prior to clipping. and/or more line-based clipping to AddText(). and/or reorganize TextUnformatted/RenderText for more efficiency for large text (e.g TextUnformatted could clip and log separately, etc).
+ - input text multi-line: support for cut/paste without selection (cut/paste the current line)
  - input text multi-line: line numbers? status bar? (follow up on #200)
  - input text multi-line: behave better when user changes input buffer while editing is active (even though it is illegal behavior). namely, the change of buffer can create a scrollbar glitch (#725)
  - input text multi-line: better horizontal scrolling support (#383, #1224)
@@ -161,6 +162,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - shortcuts,menus: global-style shortcut api e.g. "Save (CTRL+S)" -> explicit flag for recursing into closed menu
  - shortcuts: programmatically access shortcuts "Focus("&Save"))
  - menus: menubars: main menu-bar could affect clamping of windows position (~ akin to modifying DisplayMin)
+ - menus: hovering from menu to menu on a menu-bar has 1 frame without any menu, which is a little annoying. ideally either 0 either longer. 
 
  - text: selectable text (for copy) as a generic feature (ItemFlags?)
  - text: proper alignment options in imgui_internal.h
@@ -174,6 +176,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - tree node: try to apply scrolling at time of TreePop() if node was just opened and end of node is past scrolling limits?
  - tree node / selectable render mismatch which is visible if you use them both next to each other (e.g. cf. property viewer)
  - tree node: tweak color scheme to distinguish headers from selected tree node (#581)
+ - tree node: leaf/non-leaf highlight mismatch.
 
 !- settings: expose enough to save/load .ini from RAM instead of fopen
  - settings: write more decent code to allow saving/loading new fields: columns, selected tree nodes?
@@ -244,6 +247,8 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - misc: provide a way to compile out the entire implementation while providing a dummy API (e.g. #define IMGUI_DUMMY_IMPL)
  - misc: fix for compilation settings where stdcall isn't the default (e.g. vectorcall) (#1230)
  - remote: make a system like RemoteImGui first-class citizen/project (#75)
+
+ - natvis: more the imgui.natvis file in a better location. perhaps reorganize extra_fonts/? (#1569)
 
  - demo: add vertical separator demo
  - demo: add virtual scrolling example?
