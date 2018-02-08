@@ -3662,6 +3662,7 @@ void ImGui::NewFrame()
             scroll_lines += (IsKeyPressedMap(ImGuiKey_PageUp) - IsKeyPressedMap(ImGuiKey_PageDown) ) * 20;
             if ( scroll_lines ) SetWindowScrollY(window, window->Scroll.y - window->CalcFontSize() * scroll_lines);
 
+#if 0
             // Horizonal Scrolling
             if (g.IO.MouseWheelH != 0.f)
             {
@@ -3669,6 +3670,7 @@ void ImGui::NewFrame()
 				window->ScrollTarget.x = window->Scroll.x + g.IO.MouseWheelH * window->ContentsRegionRect.GetWidth() * 0.05f;;
                 window->ScrollTargetCenterRatio.x = 0.0f;
             }
+#endif
         }
 
     }
