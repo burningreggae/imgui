@@ -263,7 +263,7 @@ void ImGui_KeyboardCallback(uSynergyCookie cookie, uint16_t key,
                             uint16_t modifiers, uSynergyBool down, uSynergyBool repeat)
 {
     int scanCode = key-1;
-//    printf("Synergy: keyboard callback: 0x%02X (%s)", scanCode, down?"true":"false");
+    // printf("Synergy: keyboard callback: 0x%02X (%s)", scanCode, down?"true":"false");
     ImGuiIO& io = ImGui::GetIO();
     io.KeysDown[key] = down;
     io.KeyShift = (modifiers & USYNERGY_MODIFIER_SHIFT);
@@ -488,8 +488,10 @@ void ImGui_ClipboardCallback(uSynergyCookie cookie, enum uSynergyClipboardFormat
     io.KeyMap[ImGuiKey_DownArrow] = kVK_DownArrow+1;
     io.KeyMap[ImGuiKey_Home] = kVK_Home+1;
     io.KeyMap[ImGuiKey_End] = kVK_End+1;
+    io.KeyMap[ImGuiKey_Insert] = kVK_Help+1;
     io.KeyMap[ImGuiKey_Delete] = kVK_ForwardDelete+1;
     io.KeyMap[ImGuiKey_Backspace] = kVK_Delete+1;
+    io.KeyMap[ImGuiKey_Space] = kVK_Space+1;
     io.KeyMap[ImGuiKey_Enter] = kVK_Return+1;
     io.KeyMap[ImGuiKey_Escape] = kVK_Escape+1;
     io.KeyMap[ImGuiKey_A] = kVK_ANSI_A+1;
@@ -586,9 +588,9 @@ void ImGui_ClipboardCallback(uSynergyCookie cookie, enum uSynergyClipboardFormat
             io.MouseDown[i] = g_MousePressed[i];
         }
 
-        // This is an arbitrary scaling factor that works for me. Not sure what units these
-        // mousewheel values from synergy are supposed to be in
+        // This is an arbitrary scaling factor that works for me. Not sure what units these mousewheel values from synergy are supposed to be in.
         io.MouseWheel = g_mouseWheelY / 500.0;
+        io.MouseWheelH = g_mouseWheelX / 500.0;
     }
     else
     {

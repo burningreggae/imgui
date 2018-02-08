@@ -911,6 +911,7 @@ void style1()
 	style.CircleLineSegment = 50;
 	style.ColumnsMinSpacing = 0.f;
 	style.PopupRounding = 4.f;
+	style.WindowBorderSize = 0.f;
 }
 
 void style2()
@@ -1055,7 +1056,7 @@ void SetStyle(int style,bool styleInvert, float alpha,float saturate,int fontNr,
 
 bool ImGui_ImplGLUT_Init()
 {
-	ImGui::CreateInstance();
+	ImGui::CreateContext();
 	// Application init
 	ImGuiIO& io = ImGui::GetIO();
 	//io.DisplaySize.x = 1920.0f;
@@ -1099,10 +1100,8 @@ bool ImGui_ImplGLUT_Init()
 
 void ImGui_ImplGLUT_Shutdown()
 {
-	ImGui::Shutdown();
-
 	ImGui_ImplGLUT_InvalidateDeviceObjects();
-	ImGui::DestroyInstance();
+	ImGui::DestroyContext();
 }
 
 
