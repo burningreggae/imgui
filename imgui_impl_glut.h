@@ -12,6 +12,7 @@ IMGUI_API bool ImGui_ImplGLUT_Init();
 IMGUI_API void ImGui_ImplGLUT_CreateDeviceObjects();
 IMGUI_API void ImGui_ImplGLUT_Shutdown();
 IMGUI_API void ImGui_ImplGLUT_MouseCursor();
+IMGUI_API void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data);
 IMGUI_API int SystemMouseCursor( int cursorID );
 IMGUI_API void SetStyle(int style,bool styleInvert, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply,int fontoversample);
 

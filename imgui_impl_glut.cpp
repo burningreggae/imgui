@@ -476,7 +476,7 @@ void ImGui_ImplGLUT_MouseCursor()
 		switch(ImGui::GetMouseCursor())
 		{
 			default:
-			case ImGuiMouseCursor_Move: hw = GLUT_CURSOR_CYCLE; break;
+			case ImGuiMouseCursor_ResizeAll: hw = GLUT_CURSOR_CYCLE; break;
 			case ImGuiMouseCursor_Arrow: hw = GLUT_CURSOR_LEFT_ARROW; break;
 			case ImGuiMouseCursor_TextInput: hw = GLUT_CURSOR_TEXT; break;
 			case ImGuiMouseCursor_ResizeEW: hw = GLUT_CURSOR_LEFT_RIGHT; break;
@@ -1064,7 +1064,7 @@ bool ImGui_ImplGLUT_Init()
 	io.IniFilename = "dock_window.json"; //"imgui.ini";
 
 
-	io.RenderDrawListsFn = ImGui_ImplGLUT_RenderDrawLists;   // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
+	//io.RenderDrawListsFn = ImGui_ImplGLUT_RenderDrawLists;   // Alternatively you can set this to NULL and call ImGui::GetDrawData() after ImGui::Render() to get the same ImDrawData pointer.
 	//io.SetClipboardTextFn = ImGui_ImplGLUT_SetClipboardText;
 	//io.GetClipboardTextFn = ImGui_ImplGLUT_GetClipboardText;
 
