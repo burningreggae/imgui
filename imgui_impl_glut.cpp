@@ -546,6 +546,7 @@ void createFonts()
 	atlas.AddFontFromFileTTF("OptimaNeue.ttf", g_FontWishSize, &config,r1);
 
 	io.FontDefault = g_FontWish > 0 && atlas.Fonts.size() > g_FontWish ? atlas.Fonts[g_FontWish] : 0;
+	if (0 == io.FontDefault && atlas.Fonts.size() ) io.FontDefault = atlas.Fonts[0];
 
 
 	// Degree Sign     ALT-248, 0x00B0, \xc2\xb0
@@ -1043,6 +1044,7 @@ void SetStyle(int style,bool styleInvert, float alpha,float saturate,int fontNr,
 		ImGuiIO& io = ImGui::GetIO();
 		ImFontAtlas& atlas = *io.Fonts;
 		io.FontDefault = g_FontWish > 0 && atlas.Fonts.size() > g_FontWish ? atlas.Fonts[g_FontWish] : 0;
+		if (0 == io.FontDefault && atlas.Fonts.size() ) io.FontDefault = atlas.Fonts[0];
 	}
 
 	ImGui::GetStyle() = ImGuiStyle();
