@@ -3277,7 +3277,9 @@ static void ImGui::NavUpdate()
     if (g.NavWindow && (g.NavWindow->Flags & ImGuiWindowFlags_NoNavInputs))
         g.NavDisableHighlight = true;
     if (g.NavActivateId != 0)
+	{
         IM_ASSERT(g.NavActivateDownId == g.NavActivateId);
+	}
     g.NavMoveRequest = false;
 
     // Process programmatic activation request
@@ -3443,8 +3445,9 @@ void ImGui::NewFrame()
 
     // Do a simple check for required key mapping (we intentionally do NOT check all keys to not pressure user into setting up everything, but Space is required and was super recently added in 1.60 WIP)
     if (g.IO.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard)
+	{
         IM_ASSERT(g.IO.KeyMap[ImGuiKey_Space] != -1 && "ImGuiKey_Space is not mapped, required for keyboard navigation.");
-
+	}
     // Load settings on first frame
     if (!g.SettingsLoaded)
     {
@@ -5847,7 +5850,9 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         flags |= ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize;
     
     if (flags & ImGuiWindowFlags_NavFlattened)
+	{
         IM_ASSERT(flags & ImGuiWindowFlags_ChildWindow);
+	}
 
     const int current_frame = g.FrameCount;
     const bool first_begin_of_the_frame = (window->LastFrameActive != current_frame);
@@ -11031,6 +11036,8 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
     bool pressed = ButtonBehavior(frame_bb, id, &hovered, &held);
     bool popup_open = IsPopupOpen(id);
 
+	envelope_gate(id,popup_open || hovered,envelope_hover);
+
     const ImRect value_bb(frame_bb.Min, frame_bb.Max - ImVec2(arrow_size, 0.0f));
     const ImU32 frame_col = GetColorU32(hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg);
     RenderNavHighlight(frame_bb, id);
@@ -11038,8 +11045,8 @@ bool ImGui::BeginCombo(const char* label, const char* preview_value, ImGuiComboF
         window->DrawList->AddRectFilled(frame_bb.Min, ImVec2(frame_bb.Max.x - arrow_size, frame_bb.Max.y), frame_col, style.FrameRounding, ImDrawCornerFlags_Left);
     if (!(flags & ImGuiComboFlags_NoArrowButton))
     {
-        window->DrawList->AddRectFilled(ImVec2(frame_bb.Max.x - arrow_size, frame_bb.Min.y), frame_bb.Max, GetColorU32((popup_open || hovered) ? ImGuiCol_ButtonHovered : ImGuiCol_Button), style.FrameRounding, (w <= arrow_size) ? ImDrawCornerFlags_All : ImDrawCornerFlags_Right);
-        RenderArrow(ImVec2(frame_bb.Max.x - arrow_size + style.FramePadding.y, frame_bb.Min.y + style.FramePadding.y), ImGuiDir_Down);
+        window->DrawList->AddRectFilled(ImVec2(frame_bb.Max.x - arrow_size, frame_bb.Min.y), frame_bb.Max, GetColorU32(ImGuiCol_Button,ImGuiCol_ButtonHovered,envelope_get(id)), style.FrameRounding, (w <= arrow_size) ? ImDrawCornerFlags_All : ImDrawCornerFlags_Right);
+        RenderArrow(ImVec2(frame_bb.Max.x - arrow_size + style.FramePadding.y, frame_bb.Min.y + frame_bb.GetHeight()*0.5f), ImGuiDir_Down);
     }
     RenderFrameBorder(frame_bb.Min, frame_bb.Max, style.FrameRounding);
     if (preview_value != NULL && !(flags & ImGuiComboFlags_NoPreview))
