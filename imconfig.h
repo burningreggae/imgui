@@ -104,7 +104,7 @@ struct shaderparamlayer
 	int _alpha_test;
 	int _alpha_scale;
 	int _alpha_from_color;
-	int _raw_density;
+	int _shader_raw_density;
 	int _level_brightness;
 	int _level_contrast;
 	int _tex_gen;

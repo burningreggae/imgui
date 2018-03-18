@@ -77,8 +77,9 @@ struct Dock
 	void setParent(Dock* dock)
 	{
 		parent = dock;
-		for (Dock* tmp = prev_tab; tmp; tmp = tmp->prev_tab) tmp->parent = dock;
-		for (Dock* tmp = next_tab; tmp; tmp = tmp->next_tab) tmp->parent = dock;
+		int run = 0;
+		for (Dock* tmp = prev_tab; tmp && ++run < 1000; tmp = tmp->prev_tab) tmp->parent = dock;
+		for (Dock* tmp = next_tab; tmp && ++run < 1000; tmp = tmp->next_tab) tmp->parent = dock;
 	}
 
 	Dock& getRoot()
