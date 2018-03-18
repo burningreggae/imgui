@@ -1027,7 +1027,7 @@ bool DockContext::tabbar(Dock* dock_in, bool close_button, bool enabled,bool nee
 			center.y = pos.y + size.y*0.5f;
 
 			float alpha = envelope_get(GetID("#CLOSE"));
-			const ImU32 col = GetColorU32(held ? ImGuiCol_CloseButtonActive : ImGuiCol_CloseButton,ImGuiCol_CloseButtonHovered,alpha);
+			const ImU32 col = GetColorU32(held ? ImGuiCol_ButtonActive : ImGuiCol_Button,ImGuiCol_ButtonHovered,alpha);
 			float radius = 3.5f;
 			draw_list->AddCircleFilled(center, radius * 2.f, col, 12);
 
