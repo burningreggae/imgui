@@ -1124,7 +1124,10 @@ static void setDockPosSize(Dock& dest, Dock& dock, Slot_ dock_slot, Dock& contai
 void DockContext::doDock(Dock& dock, Dock* dest, Slot_ dock_slot)
 {
 	//IM_ASSERT(!dock.parent);
-	msg ("doDock assert dock.parent\n");
+	if ( !dock.parent )
+	{
+		msg ("doDock assert dock.parent\n");
+	}
 	if (!dest)
 	{
 		dock.status = Status_Docked;

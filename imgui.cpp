@@ -6443,10 +6443,16 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             // Close button
             if (p_open != NULL)
             {
+/*
                 const float pad = style.FramePadding.y;
                 const float rad = (window->TitleBarHeight() - pad*2.0f) * 0.5f;
                 if (CloseButton(window->GetID("#CLOSE"), window->Rect().GetTR() + ImVec2(-pad - rad, pad + rad), rad + 1))
+					*p_open = false;
+*/
+				const float pad = style.CloseButtonSize * 1.2f + style.FramePadding.x;
+				if (CloseButton(window->GetID("#CLOSE"), window->Pos + ImVec2( window->Size.x - pad,title_bar_rect.GetHeight()*0.5f), style.CloseButtonSize))
                     *p_open = false;
+
             }
 
             window->DC.NavLayerCurrent--;
@@ -8094,7 +8100,7 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos, float radius)
     float alpha = envelope_get(id);
     const ImU32 col = GetColorU32(held ? ImGuiCol_ButtonActive : ImGuiCol_Button,ImGuiCol_ButtonHovered,alpha);
     ImVec2 center = bb.GetCenter();
-    window->DrawList->AddCircleFilled(center, ImMax(2.0f, radius), col, 9);
+    window->DrawList->AddCircleFilled(center, ImMax(2.0f, radius), col, 12);
     float cross_extent = (radius * 0.7071f) - 1.0f;
     ImU32 cross_col = GetColorU32(ImGuiCol_Text);
     center -= ImVec2(0.5f, 0.5f);
