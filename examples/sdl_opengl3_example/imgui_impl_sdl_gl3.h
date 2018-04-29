@@ -4,6 +4,8 @@
 
 // Implemented features:
 //  [X] User texture binding. Cast 'GLuint' OpenGL texture identifier as void*/ImTextureID. Read the FAQ about ImTextureID in imgui.cpp.
+// Missing features:
+//  [ ] SDL2 handling of IME under Windows appears to be broken and it explicitly disable the regular Windows IME. You can restore Windows IME by compiling SDL with SDL_DISABLE_WINDOWS_IME.
 
 // You can copy and use unmodified imgui_impl_* files in your project. See main.cpp for an example of using this.
 // If you use this binding you'll need to call 4 functions: ImGui_ImplXXXX_Init(), ImGui_ImplXXXX_NewFrame(), ImGui::Render() and ImGui_ImplXXXX_Shutdown().
@@ -13,7 +15,7 @@
 struct SDL_Window;
 typedef union SDL_Event SDL_Event;
 
-IMGUI_API bool        ImGui_ImplSdlGL3_Init(SDL_Window* window);
+IMGUI_API bool        ImGui_ImplSdlGL3_Init(SDL_Window* window, const char* glsl_version = NULL);
 IMGUI_API void        ImGui_ImplSdlGL3_Shutdown();
 IMGUI_API void        ImGui_ImplSdlGL3_NewFrame(SDL_Window* window);
 IMGUI_API void        ImGui_ImplSdlGL3_RenderDrawData(ImDrawData* draw_data);
