@@ -16,9 +16,9 @@ static void glfw_error_callback(int error, const char* description)
 
 void system_redraw( const char *function, const char* caller, int value) {}
 
-void hover_gate(ImGuiID id, bool isHovered ) {}
-float hover_envelope(ImGuiID id) { return 1.f; }
-void hover_step() {}
+float envelope_get(ImGuiID id, int group) { return 1.f; }
+void envelope_gate(ImGuiID id, bool isActive, int group ) {}
+void envelope_step(float dt) {}
 
 int main(int, char**)
 {
@@ -80,6 +80,7 @@ int main(int, char**)
 
         // 1. Show a simple window.
         // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
+
         {
             static float f = 0.0f;
             static int counter = 0;
