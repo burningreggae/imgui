@@ -49,7 +49,7 @@
 
 // GLFW data
 static GLFWwindow*  g_Window = NULL;
-static double       g_Time = 0.0f;
+static double       g_Time = 0.0;
 static bool         g_MouseJustPressed[3] = { false, false, false };
 static GLFWcursor*  g_MouseCursors[ImGuiMouseCursor_COUNT] = { 0 };
 
@@ -237,6 +237,7 @@ void system_redraw( const char *function, const char* caller, int value)
 bool    ImGui_ImplGlfwGL2_Init(GLFWwindow* window, bool install_callbacks)
 {
     g_Window = window;
+    g_Time = 0.0;
 
     ImGui::CreateInstance();
 
