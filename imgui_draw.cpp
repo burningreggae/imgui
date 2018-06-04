@@ -928,12 +928,20 @@ void ImDrawList::PathArcToFast(const ImVec2& centre, float radius, int a_min_of_
         _Path.push_back(centre);
         return;
     }
+/*
     _Path.reserve(_Path.Size + (a_max_of_12 - a_min_of_12 + 1));
     for (int a = a_min_of_12; a <= a_max_of_12; a++)
     {
         const ImVec2& c = _Data->CircleVtx12[a % IM_ARRAYSIZE(_Data->CircleVtx12)];
         _Path.push_back(ImVec2(centre.x + c.x * radius, centre.y + c.y * radius));
     }
+*/
+	_Path.reserve(_Path.Size + (a_max_of_12 - a_min_of_12 + 1)*circle_supersample);
+    for ( int a = a_min_of_12 * circle_supersample; a <= a_max_of_12*circle_supersample; ++a )
+    {
+		_Path.push_back(ImVec2(centre.x + circle_vtx[a].x * radius, centre.y + circle_vtx[a].y * radius));
+    }
+
 }
 
 void ImDrawList::PathArcTo(const ImVec2& centre, float radius, float a_min, float a_max, int num_segments)
@@ -943,6 +951,7 @@ void ImDrawList::PathArcTo(const ImVec2& centre, float radius, float a_min, floa
         _Path.push_back(centre);
         return;
     }
+	num_segments *= circle_supersample;
     _Path.reserve(_Path.Size + (num_segments + 1));
     for (int i = 0; i <= num_segments; i++)
     {
