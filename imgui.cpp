@@ -10645,8 +10645,11 @@ static bool InputTextFilterCharacter(unsigned int* p_char, ImGuiInputTextFlags f
         }
 
         if (flags & ImGuiInputTextFlags_CharsScientific)
+		{
+            if ( c == ',' ) c = *p_char = '.';	//allow german punctuation
             if (!(c >= '0' && c <= '9') && (c != '.') && (c != '-') && (c != '+') && (c != '*') && (c != '/') && (c != 'e') && (c != 'E'))
                 return false;
+		}
 
         if (flags & ImGuiInputTextFlags_CharsHexadecimal)
             if (!(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f') && !(c >= 'A' && c <= 'F'))
