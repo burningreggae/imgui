@@ -1,4 +1,4 @@
-// dear imgui, v1.62 WIP
+// dear imgui, v1.62
 // (headers)
 
 // See imgui.cpp file for documentation.
@@ -22,18 +22,22 @@
 #include <string.h>                 // memset, memmove, memcpy, strlen, strchr, strcpy, strcmp
 
 // Version
-#define IMGUI_VERSION               "1.62 WIP"
+#define IMGUI_VERSION               "1.62"
 #define IMGUI_CHECKVERSION()        ImGui::DebugCheckVersionAndDataLayout(IMGUI_VERSION, sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert))
 
 // Define attributes of all API symbols declarations (e.g. for DLL under Windows)
+// IMGUI_API is used for core imgui functions, IMGUI_IMPL_API is used for the default bindings files (imgui_impl_xxx.h)
 #ifndef IMGUI_API
 #define IMGUI_API
+#endif
+#ifndef IMGUI_IMPL_API
+#define IMGUI_IMPL_API      IMGUI_API
 #endif
 
 // Helpers
 #ifndef IM_ASSERT
-#include <assert.h>
-#define IM_ASSERT(_EXPR)            assert(_EXPR)
+#include <assert.h>                                                             
+#define IM_ASSERT(_EXPR)            assert(_EXPR)                               // You can override the default assert handler by editing imconfig.h
 #endif
 #if defined(__clang__) || defined(__GNUC__)
 #define IM_FMTARGS(FMT)             __attribute__((format(printf, FMT, FMT+1))) // Apply printf-style warnings to user functions.
@@ -77,6 +81,7 @@ typedef void* ImTextureID;          // User data to identify a texture (this is 
 #endif
 
 // Typedefs and Enumerations (declared as int for compatibility with old C++ and to not pollute the top of this file)
+// Use your programming IDE "Go to definition" facility on the names of the right-most columns to find the actual flags/enum lists.
 typedef unsigned int ImGuiID;       // Unique ID used by widgets (typically hashed from a stack of string)
 typedef unsigned short ImWchar;     // Character for keyboard input/display
 typedef int ImGuiCol;               // enum: a color identifier for styling     // enum ImGuiCol_
@@ -130,7 +135,7 @@ enum ImGuiItemGetterCommand
 typedef bool (*ImGuiItemGetter) (void* data, int idx, const char** out_text,ImGuiItemGetterCommand cmd);
 struct ImVec4;
 
-// 2d vector
+// 2D vector (often used to store positions, sizes, etc.)
 struct ImVec2
 {
     float     x, y;
@@ -142,7 +147,7 @@ struct ImVec2
 #endif
 };
 
-// 4d vector (often used to store floating-point colors)
+// 4D vector (often used to store floating-point colors)
 struct ImVec4
 {
     float     x, y, z, w;
@@ -170,9 +175,9 @@ namespace ImGui
     IMGUI_API ImGuiIO&      GetIO();                                    // access the IO structure (mouse/keyboard/gamepad inputs, time, various configuration options/flags)
     IMGUI_API ImGuiStyle&   GetStyle();                                 // access the Style structure (colors, sizes). Always use PushStyleCol(), PushStyleVar() to modify style mid-frame.
     IMGUI_API void          NewFrame();                                 // start a new ImGui frame, you can submit any command from this point until Render()/EndFrame().
+    IMGUI_API void          EndFrame();                                 // ends the ImGui frame. automatically called by Render(), you likely don't need to call that yourself directly. If you don't need to render data (skipping rendering) you may call EndFrame() but you'll have wasted CPU already! If you don't need to render, better to not create any imgui windows and not call NewFrame() at all!
     IMGUI_API void          Render();                                   // ends the ImGui frame, finalize the draw data. (Obsolete: optionally call io.RenderDrawListsFn if set. Nowadays, prefer calling your render function yourself.)
     IMGUI_API ImDrawData*   GetDrawData();                              // valid after Render() and until the next call to NewFrame(). this is what you have to render. (Obsolete: this used to be passed to your io.RenderDrawListsFn() function.)
-    IMGUI_API void          EndFrame();                                 // ends the ImGui frame. automatically called by Render(), so most likely don't need to ever call that yourself directly. If you don't need to render you may call EndFrame() but you'll have wasted CPU already. If you don't need to render, better to not create any imgui windows instead!
 
     // Demo, Debug, Information
     IMGUI_API void          ShowDemoWindow(bool* p_open = NULL);        // create demo/test window (previously called ShowTestWindow). demonstrate most ImGui features. call this to learn about the library! try to make it always available in your application!
@@ -621,6 +626,7 @@ namespace ImGui
 // Flags for ImGui::Begin()
 enum ImGuiWindowFlags_
 {
+    ImGuiWindowFlags_None                   = 0,
     ImGuiWindowFlags_NoTitleBar             = 1 << 0,   // Disable title-bar
     ImGuiWindowFlags_NoResize               = 1 << 1,   // Disable user resizing with the lower-right grip
     ImGuiWindowFlags_NoMove                 = 1 << 2,   // Disable user moving the window
@@ -658,6 +664,7 @@ enum ImGuiWindowFlags_
 // Flags for ImGui::InputText()
 enum ImGuiInputTextFlags_
 {
+    ImGuiInputTextFlags_None                = 0,
     ImGuiInputTextFlags_CharsDecimal        = 1 << 0,   // Allow 0123456789.+-*/
     ImGuiInputTextFlags_CharsHexadecimal    = 1 << 1,   // Allow 0123456789ABCDEFabcdef
     ImGuiInputTextFlags_CharsUppercase      = 1 << 2,   // Turn a..z into A..Z
@@ -683,6 +690,7 @@ enum ImGuiInputTextFlags_
 // Flags for ImGui::TreeNodeEx(), ImGui::CollapsingHeader*()
 enum ImGuiTreeNodeFlags_
 {
+    ImGuiTreeNodeFlags_None                 = 0,
     ImGuiTreeNodeFlags_Selected             = 1 << 0,   // Draw as selected
     ImGuiTreeNodeFlags_Framed               = 1 << 1,   // Full colored frame (e.g. for CollapsingHeader)
     ImGuiTreeNodeFlags_AllowItemOverlap     = 1 << 2,   // Hit testing to allow subsequent widgets to overlap this one
@@ -708,6 +716,7 @@ enum ImGuiTreeNodeFlags_
 // Flags for ImGui::Selectable()
 enum ImGuiSelectableFlags_
 {
+    ImGuiSelectableFlags_None               = 0,
     ImGuiSelectableFlags_DontClosePopups    = 1 << 0,   // Clicking this don't close parent popup window
     ImGuiSelectableFlags_SpanAllColumns     = 1 << 1,   // Selectable frame can span all columns (text will still fit in current column)
     ImGuiSelectableFlags_AllowDoubleClick   = 1 << 2    // Generate press events on double clicks too
@@ -716,6 +725,7 @@ enum ImGuiSelectableFlags_
 // Flags for ImGui::BeginCombo()
 enum ImGuiComboFlags_
 {
+    ImGuiComboFlags_None                    = 0,
     ImGuiComboFlags_PopupAlignLeft          = 1 << 0,   // Align the popup toward the left by default
     ImGuiComboFlags_HeightSmall             = 1 << 1,   // Max ~4 items visible. Tip: If you want your combo popup to be a specific size you can use SetNextWindowSizeConstraints() prior to calling BeginCombo()
     ImGuiComboFlags_HeightRegular           = 1 << 2,   // Max ~8 items visible (default)
@@ -729,6 +739,7 @@ enum ImGuiComboFlags_
 // Flags for ImGui::IsWindowFocused()
 enum ImGuiFocusedFlags_
 {
+    ImGuiFocusedFlags_None                          = 0,
     ImGuiFocusedFlags_ChildWindows                  = 1 << 0,   // IsWindowFocused(): Return true if any children of the window is focused
     ImGuiFocusedFlags_RootWindow                    = 1 << 1,   // IsWindowFocused(): Test from root window (top most parent of the current hierarchy)
     ImGuiFocusedFlags_AnyWindow                     = 1 << 2,   // IsWindowFocused(): Return true if any window is focused
@@ -739,7 +750,7 @@ enum ImGuiFocusedFlags_
 // Note: If you are trying to check whether your mouse should be dispatched to imgui or to your app, you should use the 'io.WantCaptureMouse' boolean for that. Please read the FAQ!
 enum ImGuiHoveredFlags_
 {
-    ImGuiHoveredFlags_Default                       = 0,        // Return true if directly over the item/window, not obstructed by another window, not obstructed by an active popup or modal blocking inputs under them.
+    ImGuiHoveredFlags_None                          = 0,        // Return true if directly over the item/window, not obstructed by another window, not obstructed by an active popup or modal blocking inputs under them.
     ImGuiHoveredFlags_ChildWindows                  = 1 << 0,   // IsWindowHovered() only: Return true if any children of the window is hovered
     ImGuiHoveredFlags_RootWindow                    = 1 << 1,   // IsWindowHovered() only: Test from root window (top most parent of the current hierarchy)
     ImGuiHoveredFlags_AnyWindow                     = 1 << 2,   // IsWindowHovered() only: Return true if any window is hovered
@@ -754,6 +765,7 @@ enum ImGuiHoveredFlags_
 // Flags for ImGui::BeginDragDropSource(), ImGui::AcceptDragDropPayload()
 enum ImGuiDragDropFlags_
 {
+    ImGuiDragDropFlags_None                         = 0,
     // BeginDragDropSource() flags
     ImGuiDragDropFlags_SourceNoPreviewTooltip       = 1 << 0,   // By default, a successful call to BeginDragDropSource opens a tooltip so you can display a preview or description of the source contents. This flag disable this behavior.
     ImGuiDragDropFlags_SourceNoDisableHover         = 1 << 1,   // By default, when dragging we clear data so that IsItemHovered() will return true, to avoid subsequent user code submitting tooltips. This flag disable this behavior so you can still call IsItemHovered() on the source item.
@@ -977,6 +989,7 @@ enum ImGuiStyleVar_
 // Enumeration for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
 enum ImGuiColorEditFlags_
 {
+    ImGuiColorEditFlags_None            = 0,
     ImGuiColorEditFlags_NoAlpha         = 1 << 1,   //              // ColorEdit, ColorPicker, ColorButton: ignore Alpha component (read 3 components from the input pointer).
     ImGuiColorEditFlags_NoPicker        = 1 << 2,   //              // ColorEdit: disable picker when clicking on colored square.
     ImGuiColorEditFlags_NoOptions       = 1 << 3,   //              // ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.
