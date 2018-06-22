@@ -19,7 +19,7 @@
 //#define IM_ASSERT(_EXPR)  MyAssert(_EXPR)
 #define IM_ASSERT(_EXPR) assert(_EXPR)
 #else
-//#define IM_ASSERT(_EXPR)  ((void)(_EXPR))     // Disable asserts
+#define IM_ASSERT(_EXPR)  ((void)(_EXPR))     // Disable asserts
 #endif
 
 //---- Define attributes of all API symbols declarations, e.g. for DLL under Windows.

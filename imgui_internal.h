@@ -1003,7 +1003,6 @@ struct IMGUI_API ImGuiWindowTempData
         MenuBarOffset = ImVec2(0.0f, 0.0f);
         StateStorage = NULL;
         LayoutType = ParentLayoutType = ImGuiLayoutType_Vertical;
-        CurrentLayout = NULL;
         ItemWidth = 0.0f;
         ItemFlags = ImGuiItemFlags_Default_;
         TextWrapPos = -1.0f;
@@ -1014,7 +1013,7 @@ struct IMGUI_API ImGuiWindowTempData
         ColumnsOffsetX = 0.0f;
         ColumnsSet = NULL;
 
-		CurrentLayout = NULL;
+        CurrentLayout = NULL;
 
     }
 };
