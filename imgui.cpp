@@ -10405,6 +10405,41 @@ void ImGui::ProgressBar(float fraction, const ImVec2& size_arg, const char* over
         RenderTextClipped(ImVec2(ImClamp(fill_br.x + style.ItemSpacing.x, bb.Min.x, bb.Max.x - overlay_size.x - style.ItemInnerSpacing.x), bb.Min.y), bb.Max, overlay, NULL, &overlay_size, ImVec2(0.0f,0.5f), &bb);
 }
 
+bool ImGui::ToggleButton(const char* label, bool* v)
+{
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    ImVec2 p = GetCursorScreenPos();
+    ImDrawList* draw_list = GetWindowDrawList();
+
+    const ImGuiID id = window->GetID(label);
+
+    float height = GetFrameHeight();
+    float width = height * 1.55f;
+    float radius = height * 0.50f;
+	bool hovered,held;
+    bool pressed = InvisibleButton(label, ImVec2(width, height),&hovered,&held);
+    if (pressed)
+    {
+        *v = !(*v);
+        MarkItemValueChanged(id);
+    }
+
+    ImU32 col_bg;
+    if (hovered)
+        col_bg = *v ? IM_COL32(145+20, 211, 68+20, 255) : IM_COL32(218-20, 218-20, 218-20, 255);
+    else
+        col_bg = *v ? IM_COL32(145, 211, 68, 255) : IM_COL32(218, 218, 218, 255);
+
+    draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), col_bg, height * 0.5f);
+    draw_list->AddCircleFilled(ImVec2(*v ? (p.x + width - radius) : (p.x + radius), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255),24);
+	SameLine();
+	Text(label);
+	return pressed;
+}
+
 bool ImGui::Checkbox(const char* label, bool* v)
 {
     ImGuiWindow* window = GetCurrentWindow();
