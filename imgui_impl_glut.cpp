@@ -893,8 +893,8 @@ void style1()
 	style.IndentSpacing = 20.f;
 	style.TitleBarHeight = 6.f;
 	style.CloseButtonSize = 6.5f;
-	style.DisplaySafeAreaPadding.x = 10.f;
-	style.DisplaySafeAreaPadding.y = 10.f;
+	style.DisplaySafeAreaPadding.x = 4.f;
+	style.DisplaySafeAreaPadding.y = 4.f;
 	style.TriangleScale = 0.85f;
 	style.CheckmarkScale = 1.f/8.f;
 	style.CircleLineSegment = 50;
@@ -979,11 +979,13 @@ void style2()
 
 }
 
-void StyleAdjust(bool invert, float alpha,float saturate )
+void StyleAdjust(bool invert,bool styleAntiAliased, float alpha,float saturate )
 {
 	if ( alpha < 0.1f ) alpha = 0.1f;
 
 	ImGuiStyle& style = ImGui::GetStyle();
+	style.AntiAliasedLines = styleAntiAliased;
+	style.AntiAliasedFill = styleAntiAliased;
 	for (int i = 0; i <= ImGuiCol_COUNT; i++)
 	{
 		ImVec4& col = style.Colors[i];
@@ -1005,7 +1007,7 @@ void StyleAdjust(bool invert, float alpha,float saturate )
 	}
 }
 
-void SetStyle(int style,bool styleInvert, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply, int fontoversample)
+void SetStyle(int style,bool styleInvert,bool styleAntiAliased, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply, int fontoversample)
 {
 	float d = g_FontWishSize-fontSize;
 	float d1 = g_FontWishRasterizerMultiply-fontRasterMultiply;
@@ -1034,8 +1036,7 @@ void SetStyle(int style,bool styleInvert, float alpha,float saturate,int fontNr,
 	else if ( style == 2 ) style4();
 	else if ( style == 3 ) style3();
 
-	StyleAdjust(styleInvert,alpha,saturate);
-
+	StyleAdjust(styleInvert,styleAntiAliased,alpha,saturate);
 }
 
 bool ImGui_ImplGLUT_Init()
