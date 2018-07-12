@@ -1527,6 +1527,7 @@ void DockContext::designer(bool *v_open)
 		return;
 	}
 	PushID((void*)this);
+	Separator();
 	Text("%s",label);
 	static char filename[8][256] = { {0},{0},{0},{0},{0},{0},{0},{0} };
 	if ( filename[index][0] == 0 )
@@ -1552,6 +1553,35 @@ void DockContext::designer(bool *v_open)
 		if (!TreeNode((void*)(i), "Dock %d %s", i, m_docks[i]->label))
 			continue;
 		Dock &dock = *m_docks[i];
+		if ( Button("Erase" ) )
+		{
+			Dock* container = &dock;
+			int thisIndex = getDockIndex(container);
+			for (int i2 = 0; i2 < m_docks.size(); ++i2)
+			{
+				Dock* d = m_docks[i2];
+
+				if ( d->parent == container )
+					d->parent = 0;
+				if ( d->next_tab == container )
+					d->next_tab = 0;
+				if ( d->prev_tab == container )
+					d->prev_tab = 0;
+				if ( d->children[0] == container )
+					d->children[0] = 0;
+				if ( d->children[1] == container )
+					d->children[1] = 0;
+			}
+
+			m_docks.erase(m_docks.begin() + thisIndex);
+			if (container == m_next_parent) m_next_parent = 0;
+
+			container->~Dock();
+			MemFree(container);
+			container = 0;
+			TreePop();
+			break;
+		}
 
 		Text("index = %d,\n",i);
 		Text("id = 0x%x,\n",dock.id);
