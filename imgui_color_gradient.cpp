@@ -139,7 +139,7 @@ void ImGradient::refreshCache()
 			return diff < 0.0001f ? -1: diff > 0.0001f ? 1 : 0;
         }
     };
-	//if (marks.size() > 1) qsort(&marks.front(), marks.size(), sizeof(ImGradientMark), StaticFunc::position);
+	if (!draggingMark && marks.size() > 1) qsort(&marks.front(), marks.size(), sizeof(ImGradientMark), StaticFunc::position);
 
 	for(markIt = marks.begin(); markIt != marks.end(); ++markIt)
 	{
@@ -496,6 +496,7 @@ namespace ImGui
 		if(!ImGui::IsMouseDown(0) && gradient->draggingMark)
 		{
 			gradient->draggingMark = 0;
+			modified = true;
 		}
 
 		if(ImGui::IsMouseDragging(0) && gradient->draggingMark)

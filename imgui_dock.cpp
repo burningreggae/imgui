@@ -1126,7 +1126,7 @@ void DockContext::doDock(Dock& dock, Dock* dest, Slot_ dock_slot)
 	//IM_ASSERT(!dock.parent);
 	if ( !dock.parent )
 	{
-		msg ("doDock assert dock.parent\n");
+		msg ("doDock assert dock.parent. %s\n" ,dock.label);
 	}
 	if (!dest)
 	{
