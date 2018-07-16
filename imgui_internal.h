@@ -561,9 +561,10 @@ struct IMGUI_API ImDrawListSharedData
 struct ImDrawDataBuilder
 {
     ImVector<ImDrawList*>   Layers[2];           // Global layers for: regular, tooltip
+	ImVector< ImVec2> TempNormals;
 
     void Clear()            { for (int n = 0; n < IM_ARRAYSIZE(Layers); n++) Layers[n].resize(0); }
-    void ClearFreeMemory()  { for (int n = 0; n < IM_ARRAYSIZE(Layers); n++) Layers[n].clear(); }
+	void ClearFreeMemory()  { for (int n = 0; n < IM_ARRAYSIZE(Layers); n++) Layers[n].clear(); TempNormals.clear(); }
     IMGUI_API void FlattenIntoSingleLayer();
 };
 
