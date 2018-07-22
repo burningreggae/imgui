@@ -41,7 +41,7 @@ struct Camera
 	float viewer[3];
 
 	unsigned int selectBuf[256]; // Space for selection buffer
-	unsigned char pickedFrameBuffer[16];
+	unsigned char pickedFrameBuffer[32];
 	int pickedId;
 };
 
