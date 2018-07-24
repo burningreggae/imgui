@@ -1249,7 +1249,7 @@ void DockContext::setDockActive(const char* name)
 	if (name)
 	{
 		const char* active = getDockActive();
-		msg ( "setDockActive %d from %s to %s\n",index,active,name);
+		msg ( "setDockActive slot:%d from %s to %s\n",index,active,name);
 
 		ImU32 id = ImHash(name, 0);
 		for (int i = 0; i < m_docks.size(); ++i)
