@@ -483,6 +483,7 @@ void ImGui_ImplGLUT_MouseCursor()
 			case ImGuiMouseCursor_ResizeNS: hw = GLUT_CURSOR_UP_DOWN; break;
 			case ImGuiMouseCursor_ResizeNESW: hw = GLUT_CURSOR_TOP_RIGHT_CORNER; break;
 			case ImGuiMouseCursor_ResizeNWSE: hw = GLUT_CURSOR_TOP_LEFT_CORNER; break;
+			case ImGuiMouseCursor_Hand: hw = GLUT_CURSOR_INFO; break;
 		}
 	}
 	SystemMouseCursor(hw);
@@ -979,13 +980,15 @@ void style2()
 
 }
 
-void StyleAdjust(bool invert,bool styleAntiAliased, float alpha,float saturate )
+void StyleAdjust(bool styleShadow, bool invert,bool styleAntiAliased, float alpha,float saturate )
 {
 	if ( alpha < 0.1f ) alpha = 0.1f;
 
 	ImGuiStyle& style = ImGui::GetStyle();
 	style.AntiAliasedLines = styleAntiAliased;
 	style.AntiAliasedFill = styleAntiAliased;
+	style.FrameShadow = styleShadow;
+
 	for (int i = 0; i <= ImGuiCol_COUNT; i++)
 	{
 		ImVec4& col = style.Colors[i];
@@ -1007,11 +1010,11 @@ void StyleAdjust(bool invert,bool styleAntiAliased, float alpha,float saturate )
 	}
 }
 
-void SetStyle(int style,bool styleInvert,bool styleAntiAliased, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply, int fontoversample)
+void SetStyle(int style,bool styleShadow,bool styleInvert,bool styleAntiAliased, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply, int fontoversample)
 {
 	float d = g_FontWishSize-fontSize;
 	float d1 = g_FontWishRasterizerMultiply-fontRasterMultiply;
-	float d2 = g_OversampleHWish-fontoversample;
+	float d2 = (float)g_OversampleHWish-fontoversample;
 	if ( d*d >= 0.999f && fontSize>=1.f || g_StyleWish != style || d1*d1 >= 0.01f || d2*d2 >= 0.01f )
 	{
 		releaseFonts();
@@ -1036,7 +1039,7 @@ void SetStyle(int style,bool styleInvert,bool styleAntiAliased, float alpha,floa
 	else if ( style == 2 ) style4();
 	else if ( style == 3 ) style3();
 
-	StyleAdjust(styleInvert,styleAntiAliased,alpha,saturate);
+	StyleAdjust(styleShadow,styleInvert,styleAntiAliased,alpha,saturate);
 }
 
 bool ImGui_ImplGLUT_Init()

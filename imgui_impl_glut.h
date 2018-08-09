@@ -14,7 +14,7 @@ IMGUI_API void ImGui_ImplGLUT_Shutdown();
 IMGUI_API void ImGui_ImplGLUT_MouseCursor();
 IMGUI_API void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data);
 IMGUI_API int SystemMouseCursor( int cursorID );
-IMGUI_API void SetStyle(int style,bool styleInvert,bool styleAntiAliased, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply,int fontoversample);
+IMGUI_API void SetStyle(int style, bool styleShadow, bool styleInvert,bool styleAntiAliased, float alpha,float saturate,int fontNr, float fontSize, float fontRasterMultiply,int fontoversample);
 
 void savePNG ( const char *filename,unsigned char* pixels,int width, int height,int samples );
 

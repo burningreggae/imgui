@@ -1106,7 +1106,8 @@ struct ImGuiStyle
     float		CheckmarkScale;		        // Scaling of Checkmark Default 1.f/5.f
     float		CloseButtonSize;			// Scaling of CloseButtonScale
     int         CircleLineSegment;			// Circle Vertex Line Segments 16
-    //float       PopupRounding;              // Radius of window corners rounding. Set to 0.0f to have rectangular windows
+	bool        FrameShadow;				// Shadow around Frame
+
     IMGUI_API ImGuiStyle();
     IMGUI_API void ScaleAllSizes(float scale_factor);
 };

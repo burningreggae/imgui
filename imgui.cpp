@@ -1005,7 +1005,7 @@ ImGuiStyle::ImGuiStyle()
     CheckmarkScale	        = 1.f/5.f;			// Scaling of Checkmark Default: 1/5
     CloseButtonSize			= 8.f;				// Scaling of Closes Button
     CircleLineSegment       = 16;				// Circle Vertex Line Segments
-    PopupRounding           = 0.f;
+    FrameShadow            = true;
     Colors[ImGuiCol_CollapseTriangle]       = ImVec4(0.90f, 0.90f, 0.90f, 1.00f);
 
 }
@@ -6765,7 +6765,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             }
 
             //shadow
-            if ( ~flags & ImGuiWindowFlags_NoShadows )
+			if ( g.Style.FrameShadow && (~flags & ImGuiWindowFlags_NoShadows) )
             {
                 float nudge = window_rounding * 0.5f;
                 ImVec2 shadowSize[2];
