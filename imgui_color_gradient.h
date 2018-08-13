@@ -82,7 +82,7 @@ public:
 	void sample1D (unsigned int*dest, int size);
 
 	void setFilename( const char* filename, const char *n2 );
-    char fileName[1024];
+    char fileName[2048];
 	bool load();
 	void save();
 	ImGradientMark* draggingMark;

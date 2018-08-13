@@ -1059,6 +1059,9 @@ bool ImGui_ImplGLUT_Init()
 #ifdef _WIN32
     io.ImeWindowHandle = FindWindow ("FREEGLUT",0);
 #endif
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;   // We can honor GetMouseCursor() values (optional)
+    io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;    // We can honor io.WantSetMousePos requests (optional, rarely used)
+	io.ConfigResizeWindowsFromEdges = true;
 
 	io.KeyMap[ImGuiKey_Tab] = 9;    // tab
 	io.KeyMap[ImGuiKey_LeftArrow] = GLUT_KEY_LEFT + GLUT_SPECIAL_OFFSET;	// Left

@@ -30,7 +30,7 @@ namespace ImGui
 	IMGUI_API void RootDock(const ImVec2& pos, const ImVec2& size);
 	IMGUI_API bool BeginDock(const char* label, bool* opened = 0, ImGuiWindowFlags extra_flags = 0, const ImVec2& default_size = ImVec2(-1, -1),bool border = false);
 	IMGUI_API void EndDock();
-	IMGUI_API void SetDockActive(int slot, const char* label);
+	IMGUI_API void SetDockActive(int slot, const char* label, int disable_all_other=0);
 	IMGUI_API const char* GetDockActive(int slot);
 	IMGUI_API void SetDockWindowPos(int slot, const char* name, const ImVec2& pos,const ImVec2& size, DockState newDockState );
 

@@ -393,7 +393,7 @@ namespace ImGui
     IMGUI_API bool          DragIntRange2(const char* label, int* v_current_min, int* v_current_max, float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%d", const char* format_max = NULL);
     IMGUI_API bool          DragScalar(const char* label, ImGuiDataType data_type, void* v, float v_speed, const void* v_min = NULL, const void* v_max = NULL, const char* format = NULL, float power = 1.0f);
     IMGUI_API bool          DragScalarN(const char* label, ImGuiDataType data_type, void* v, int components, float v_speed, const void* v_min = NULL, const void* v_max = NULL, const char* format = NULL, float power = 1.0f);
-    IMGUI_API bool          DragFloatN2(const char* label, float* v, int components, const float *v_speed, const float *v_min, const float *v_max, const char* format, float power);
+    IMGUI_API bool          DragFloatN2(const char* label, float* v, int components, const float *v_speed, const float *v_min, const float *v_max, const char* format[], float power);
 
 
     // Widgets: Input with Keyboard
@@ -1438,7 +1438,8 @@ struct ImGuiTextBuffer
     int json_element_count[4];
     void json_object(const char* classname,int open = 1);
     void json(const char* var, const char* value, int need_quote=1);
-    void json(const char* var, const float value, const int decimal_precision=-1);
+	void json(const char* var, const float value, const int decimal_precision=-1);
+    void json(const char* var, const float* value, int value_size, const int decimal_precision=-1);
     void json(const char* var, const int value);
 	void json_hex(const char* var, const unsigned value);
 };

@@ -2060,14 +2060,6 @@ void ImGuiTextBuffer::json_object(const char* classname,int open)
 //http://jsoneditoronline.org/
 void ImGuiTextBuffer::json(const char* var, const char* value,int need_quote)
 {
-/*
-    if ( value)
-    switch ( value[0] )
-    {
-        case '{': case '}': case '0': case '1': case '2': case '3':	case '4': case '5':
-        case '6': case '7': case '8': case '9': case '-': need_quote = 0;
-    }
-*/
     appendf("%s\"%s\":%s%s%s",
         json_element_count[json_object_nr]>0 ? ",\n" : "",
         var ? var : "",
@@ -2081,10 +2073,23 @@ void ImGuiTextBuffer::json(const char* var, const char* value,int need_quote)
 void ImGuiTextBuffer::json(const char* var, const float value,const int decimal_precision)
 {
     char buf[64];
-    if (decimal_precision < 0) ImFormatString(buf, 64, "%f",value);
-    else ImFormatString(buf, 64, "%.*f", decimal_precision,value);
-    json(var,buf,0);
+	if (decimal_precision < 0) ImFormatString(buf, 64, "%f",value);
+	else ImFormatString(buf, 64, "%.*f", decimal_precision,value);
+	json(var,buf,0);
 }
+
+void ImGuiTextBuffer::json(const char* var, const float* value,int value_size,const int decimal_precision)
+{
+	json(var,"[",0);
+	for ( int i = 0; i < value_size; ++i )
+	{
+		if ( i > 0) appendf(",");
+		if (decimal_precision < 0) appendf( "%f",value[i]);
+		else appendf ("%.*f", decimal_precision,value[i]);
+	}
+	appendf("]");
+}
+
 void ImGuiTextBuffer::json(const char* var, const int value)
 {
     char buf[64];
@@ -3873,6 +3878,7 @@ static bool IsWindowActiveAndVisible(ImGuiWindow* window)
     {
         window->DrawList->CmdBuffer[cmd_i].envelope = e;
     }
+	//return (window->Active || take);
     return (!window->Hidden) && (window->Active || take);
 }
 
@@ -10415,7 +10421,7 @@ bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_cu
     return value_changed;
 }
 
-bool ImGui::DragFloatN2(const char* label, float* v, int components, const float *v_speed, const float *v_min, const float* v_max, const char* format, float power)
+bool ImGui::DragFloatN2(const char* label, float* v, int components, const float *v_speed, const float *v_min, const float* v_max, const char* format[], float power)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -10429,7 +10435,7 @@ bool ImGui::DragFloatN2(const char* label, float* v, int components, const float
     for (int i = 0; i < components; i++)
     {
         PushID(i);
-        value_changed |= DragFloat("##v", &v[i], v_speed[i], v_min[i], v_max[i], format, power);
+        value_changed |= DragFloat("##v", &v[i], v_speed[i], v_min[i], v_max[i], format[i], power);
         SameLine(0, g.Style.ItemInnerSpacing.x);
         PopID();
         PopItemWidth();
@@ -13332,11 +13338,13 @@ bool ImGui::ColorEdit4(const char* label, float col[4], ImGuiColorEditFlags flag
         if (BeginPopup("picker"))
         {
             picker_active_window = g.CurrentWindow;
+/*
             if (label != label_display_end)
             {
                 TextUnformatted(label, label_display_end);
                 Separator();
             }
+*/
             ImGuiColorEditFlags picker_flags_to_forward = ImGuiColorEditFlags__DataTypeMask | ImGuiColorEditFlags__PickerMask | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaBar;
             ImGuiColorEditFlags picker_flags = (flags_untouched & picker_flags_to_forward) | ImGuiColorEditFlags__InputsMask | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaPreviewHalf;
             PushItemWidth(square_sz * 12.0f); // Use 256 + bar sizes?
@@ -13460,10 +13468,11 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
     float backup_initial_col[4];
     memcpy(backup_initial_col, col, components * sizeof(float));
 
+	//TA: smth wrong when smth was drown before circle (ColorEdit4 with visible label)
     float wheel_thickness = sv_picker_size * 0.08f;
-    float wheel_r_outer = sv_picker_size * 0.50f;
+    float wheel_r_outer = sv_picker_size * 0.5f;
     float wheel_r_inner = wheel_r_outer - wheel_thickness;
-    ImVec2 wheel_center(picker_pos.x + (sv_picker_size + bars_width)*0.5f, picker_pos.y + sv_picker_size*0.5f);
+    ImVec2 wheel_center(picker_pos.x + (sv_picker_size + bars_width)*0.5f, picker_pos.y + sv_picker_size*0.5f); 
 
     // Note: the triangle is displayed rotated with triangle_pa pointing to Hue, but most coordinates stays unrotated for logic.
     float triangle_r = wheel_r_inner - (int)(sv_picker_size * 0.027f);
