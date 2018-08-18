@@ -177,7 +177,7 @@ void ImGui_ImplGLUT_RenderDrawLists(ImDrawData* draw_data)
 				if ( pcmd->shader )
 				{
 					//pcmd->shader->layer[0].octTex = t;
-					setShader(*pcmd->shader);
+					setShader(*pcmd->shader,GL_RENDER);
 					glEnable(GL_SCISSOR_TEST);
 					glDisable(GL_CULL_FACE);
 					glDisable(GL_DEPTH_TEST);
@@ -361,7 +361,7 @@ void ImGui_ImplGLUT_RenderDrawLists2(ImDrawData* draw_data)
 				if ( pcmd->shader )
 				{
 					//pcmd->shader->layer[0].octTex = t;
-					setShader(*pcmd->shader);
+					setShader(*pcmd->shader,GL_RENDER);
 					glEnable(GL_SCISSOR_TEST);
 					glDisable(GL_CULL_FACE);
 					glDisable(GL_DEPTH_TEST);
@@ -1085,7 +1085,6 @@ bool ImGui_ImplGLUT_Init()
 	io.KeyMap[ImGuiKey_Y] = 25;  // for text edit CTRL+Y: redo
 	io.KeyMap[ImGuiKey_Z] = 26;  // for text edit CTRL+Z: undo
 	io.KeyMap[ImGuiKey_D] = 4;   // for text edit CTRL+D: deselect all
-	io.KeyMap[ImGuiKey_R] = 18;  // for text edit CTRL+R: revert
 	return true;
 }
 

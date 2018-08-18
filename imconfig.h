@@ -142,7 +142,9 @@ struct shaderparam
 	shaderparamlayer layer[2];
 };
 
-void setShader(shaderparam &shader);
+void setShader(shaderparam &shader, int rendermode);
+void setShader_disable_texture();
+
 void msg(const char* fmt, ...);
 void system_redraw( const char *function, const char* caller = 0, int value=1);
 

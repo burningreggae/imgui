@@ -844,7 +844,6 @@ enum ImGuiKey_
     ImGuiKey_Y,         // for text edit CTRL+Y: redo
     ImGuiKey_Z,         // for text edit CTRL+Z: undo
     ImGuiKey_D,			// for text edit CTRL+D: deselect all
-    ImGuiKey_R,			// for text edit CTRL+R: revert
     ImGuiKey_COUNT
 };
 
