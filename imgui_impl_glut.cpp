@@ -73,6 +73,9 @@ void setGUIShader(GLhandleARB shader)
 
 	glDisable(GL_MULTISAMPLE);
 	glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+    //glDisable(GL_LINE_SMOOTH);
+    //glDisable(GL_POLYGON_SMOOTH);
+
 
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
@@ -280,6 +283,8 @@ void ImGui_ImplGLUT_RenderDrawLists2(ImDrawData* draw_data)
 
 	glDisable(GL_MULTISAMPLE);
 	glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+    //glDisable(GL_LINE_SMOOTH);
+    //glDisable(GL_POLYGON_SMOOTH);
 
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);

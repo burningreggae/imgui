@@ -25,24 +25,24 @@ struct Camera
 	void glPushMatrix();
 	void glPopMatrix();
 
-	void glFrustum(float left, float right, float bottom, float top, float nearval, float farval);
+	void glFrustum(double left, double right, double bottom, double top, double nearval, double farval);
 	void glOrtho (float left, float right, float bottom, float top, float zNear, float zFar);
 	void gluPerspective(float fovy, float aspect, float zNear, float zFar);
 
 	void gluPickMatrix(float x, float y,float width, float height, const int viewport[4]);
 	void glViewport(const int viewport[4]);
 
-	bool invert_matrix(float * out,const float * m);
 	void transform_point(float out[4], const float m[16], const float in[4]);
+
 	int viewport[4];
-	float projection[16];
-	float modelview[16];
-	float modelview_inverse[16];
+	double projection[16];
+	double modelview[16];
+	double modelview_inverse[16];
 	float viewer[3];
 
 	unsigned int selectBuf[256]; // Space for selection buffer
 	unsigned char pickedFrameBuffer[32];
-	int pickedId;
+	//int pickedId;
 };
 
 #define GLUT_SPECIAL_OFFSET 256	//Map Glut special key
