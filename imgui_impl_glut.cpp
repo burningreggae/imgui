@@ -1096,7 +1096,7 @@ bool ImGui_ImplGLUT_Init()
 void ImGui_ImplGLUT_Shutdown()
 {
 	ImGui_ImplGLUT_InvalidateDeviceObjects();
-	ImGui::DestroyContext();
+	if ( ImGui::GetCurrentContext() ) ImGui::DestroyContext();
 }
 
 
