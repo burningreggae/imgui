@@ -15215,42 +15215,6 @@ void ImGui::ShowMetricsWindow(bool* p_open)
     ImGui::End();
 }
 
-bool ImGui::Image4(ImTextureID user_texture_id, const ImVec2& size, const ImVec4 uv[4], unsigned tint_col, shaderparam *shader, const char *str_id)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window->SkipItems) return false;
-
-    const ImGuiID id = window->GetID(str_id);
-
-    ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size);
-    //if (border_col.w > 0.0f) bb.Max += ImVec2(2,2);
-    ItemSize(bb);
-    if (!ItemAdd(bb, id)) return false;
-
-    bool hovered, held;
-    bool pressed = ButtonBehavior(bb, id, &hovered, &held);
-
-/*
-    if (border_col.w > 0.0f)
-    {
-        window->DrawList->AddRect(bb.Min, bb.Max, GetColorU32(border_col), 0.0f);
-        window->DrawList->AddImage(user_texture_id, bb.Min+ImVec2(1,1), bb.Max-ImVec2(1,1), uv0, uv1, GetColorU32(tint_col));
-    }
-    else
-    {
-        window->DrawList->AddImage(user_texture_id, bb.Min, bb.Max, uv0, uv1, GetColorU32(tint_col));
-    }
-*/
-    if (tint_col & IM_COL32_A_MASK)
-	{
-		window->DrawList->PushTextureID(user_texture_id);
-		window->DrawList->PrimReserve(6, 4);
-		PrimRectUV4(*window->DrawList,bb.Min, bb.Max, uv,tint_col);
-		PokeDrawCmd(*window->DrawList,shader);
-		window->DrawList->PopTextureID();
-	}
-    return pressed;
-}
 
 //-----------------------------------------------------------------------------
 
