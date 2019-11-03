@@ -13,28 +13,20 @@
 
 #pragma once
 
-#ifdef _DEBUG
-#include <assert.h>
 //---- Define assertion handler. Defaults to calling assert().
 //#define IM_ASSERT(_EXPR)  MyAssert(_EXPR)
-#define IM_ASSERT(_EXPR) assert(_EXPR)
-#else
-#define IM_ASSERT(_EXPR)  ((void)(_EXPR))     // Disable asserts
-#endif
+//#define IM_ASSERT(_EXPR)  ((void)(_EXPR))     // Disable asserts
 
 //---- Define attributes of all API symbols declarations, e.g. for DLL under Windows.
 //#define IMGUI_API __declspec( dllexport )
 //#define IMGUI_API __declspec( dllimport )
 
 //---- Don't define obsolete functions/enums names. Consider enabling from time to time after updating to avoid using soon-to-be obsolete function/names.
-#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+//#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 //---- Don't implement demo windows functionality (ShowDemoWindow()/ShowStyleEditor()/ShowUserGuide() methods will be empty)
 //---- It is very strongly recommended to NOT disable the demo windows during development. Please read the comments in imgui_demo.cpp.
-#ifdef _DEBUG
-#else
-#define IMGUI_DISABLE_DEMO_WINDOWS
-#endif
+//#define IMGUI_DISABLE_DEMO_WINDOWS
 
 //---- Don't implement some functions to reduce linkage requirements.
 //#define IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS   // [Win32] Don't implement default clipboard handler. Won't use and link with OpenClipboard/GetClipboardData/CloseClipboard etc.
@@ -69,7 +61,7 @@
 */
 
 //---- Use 32-bit vertex indices (default is 16-bit) to allow meshes with more than 64K vertices. Render function needs to support it.
-#define ImDrawIdx unsigned int
+//#define ImDrawIdx unsigned int
 
 //---- Tip: You can add extra functions within the ImGui:: namespace, here or in your own headers files.
 /*
@@ -78,86 +70,3 @@ namespace ImGui
     void MyFunction(const char* name, const MyMatrix44& v);
 }
 */
-
-#define IMGUI_OVERRIDE_DRAWVERT_STRUCT_LAYOUT struct ImDrawVert\
-{\
-    ImVec2  pos;\
-    ImVec4  uv;\
-    ImU32   col;\
-};
-
-#define IM_VEC4_CLASS_EXTRA                                           \
-	ImVec4(const ImVec2& f):x(f.x),y(f.y),z(f.x),w(f.y) {}
-
-//shader
-#define shader_raw_density 1
-#define maximumIntensityProjection 4
-#define blendAlpha 8
-#define blendAlphaPremul 16
-#define alpha_from_color 32
-#define tex_filter		64
-#define tex_clamp		128
-#define tex_gen			256
-#define tex_mipmapgen	512
-#define tex_filter2		1024
-#define shader_autobrightnesscontrast 2048
-
-struct shaderparamlayer
-{
-	shaderparamlayer():transferTexPrivate(0) {}
-
-	//uniform location
-	int _oct;
-	int _transferFunc;
-	int _alpha_test;
-	int _alpha_scale;
-	int _alpha_from_color;
-	int _shader_raw_density;
-	int _level_brightness;
-	int _level_contrast;
-	int _tex_gen;
-	int _alpha_premul;
-	int _colorMode;
-	int _envelope;
-
-	unsigned int octTex;
-	unsigned int octTexType; 
-	float alpha_test;
-	float alpha_scale;
-	unsigned flags;
-	unsigned int transferTex;			//volume colormap
-	unsigned int transferTexPrivate;	//private colormap
-	unsigned int transferTexLink;		//linked colormap
-	float level_brightness;
-	float level_contrast;
-	int colorMode;
-	float envelope;
-};
-
-struct shaderparam
-{
-	shaderparam():id(0) {}
-
-	unsigned int id;	//shader nr
-	shaderparamlayer layer[2];
-};
-
-void setShader(shaderparam &shader, int rendermode);
-void setShader_disable_texture();
-
-void msg(const char* fmt, ...);
-void system_redraw( const char *function, const char* caller = 0, int value=1);
-
-#define GUI_ENVELOPE_WINDOW
-enum eEnvelopeGroup
-{
-	envelope_hover = 0,	 // widget hover
-	envelope_window,	// window active
-	envelope_scroll,
-};
-
-void envelope_gate(unsigned int id, bool isActive, int group );
-float envelope_get(unsigned int id, int group=envelope_hover);
-void envelope_step(float dt);
-void envelope_load(int type);
-void envelope_reset();

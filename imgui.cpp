@@ -1581,21 +1581,6 @@ ImU32 ImGui::GetColorU32(ImGuiCol idx, float alpha_mul)
     return ColorConvertFloat4ToU32(c); 
 }
 
-ImU32 ImGui::GetColorU32(ImGuiCol idx0,ImGuiCol idx1,float a)  
-{ 
-    if ( idx0 == idx1 )
-        return GetColorU32(idx0,a);
-    const ImGuiStyle& style = GImGui->Style;
-    const ImVec4& c0 = style.Colors[idx0];
-    const ImVec4& c1 = style.Colors[idx1];
-    ImVec4 c;
-    c.x = (c0.x * (1.f - a) + c1.x * a) * style.Brightness;
-    c.y = (c0.y * (1.f - a) + c1.y * a) * style.Brightness;
-    c.z = (c0.z * (1.f - a) + c1.z * a) * style.Brightness;
-    c.w = (c0.w * (1.f - a) + c1.w * a) * style.Alpha;
-
-    return ColorConvertFloat4ToU32(c); 
-}
 
 
 ImU32 ImGui::GetColorU32(const ImVec4& col)
@@ -8708,7 +8693,7 @@ bool ImGui::ArrowButton(const char* str_id, ImGuiDir dir)
 
 // Tip: use ImGui::PushID()/PopID() to push indices or pointers in the ID stack.
 // Then you can keep 'str_id' empty or the same for all your buttons (instead of creating a string based on a non-string id)
-bool ImGui::InvisibleButton(const char* str_id, const ImVec2& size_arg, bool *hovered, bool *held)
+bool ImGui::InvisibleButton(const char* str_id, const ImVec2& size_arg)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -8724,7 +8709,7 @@ bool ImGui::InvisibleButton(const char* str_id, const ImVec2& size_arg, bool *ho
     if (!ItemAdd(bb, id))
         return false;
 
-    bool pressed = ButtonBehavior(bb, id, hovered, held);
+    bool pressed = ButtonBehavior(bb, id, 0, 0);
 
     return pressed;
 }
@@ -10421,32 +10406,6 @@ bool ImGui::DragFloatRange2(const char* label, float* v_current_min, float* v_cu
     return value_changed;
 }
 
-bool ImGui::DragFloatN2(const char* label, float* v, int components, const float *v_speed, const float *v_min, const float* v_max, const char* format[], float power)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window->SkipItems)
-        return false;
-
-    ImGuiContext& g = *GImGui;
-    bool value_changed = false;
-    BeginGroup();
-    PushID(label);
-    PushMultiItemsWidths(components);
-    for (int i = 0; i < components; i++)
-    {
-        PushID(i);
-        value_changed |= DragFloat("##v", &v[i], v_speed[i], v_min[i], v_max[i], format[i], power);
-        SameLine(0, g.Style.ItemInnerSpacing.x);
-        PopID();
-        PopItemWidth();
-    }
-    PopID();
-
-    TextUnformatted(label, FindRenderedTextEnd(label));
-    EndGroup();
-
-    return value_changed;
-}
 
 
 // NB: v_speed is float to allow adjusting the drag speed with more precision
@@ -10678,40 +10637,6 @@ void ImGui::ProgressBar(float fraction, const ImVec2& size_arg, const char* over
         RenderTextClipped(ImVec2(ImClamp(fill_br.x + style.ItemSpacing.x, bb.Min.x, bb.Max.x - overlay_size.x - style.ItemInnerSpacing.x), bb.Min.y), bb.Max, overlay, NULL, &overlay_size, ImVec2(0.0f,0.5f), &bb);
 }
 
-bool ImGui::ToggleButton(const char* label, bool* v)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window->SkipItems)
-        return false;
-
-    ImVec2 p = GetCursorScreenPos();
-    ImDrawList* draw_list = GetWindowDrawList();
-
-    const ImGuiID id = window->GetID(label);
-
-    float height = GetFrameHeight();
-    float width = height * 1.55f;
-    float radius = height * 0.50f;
-	bool hovered,held;
-    bool pressed = InvisibleButton(label, ImVec2(width, height),&hovered,&held);
-    if (pressed)
-    {
-        *v = !(*v);
-        MarkItemValueChanged(id);
-    }
-
-    ImU32 col_bg;
-    if (hovered)
-        col_bg = *v ? IM_COL32(145+20, 211, 68+20, 255) : IM_COL32(218-20, 218-20, 218-20, 255);
-    else
-        col_bg = *v ? IM_COL32(145, 211, 68, 255) : IM_COL32(218, 218, 218, 255);
-
-    draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), col_bg, height * 0.5f);
-    draw_list->AddCircleFilled(ImVec2(*v ? (p.x + width - radius) : (p.x + radius), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255),24);
-	SameLine();
-	Text(label);
-	return pressed;
-}
 
 bool ImGui::Checkbox(const char* label, bool* v)
 {
@@ -12064,46 +11989,6 @@ static bool Items_SingleStringGetter(void* data, int idx, const char** out_text)
     return true;
 }
 
-// Old API, prefer using BeginCombo() nowadays if you can.
-bool ImGui::Combo(const char* label, int* current_item, ImGuiItemGetter items_getter, void* data, int items_count, int popup_max_height_in_items)
-{
-    ImGuiContext& g = *GImGui;
-
-    // Call the getter to obtain the preview string which is a parameter to BeginCombo()
-    const char* preview_value = NULL;
-    if (*current_item >= 0 && *current_item < items_count)
-        items_getter(data, *current_item, &preview_value,ImGuiItemGetterCommand_get_text);
-
-    // The old Combo() API exposed "popup_max_height_in_items". The new more general BeginCombo() API doesn't have/need it, but we emulate it here.
-    if (popup_max_height_in_items != -1 && !g.NextWindowData.SizeConstraintCond)
-        SetNextWindowSizeConstraints(ImVec2(0,0), ImVec2(FLT_MAX, CalcMaxPopupHeightFromItemCount(popup_max_height_in_items)));
-
-    if (!BeginCombo(label, preview_value, ImGuiComboFlags_None))
-        return false;
-
-    // Display items
-    // FIXME-OPT: Use clipper (but we need to disable it on the appearing frame to make sure our call to SetItemDefaultFocus() is processed)
-    bool value_changed = false;
-    for (int i = 0; i < items_count; i++)
-    {
-        PushID((void*)(intptr_t)i);
-        const bool item_selected = (i == *current_item);
-        const char* item_text;
-        if (!items_getter(data, i, &item_text,ImGuiItemGetterCommand_get_text))
-            item_text = "*Unknown item*";
-        if (Selectable(item_text, item_selected))
-        {
-            value_changed = true;
-            *current_item = i;
-        }
-        if (item_selected)
-            SetItemDefaultFocus();
-        PopID();
-    }
-
-    EndCombo();
-    return value_changed;
-}
 
 
 // Getter for the old Combo() API: const char*[]
@@ -12161,283 +12046,6 @@ bool ImGui::Combo(const char* label, int* current_item, const char* items_separa
     return value_changed;
 }
 
-// Combo box function.
-bool ImGui::Combo2(const char* label, int* current_item, ImGuiItemGetter items_getter, void* data, int items_count, int height_in_items, int columns)
-{
-    ImGuiWindow* window = GetCurrentWindow();
-    if (window->SkipItems)
-        return false;
-
-    //items_getter(data,0,(const char**) &items_count,ImGuiItemGetterCommand_get_item_count);
-    items_count *= columns;
-
-    ImGuiContext& g = *GImGui;
-    const ImGuiStyle& style = g.Style;
-    const ImGuiID id = window->GetID(label);
-    const float w = CalcItemWidth();
-
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
-    const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y*2.0f));
-    const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
-    ItemSize(total_bb, style.FramePadding.y);
-    if (!ItemAdd(total_bb, id))
-        return false;
-
-    const float arrow_size = (g.FontSize + style.FramePadding.x * 2.0f);
-    //const bool hovered = IsHovered(frame_bb, id);
-    bool hovered, held;
-    bool pressed = ButtonBehavior(frame_bb, id, &hovered, &held);
-
-    bool popup_open = IsPopupOpen(id);
-	envelope_gate(id,popup_open || hovered,envelope_hover);
-	const ImU32 col = GetColorU32(ImGuiCol_Button,ImGuiCol_ButtonHovered,envelope_get(id));
-
-    const ImRect value_bb(frame_bb.Min, frame_bb.Max - ImVec2(arrow_size, 0.0f));
-    RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
-    RenderFrame(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y), frame_bb.Max, col, true, style.FrameRounding); // FIXME-ROUNDING
-    RenderArrow(ImVec2(frame_bb.Max.x-arrow_size, frame_bb.Min.y) + ImVec2( style.FramePadding.x,frame_bb.GetHeight()*0.5f), ImGuiDir_Down);
-
-    if (*current_item >= 0 && *current_item < items_count)
-    {
-        const char* item_text;
-        if (items_getter(data, *current_item , &item_text,ImGuiItemGetterCommand_get_text))
-            RenderTextClipped(frame_bb.Min + style.FramePadding, value_bb.Max, item_text, NULL, NULL, ImVec2(0.0f,0.0f));
-    }
-
-    if (label_size.x > 0)
-        RenderText(ImVec2(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
-
-    bool popup_toggled = false;
-    if (hovered)
-    {
-        SetHoveredID(id);
-        if (g.IO.MouseClicked[0])
-        {
-            ClearActiveID();
-            popup_toggled = true;
-        }
-    }
-    if (popup_toggled)
-    {
-        if (IsPopupOpen(id))
-        {
-            ClosePopup(id);
-        }
-        else
-        {
-            FocusWindow(window);
-            OpenPopup(label);
-            popup_open = true;
-        }
-    }
-
-    bool value_changed = false;
-    if (IsPopupOpen(id))
-    {
-        // Size default to hold ~7 items
-        if (height_in_items < 0)
-            height_in_items = 7;
-        int line_count = columns<= 1 ? items_count: items_count/columns;
-        float popup_x1 = ImClamp(frame_bb.Min.x,style.DisplaySafeAreaPadding.x,g.IO.DisplaySize.x - style.DisplaySafeAreaPadding.x);
-        float popup_x2 = ImClamp(frame_bb.Max.x,style.DisplaySafeAreaPadding.x,g.IO.DisplaySize.x - style.DisplaySafeAreaPadding.x);
-        float popup_height = (label_size.y + style.ItemSpacing.y) * ImMin(line_count, height_in_items) + (style.FramePadding.y * 3);
-        float popup_y1 = frame_bb.Max.y;
-        float popup_y2 = ImClamp(popup_y1 + popup_height, popup_y1, g.IO.DisplaySize.y - style.DisplaySafeAreaPadding.y);
-        if ((popup_y2 - popup_y1) < ImMin(popup_height, frame_bb.Min.y - style.DisplaySafeAreaPadding.y))
-        {
-            // Position our combo ABOVE because there's more space to fit! (FIXME: Handle in Begin() or use a shared helper. We have similar code in Begin() for popup placement)
-            popup_y1 = ImClamp(frame_bb.Min.y - popup_height, style.DisplaySafeAreaPadding.y, frame_bb.Min.y);
-            popup_y2 = frame_bb.Min.y;
-        }
-        if ( columns <= 1 )
-        {
-            ImRect popup_rect(ImVec2(frame_bb.Min.x, popup_y1), ImVec2(frame_bb.Max.x, popup_y2));
-            SetNextWindowPos(popup_rect.Min);
-            SetNextWindowSize(popup_rect.GetSize());
-            PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
-
-            const ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysAutoResize;
-
-            if (BeginPopupEx(id, flags))
-            {
-                // Display items
-                Spacing();
-                for (int i = 0; i < items_count; i++)
-                {
-                    PushID((void*)(intptr_t)i);
-                    const bool item_selected = (i == *current_item);
-                    const char* item_text;
-                    if (!items_getter(data, i, &item_text,ImGuiItemGetterCommand_get_text))
-                        item_text = "*Unknown item*";
-                    if (Selectable(item_text, item_selected))
-                    {
-                        ClearActiveID();
-                        value_changed = true;
-                        *current_item = i;
-                    }
-                    if (item_selected && popup_toggled)
-                        SetScrollHere();
-                    PopID();
-                }
-                EndPopup();
-            }
-            PopStyleVar();
-        }
-        else
-        {
-            float popup_width = (popup_x2 - popup_x1);
-
-            //auto size and visible columns
-            const char* item_text;
-            int column_index;
-
-            float content_width = 0.f;
-            int columns_visible = 0;
-            for (column_index = 0; column_index < columns; ++column_index)
-            {
-                int column_visible = 1;
-                items_getter(data,column_index,(const char**) &column_visible,ImGuiItemGetterCommand_get_column_visible);
-                if (!column_visible) continue;
-
-                columns_visible += 1;
-                if (items_getter(data,column_index,&item_text,ImGuiItemGetterCommand_get_column_auto_size))
-                {
-                    const ImVec2 textsize = CalcTextSize(item_text, 0, false);
-                    if (textsize.x) content_width += textsize.x + 2.f * g.Style.ItemSpacing.x;
-                }
-            }
-
-            //ask for virtual content width before open window
-            bool doSetContentWidth = false;
-            if(items_getter(data,0,(const char**) &content_width,ImGuiItemGetterCommand_get_content_width))
-            {
-                //SetNextWindowContentWidth(content_width);
-                doSetContentWidth = true;
-                if ( content_width > popup_width )
-                {
-                    popup_width = ImMin(content_width,g.IO.DisplaySize.x-style.DisplaySafeAreaPadding.x - popup_x1);
-                    popup_x2 = popup_x1 + popup_width;
-                }
-            }
-            else
-            {
-                content_width = popup_width;
-            }
-            if ( content_width < popup_width ) content_width = popup_width;
-
-            ImRect popup_rect(ImVec2(popup_x1, popup_y1), ImVec2(popup_x2, popup_y2));
-            SetNextWindowPos(popup_rect.Min);
-            SetNextWindowSize(popup_rect.GetSize(),line_count< 1 ? ImGuiCond_Always:ImGuiCond_FirstUseEver);
-            SetNextWindowSizeConstraints(
-                ImVec2(frame_bb.GetSize().x, 0),
-                ImVec2(g.IO.DisplaySize.x - style.DisplaySafeAreaPadding.x - popup_x1,
-                       g.IO.DisplaySize.y - style.DisplaySafeAreaPadding.y - popup_y1)
-                );
-
-            if ( doSetContentWidth ) SetNextWindowContentSize(ImVec2(content_width, 0.0f));
-            ImGuiWindowFlags flags = ImGuiWindowFlags_ComboBox | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
-            if ( content_width > popup_width ) flags |= ImGuiWindowFlags_HorizontalScrollbar;
-
-            PushStyleVar(ImGuiStyleVar_WindowPadding, style.FramePadding);
-
-            if (BeginPopupEx(id, flags))
-            {
-                // Display items
-
-                float scroll = GetScrollY();
-                if (popup_toggled)
-                {
-                    scroll = GetTextLineHeightWithSpacing() * (*current_item/columns);
-                    scroll -= popup_rect.GetHeight() * 0.5f;
-                    if ( scroll < 0.f ) scroll = 0.f;
-                    SetScrollY(scroll);
-                }
-                //if (popup_opened_now ) scroll = GetTextLineHeightWithSpacing()* *current_item;
-
-                Columns(columns_visible,"###table",true,items_getter,data);
-
-                //header
-                int id = 0;
-                bool multiSelect = true;
-                int selFlags = ImGuiSelectableFlags_DontClosePopups | (multiSelect ? 0: ImGuiSelectableFlags_SpanAllColumns);
-                for ( column_index = 0; column_index < columns; ++column_index,++id )
-                {
-                    int column_visible = 1;
-                    items_getter(data,column_index,(const char**) &column_visible,ImGuiItemGetterCommand_get_column_visible);
-                    if (!column_visible) continue;
-
-                    if (items_getter(data, id, &item_text,ImGuiItemGetterCommand_get_text))
-                    {
-                        PushID(id);
-                        const bool item_selected = (id==*current_item);
-                        if (Selectable(item_text, item_selected,selFlags))
-                        {
-                            ClearActiveID();
-                            //value_changed = true;
-                            //*current_item = id;
-                        }
-                        PopID();
-                    }
-                    //Spacing();
-                    NextColumn();
-                }
-                Separator();
-                ImGuiListClipper clipper;
-                clipper.Begin(line_count-1, GetTextLineHeightWithSpacing());
-
-                multiSelect = false;
-                //PushTextWrapPos(0.f);
-                selFlags = multiSelect ? 0: ImGuiSelectableFlags_SpanAllColumns;
-                while (clipper.Step())
-                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                {
-                    for ( column_index = 0; column_index < columns; ++column_index )
-                    {
-                        int column_visible = 1;
-                        items_getter(data,column_index,(const char**) &column_visible,ImGuiItemGetterCommand_get_column_visible);
-                        if (!column_visible) continue;
-
-                        int id = (i+1)*columns + column_index;
-                        if (items_getter(data, id, &item_text,ImGuiItemGetterCommand_get_text))
-                        {
-                            if (!multiSelect) SetItemAllowOverlap();
-                            if ( column_index == 0 || multiSelect )
-                            {
-                                PushID(id);
-                                const bool item_selected = (id==*current_item);
-                                if (Selectable(item_text, item_selected,selFlags))
-                                {
-                                    ClearActiveID();
-                                    value_changed = true;
-                                    *current_item = id;
-                                }
-                                PopID();
-                            }
-                            else
-                            {
-                                TextUnformatted(item_text,0);
-                                //TextWrapped("%s",item_text);
-                            }
-                        }
-                        NextColumn();
-                    }
-                }
-                //PopTextWrapPos();
-                //retreive dragged mouse column size
-                for (column_index = 0; column_index < columns; ++column_index )
-                {
-                    //float offset = GetColumnOffset(column_index);
-                    //items_getter(data, c, &item_text,&offset,0);
-                }
-                Columns(1,"###table",true,items_getter,data);
-
-                EndPopup();
-            }
-            PopStyleVar();
-        }
-    }
-    return value_changed;
-}
 
 // Tip: pass an empty label (e.g. "##dummy") then you can use the space to draw other text or image.
 // But you need to make sure the ID is unique, e.g. enclose calls in PushID/PopID or use ##unique_id.

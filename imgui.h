@@ -128,18 +128,6 @@ typedef signed   long long  ImS64;  // 64-bit signed integer (post C++11)
 typedef unsigned long long  ImU64;  // 64-bit unsigned integer (post C++11)
 #endif
 
-enum ImGuiItemGetterCommand
-{
-    ImGuiItemGetterCommand_get_text = 0,
-    ImGuiItemGetterCommand_get_item_count,
-    ImGuiItemGetterCommand_get_combo_edit,
-    ImGuiItemGetterCommand_get_content_width,
-    ImGuiItemGetterCommand_get_column_auto_size,
-    ImGuiItemGetterCommand_get_column_visible,
-    ImGuiItemGetterCommand_get_visible_column_width_norm,
-    ImGuiItemGetterCommand_set_current_item,
-};
-typedef bool (*ImGuiItemGetter) (void* data, int idx, const char** out_text,ImGuiItemGetterCommand cmd);
 struct ImVec4;
 
 // 2D vector (often used to store positions, sizes, etc.)
@@ -273,8 +261,6 @@ namespace ImGui
     IMGUI_API ImU32         GetColorU32(const ImVec4& col);                                 // retrieve given color with style alpha applied
     IMGUI_API ImU32         GetColorU32(ImU32 col);                                         // retrieve given color with style alpha applied
 
-    IMGUI_API ImU32         GetColorU32(ImGuiCol idx0,ImGuiCol idx1,float alpha_mul);       // retrieve given style color with style alpha applied and optional extra alpha multiplier
-
     // Parameters stacks (current window)
     IMGUI_API void          PushItemWidth(float item_width);                                // width of items for the common item+label case, pixels. 0.0f = default to ~2/3 of windows width, >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -1.0f always align width to the right side)
     IMGUI_API void          PopItemWidth();
@@ -350,12 +336,11 @@ namespace ImGui
     // Most widgets return true when the value has been changed or when pressed/selected
     IMGUI_API bool          Button(const char* label, const ImVec2& size = ImVec2(0,0));    // button
     IMGUI_API bool          SmallButton(const char* label);                                 // button with FramePadding=(0,0) to easily embed within text
-    IMGUI_API bool          InvisibleButton(const char* str_id, const ImVec2& size, bool *hovered = 0, bool *held = 0);        // button behavior without the visuals, useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.)
+    IMGUI_API bool          InvisibleButton(const char* str_id, const ImVec2& size);        // button behavior without the visuals, useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.)
     IMGUI_API bool          ArrowButton(const char* str_id, ImGuiDir dir);                  // square button with an arrow shape
     IMGUI_API void          Image(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0 = ImVec2(0,0), const ImVec2& uv1 = ImVec2(1,1), const ImVec4& tint_col = ImVec4(1,1,1,1), const ImVec4& border_col = ImVec4(0,0,0,0));
     IMGUI_API bool          Image4(ImTextureID user_texture_id, const ImVec2& size, const ImVec4 uv[4], unsigned tint_col, shaderparam* shader, const char *str_id);
     IMGUI_API bool          ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0 = ImVec2(0,0),  const ImVec2& uv1 = ImVec2(1,1), int frame_padding = -1, const ImVec4& bg_col = ImVec4(0,0,0,0), const ImVec4& tint_col = ImVec4(1,1,1,1));    // <0 frame_padding uses default frame padding settings. 0 for no padding
-	IMGUI_API bool          ToggleButton(const char* label, bool* v);
     IMGUI_API bool          Checkbox(const char* label, bool* v);
     IMGUI_API bool          CheckboxFlags(const char* label, unsigned int* flags, unsigned int flags_value);
     IMGUI_API bool          RadioButton(const char* label, bool active);                    // use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; }
@@ -374,8 +359,6 @@ namespace ImGui
     IMGUI_API void          EndCombo(); // only call EndCombo() if BeginCombo() returns true!
     IMGUI_API bool          Combo(const char* label, int* current_item, const char* const items[], int items_count, int popup_max_height_in_items = -1);
     IMGUI_API bool          Combo(const char* label, int* current_item, const char* items_separated_by_zeros, int popup_max_height_in_items = -1);      // Separate items with \0 within a string, end item-list with \0\0. e.g. "One\0Two\0Three\0"
-    IMGUI_API bool          Combo(const char* label, int* current_item, ImGuiItemGetter items_getter, void* data, int items_count, int popup_max_height_in_items = -1);
-    IMGUI_API bool          Combo2(const char* label, int* current_item, ImGuiItemGetter items_getter, void* data, int items_count, int height_in_items = -1,int columns = 1);
 
     // Widgets: Drags (tip: ctrl+click on a drag box to input with keyboard. manually input values aren't clamped, can go off-bounds)
     // For all the Float2/Float3/Float4/Int2/Int3/Int4 versions of every functions, note that a 'float v[X]' function argument is the same as 'float* v', the array syntax is just a way to document the number of elements that are expected to be accessible. You can pass address of your first element out of a contiguous set, e.g. &myvector.x
@@ -393,7 +376,6 @@ namespace ImGui
     IMGUI_API bool          DragIntRange2(const char* label, int* v_current_min, int* v_current_max, float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%d", const char* format_max = NULL);
     IMGUI_API bool          DragScalar(const char* label, ImGuiDataType data_type, void* v, float v_speed, const void* v_min = NULL, const void* v_max = NULL, const char* format = NULL, float power = 1.0f);
     IMGUI_API bool          DragScalarN(const char* label, ImGuiDataType data_type, void* v, int components, float v_speed, const void* v_min = NULL, const void* v_max = NULL, const char* format = NULL, float power = 1.0f);
-    IMGUI_API bool          DragFloatN2(const char* label, float* v, int components, const float *v_speed, const float *v_min, const float *v_max, const char* format[], float power);
 
 
     // Widgets: Input with Keyboard
@@ -656,7 +638,6 @@ enum ImGuiWindowFlags_
     ImGuiWindowFlags_NoNav                  = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoNavFocus,
 
     ImGuiWindowFlags_NoZoom                 = 1 << 18,  // Allow fontuserscaling
-    ImGuiWindowFlags_NoShadows				= 1 << 19,  // Disable Shadows
     ImGuiWindowFlags_ComboBox               = 1 << 20,
     // [Internal]
     ImGuiWindowFlags_NavFlattened           = 1 << 23,  // [BETA] Allow gamepad/keyboard navigation to cross over parent border to this child (only use on child that have no scrolling!)
@@ -1590,7 +1571,6 @@ struct ImColor
     // FIXME-OBSOLETE: May need to obsolete/cleanup those helpers.
     inline void    SetHSV(float h, float s, float v, float a = 1.0f){ ImGui::ColorConvertHSVtoRGB(h, s, v, Value.x, Value.y, Value.z); Value.w = a; }
     static ImColor HSV(float h, float s, float v, float a = 1.0f)   { float r,g,b; ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b); return ImColor(r,g,b,a); }
-    static ImColor HSB(float hue, float sat, float bri, float a = 1.0f)   { float r, g, b; ImGui::ColorConvertHSVtoRGB(hue * (1.f / 360.f), sat, bri, r, g, b); return ImColor(r, g, b, a); }
 };
 
 // Helper: Manually clip large list of items.
