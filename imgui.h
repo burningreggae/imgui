@@ -903,6 +903,7 @@ enum ImGuiKey_
     ImGuiKey_X,         // for text edit CTRL+X: cut
     ImGuiKey_Y,         // for text edit CTRL+Y: redo
     ImGuiKey_Z,         // for text edit CTRL+Z: undo
+	expand_ImGuiKey_COUNT
     ImGuiKey_COUNT
 };
 
@@ -1032,6 +1033,7 @@ enum ImGuiCol_
     ImGuiCol_NavWindowingHighlight, // Highlight window when using CTRL+TAB
     ImGuiCol_NavWindowingDimBg,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
     ImGuiCol_ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
+	expand_ImGuiCol_COUNT
     ImGuiCol_COUNT
 
     // Obsolete names (will be removed)
