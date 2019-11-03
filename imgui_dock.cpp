@@ -130,7 +130,7 @@ struct Dock
 		if (isHorizontal())
 		{
 			s.y = _size.y;
-			divisor = (children[0]->size.x + children[1]->size.x);
+			divisor = (int) floorf(children[0]->size.x + children[1]->size.x);
 			s.x = (float) (divisor ? int( _size.x * children[0]->size.x / divisor ) : 0);
 
 			if (s.x < children[0]->getMinSize().x)
@@ -151,7 +151,7 @@ struct Dock
 		else
 		{
 			s.x = _size.x;
-			divisor = (children[0]->size.y + children[1]->size.y);
+			divisor = (int) floorf(children[0]->size.y + children[1]->size.y);
 			s.y = (float) (divisor ? int( _size.y * children[0]->size.y / divisor ) : 0);
 			if (s.y < children[0]->getMinSize().y)
 			{

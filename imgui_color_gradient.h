@@ -85,7 +85,7 @@ public:
     char fileName[2048];
 	bool load();
 	void save();
-	ImGradientMark* draggingMark;
+	ImGradientMark* draggingMark; //<-- please no pointer!!!!
 	ImGradientMark* selectedMark;
 	bool gui_expanded;
 	bool gui_child;
