@@ -3857,12 +3857,13 @@ static bool IsWindowActiveAndVisible(ImGuiWindow* window)
         if ( e < 0.5f ) e = 0.5f; // don't let collapsed window disappear
     }
     take = e > 0.f;
-#endif
+
 	//fill current envelope
     for (int cmd_i = 0; cmd_i < window->DrawList->CmdBuffer.Size; cmd_i++)
     {
         window->DrawList->CmdBuffer[cmd_i].envelope = e;
     }
+#endif
 	//return (window->Active || take);
     return (!window->Hidden) && (window->Active || take);
 }
@@ -15244,8 +15245,8 @@ bool ImGui::Image4(ImTextureID user_texture_id, const ImVec2& size, const ImVec4
 	{
 		window->DrawList->PushTextureID(user_texture_id);
 		window->DrawList->PrimReserve(6, 4);
-		window->DrawList->PrimRectUV4(bb.Min, bb.Max, uv,tint_col);
-		window->DrawList->PokeDrawCmd(shader);
+		PrimRectUV4(*window->DrawList,bb.Min, bb.Max, uv,tint_col);
+		PokeDrawCmd(*window->DrawList,shader);
 		window->DrawList->PopTextureID();
 	}
     return pressed;
