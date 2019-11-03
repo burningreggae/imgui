@@ -1733,7 +1733,6 @@ struct ImDrawList
     IMGUI_API void  AddConvexPolyFilled(const ImVec2* points, const int num_points, ImU32 col); // Note: Anti-aliased filling requires points to be in clockwise order.
     IMGUI_API void  AddBezierCurve(const ImVec2& pos0, const ImVec2& cp0, const ImVec2& cp1, const ImVec2& pos1, ImU32 col, float thickness, int num_segments = 0);
 
-    IMGUI_API void  AddPolylineColor(const ImVec2* points, const int num_points, const ImU32* col, bool closed, float thickness, const float* _primitiveRestartIndex = 0);
 
     // Stateful path API, add points then finish with PathFillConvex() or PathStroke()
     inline    void  PathClear()                                                 { _Path.resize(0); }
