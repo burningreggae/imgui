@@ -657,7 +657,7 @@ void ImDrawList::PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, c
 }
 
 // TODO: Thickness anti-aliased lines cap are missing their AA fringe.
-void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32 col, bool closed, float thickness, const float* _primitiveRestartIndex)
+void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32 col, bool closed, float thickness)
 {
     if (points_count < 2)
         return;
@@ -819,15 +819,6 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
             const int i2 = (i1+1) == points_count ? 0 : i1+1;
             const ImVec2& p1 = points[i1];
             const ImVec2& p2 = points[i2];
-
-            //glPrimitiveRestartIndex
-            if ( _primitiveRestartIndex && (p1.x <= _primitiveRestartIndex[0] || p2.x <= _primitiveRestartIndex[0]) )
-            {
-                CmdBuffer.Data[CmdBuffer.Size-1].ElemCount -= 6;
-                VtxBuffer.Size -= 4;
-                IdxBuffer.Size -= 6;
-                continue;
-            }
 
             ImVec2 diff = p2 - p1;
             diff *= ImInvLength(diff, 1.0f);
