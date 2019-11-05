@@ -11992,39 +11992,6 @@ static bool Items_SingleStringGetter(void* data, int idx, const char** out_text)
 
 
 
-// Getter for the old Combo() API: const char*[]
-static bool Items_ArrayGetter(void* data, int idx, const char** out_text,ImGuiItemGetterCommand cmd)
-{
-    if ( cmd != ImGuiItemGetterCommand_get_text ) return false;
-
-    const char* const* items = (const char* const*)data;
-    if (out_text)
-        *out_text = items[idx];
-    return true;
-}
-
-// Getter for the old Combo() API: "item1\0item2\0item3\0"
-static bool Items_SingleStringGetter(void* data, int idx, const char** out_text,ImGuiItemGetterCommand cmd)
-{
-    if ( cmd != ImGuiItemGetterCommand_get_text ) return false;
-
-    // FIXME-OPT: we could pre-compute the indices to fasten this. But only 1 active combo means the waste is limited.
-    const char* items_separated_by_zeros = (const char*)data;
-    int items_count = 0;
-    const char* p = items_separated_by_zeros;
-    while (*p)
-    {
-        if (idx == items_count)
-            break;
-        p += strlen(p) + 1;
-        items_count++;
-    }
-    if (!*p)
-        return false;
-    if (out_text)
-        *out_text = p;
-    return true;
-}
 
 // Combo box helper allowing to pass an array of strings.
 bool ImGui::Combo(const char* label, int* current_item, const char* const items[], int items_count, int height_in_items)
@@ -12044,6 +12011,48 @@ bool ImGui::Combo(const char* label, int* current_item, const char* items_separa
         items_count++;
     }
     bool value_changed = Combo(label, current_item, Items_SingleStringGetter, (void*)items_separated_by_zeros, items_count, height_in_items);
+    return value_changed;
+}
+
+
+// Old API, prefer using BeginCombo() nowadays if you can.
+bool ImGui::Combo(const char* label, int* current_item, bool (*items_getter)(void* data, int idx, const char** out_text), void* data, int items_count, int popup_max_height_in_items)
+{
+    ImGuiContext& g = *GImGui;
+
+    // Call the getter to obtain the preview string which is a parameter to BeginCombo()
+    const char* preview_value = NULL;
+    if (*current_item >= 0 && *current_item < items_count)
+        items_getter(data, *current_item, &preview_value/*,ImGuiItemGetterCommand_get_text*/);
+
+    // The old Combo() API exposed "popup_max_height_in_items". The new more general BeginCombo() API doesn't have/need it, but we emulate it here.
+    if (popup_max_height_in_items != -1 && !g.NextWindowData.SizeConstraintCond)
+        SetNextWindowSizeConstraints(ImVec2(0,0), ImVec2(FLT_MAX, CalcMaxPopupHeightFromItemCount(popup_max_height_in_items)));
+
+    if (!BeginCombo(label, preview_value, ImGuiComboFlags_None))
+        return false;
+
+    // Display items
+    // FIXME-OPT: Use clipper (but we need to disable it on the appearing frame to make sure our call to SetItemDefaultFocus() is processed)
+    bool value_changed = false;
+    for (int i = 0; i < items_count; i++)
+    {
+        PushID((void*)(intptr_t)i);
+        const bool item_selected = (i == *current_item);
+        const char* item_text;
+        if (!items_getter(data, i, &item_text/*,ImGuiItemGetterCommand_get_text*/))
+            item_text = "*Unknown item*";
+        if (Selectable(item_text, item_selected))
+        {
+            value_changed = true;
+            *current_item = i;
+        }
+        if (item_selected)
+            SetItemDefaultFocus();
+        PopID();
+    }
+
+    EndCombo();
     return value_changed;
 }
 
@@ -12221,7 +12230,7 @@ bool ImGui::ListBox(const char* label, int* current_item, const char* const item
     return value_changed;
 }
 
-bool ImGui::ListBox(const char* label, int* current_item, ImGuiItemGetter items_getter, void* data, int items_count, int height_in_items)
+bool ImGui::ListBox(const char* label, int* current_item, bool (*items_getter)(void* data, int idx, const char** out_text), void* data, int items_count, int height_in_items)
 {
     if (!ListBoxHeader(label, items_count, height_in_items))
         return false;
@@ -12234,7 +12243,7 @@ bool ImGui::ListBox(const char* label, int* current_item, ImGuiItemGetter items_
         {
             const bool item_selected = (i == *current_item);
             const char* item_text;
-            if (!items_getter(data, i, &item_text,ImGuiItemGetterCommand_get_text))
+            if (!items_getter(data, i, &item_text/*,ImGuiItemGetterCommand_get_text*/))
                 item_text = "*Unknown item*";
 
             PushID(i);
